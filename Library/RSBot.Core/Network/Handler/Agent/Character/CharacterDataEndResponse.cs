@@ -34,10 +34,16 @@ internal class CharacterDataEndResponse : IPacketHandler
         packet = Game.ChunkedPacket;
         packet.Lock();
 
+        Log.Debug($"[CharData] Packet total length: {packet.Length}");
+
         if (Game.ClientType >= GameClientType.Thailand)
-            packet.ReadUInt(); // serverTimestamp
+        {
+            var ts = packet.ReadUInt(); // serverTimestamp
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} serverTimestamp={ts}");
+        }
 
         var modelId = packet.ReadUInt();
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} modelId={modelId}");
 
         var character = new Player(modelId);
         character.Scale = packet.ReadByte();
@@ -53,6 +59,7 @@ internal class CharacterDataEndResponse : IPacketHandler
         character.Health = packet.ReadInt();
         character.Mana = packet.ReadInt();
         character.AutoInverstExperience = (AutoInverstType)packet.ReadByte();
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after basic stats: lvl={character.Level} hp={character.Health} mp={character.Mana} gold={character.Gold}");
 
         if (Game.ClientType == GameClientType.Chinese_Old)
             character.DailyPK = (byte)packet.ReadUShort();
@@ -67,6 +74,8 @@ internal class CharacterDataEndResponse : IPacketHandler
 
         if (Game.ClientType > GameClientType.Thailand)
             /*character.PvpFlag = (PvpFlag)*/packet.ReadByte();
+
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after pk/berzerk");
 
         if (Game.ClientType >= GameClientType.Chinese)
         {
@@ -93,6 +102,8 @@ internal class CharacterDataEndResponse : IPacketHandler
             if (Game.ClientType == GameClientType.Taiwan)
                 packet.ReadBytes(5);
 
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} before serverCap, remaining={packet.Remaining}");
+
             var serverCap = packet.ReadByte();
             Log.Notify($"The game server cap is {serverCap}!");
 
@@ -102,14 +113,19 @@ internal class CharacterDataEndResponse : IPacketHandler
                 && Game.ClientType != GameClientType.Japanese
             )
                 packet.ReadUShort();
+
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after client-specific block, remaining={packet.Remaining}");
         }
 
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} before Inventory, remaining={packet.Remaining}");
         character.Inventory = new CharacterInventory(packet);
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Inventory, remaining={packet.Remaining}");
 
         if (Game.ClientType >= GameClientType.Thailand)
             character.Avatars = new InventoryItemCollection(packet);
         else
             character.Avatars = new InventoryItemCollection(5);
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Avatars, remaining={packet.Remaining}");
 
         // JOB2
         if (Game.ClientType > GameClientType.Vietnam)
@@ -118,13 +134,18 @@ internal class CharacterDataEndResponse : IPacketHandler
 
             character.Job2 = new InventoryItemCollection(packet);
         }
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after JOB2, remaining={packet.Remaining}");
 
         character.Skills = Skills.FromPacket(packet);
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Skills, remaining={packet.Remaining}");
+
         character.QuestLog = QuestLog.FromPacket(packet);
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after QuestLog, remaining={packet.Remaining}");
 
         packet.ReadByte(); // Unknown
 
-        if (Game.ClientType > GameClientType.Thailand)
+        // vSRO 274 does not include the collection-book section here.
+        if (Game.ClientType > GameClientType.Thailand && Game.ClientType != GameClientType.Vietnam274)
         {
             var collectionBookStartedThemeCount = packet.ReadUInt();
             for (var i = 0; i < collectionBookStartedThemeCount; i++)
@@ -134,8 +155,10 @@ internal class CharacterDataEndResponse : IPacketHandler
                 packet.ReadUInt(); //pages
             }
         }
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after collection book, remaining={packet.Remaining}");
 
         character.ParseBionicDetails(packet);
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after bionic, remaining={packet.Remaining}");
 
         character.Name = packet.ReadString();
         character.JobInformation = JobInfo.FromPacket(packet);
@@ -194,6 +217,7 @@ internal class CharacterDataEndResponse : IPacketHandler
 
         character.JID = packet.ReadUInt();
         character.IsGameMaster = packet.ReadBool();
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} FINAL remaining={packet.Remaining}, name={character.Name}");
 
         // Load Notification sound settings
         character.NotificationSounds.LoadPlayerSettings();

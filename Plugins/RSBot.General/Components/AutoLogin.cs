@@ -177,7 +177,7 @@ internal static class AutoLogin
             loginPacket.WriteString(account.Password);
         }
 
-        Game.MacAddress = GenerateMacAddress();
+        Game.MacAddress = GetOrCreateMacAddress();
 
         if (
             Game.ClientType == GameClientType.Turkey
@@ -214,8 +214,25 @@ internal static class AutoLogin
     ///     Generates valid MAC address.
     /// </summary>
     /// <returns></returns>
-    private static byte[] GenerateMacAddress()
+    private static byte[] GetOrCreateMacAddress()
     {
+        const string configKey = "RSBot.General.AutoLoginMacAddress";
+        var savedMacAddress = GlobalConfig.Get<string>(configKey);
+
+        if (!string.IsNullOrWhiteSpace(savedMacAddress))
+        {
+            try
+            {
+                var macAddress = Convert.FromBase64String(savedMacAddress);
+                if (macAddress.Length == 6)
+                    return macAddress;
+            }
+            catch (FormatException)
+            {
+                // Generate and save a replacement for an invalid legacy value.
+            }
+        }
+
         Random rand = new Random();
         byte firstByte = (byte)(rand.Next(0, 256) & 0xFE);
 
@@ -225,6 +242,8 @@ internal static class AutoLogin
         {
             macBytes[i] = (byte)rand.Next(0, 256);
         }
+
+        GlobalConfig.Set(configKey, Convert.ToBase64String(macBytes));
 
         return macBytes;
     }
@@ -255,8 +274,17 @@ internal static class AutoLogin
     ///     Enters the game.
     /// </summary>
     /// <param name="character">The character.</param>
-    public static void EnterGame(string character)
+    public static async void EnterGame(string character)
     {
+        if (!GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin"))
+            return;
+
+        // vSRO 274 servers can close the agent connection when the character
+        // selection request arrives in the same receive cycle as the listing.
+        // Give the client/server state transition a moment to complete first.
+        if (Game.ClientType == GameClientType.Vietnam274)
+            await Task.Delay(1000);
+
         if (!GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin"))
             return;
 

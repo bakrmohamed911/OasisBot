@@ -126,7 +126,8 @@ public class State
         MotionState = (MotionState)packet.ReadByte();
         BodyState = (BodyState)packet.ReadByte();
 
-        if (Game.ClientType > GameClientType.Vietnam193)
+        // vSRO 274 does not include the red-arrow-effect flag.
+        if (Game.ClientType > GameClientType.Vietnam193 && Game.ClientType != GameClientType.Vietnam274)
             packet.ReadByte(); // hasRedArrowEffect
 
         WalkSpeed = packet.ReadFloat();

@@ -26,9 +26,16 @@ if ($Clean) {
 }
 
 Write-Output "Building with '$Configuration' configuration..."
-$vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+
+$vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath
 $msBuildPath = Join-Path $vsPath "MSBuild\Current\Bin\MSBuild.exe"
-& $msBuildPath /p:Configuration=$Configuration /p:Platform=x86 OasisBot.sln | Tee-Object -FilePath build.log
+
+Write-Output "Step 1: Building .NET projects with dotnet build..."
+dotnet build OasisBot.sln /p:Configuration=$Configuration /p:Platform=x86 2>&1 | Tee-Object -FilePath build.log
+
+Write-Output "Step 2: Building C++ loader with VS MSBuild..."
+& $msBuildPath "Library\RSBot.Loader.Library\RSBot.Loader.Library.vcxproj" /p:Configuration=Release 2>&1 | Tee-Object -FilePath build.log -Append
+
 $buildExitCode = $LASTEXITCODE
 
 if ($Clean) {
