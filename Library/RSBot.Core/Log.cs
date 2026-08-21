@@ -124,6 +124,20 @@ public class Log
     {
         Warn(obj.Message);
 
+        FatalFileOnly(obj);
+    }
+
+    /// <summary>
+    ///     Writes to the same exception file <see cref="Fatal(Exception)" /> does, but skips the
+    ///     <see cref="Warn(object)" /> call - i.e. never fires "OnAddLog". EventManager.FireEvent
+    ///     uses this for exceptions it catches while dispatching "OnAddLog" itself: calling the
+    ///     normal Fatal(Exception) there would re-fire "OnAddLog" with the same input that just
+    ///     failed, which fails again, which fires it again... - a real path to unbounded recursion
+    ///     ending in an uncatchable native stack overflow, not a hypothetical one.
+    /// </summary>
+    /// <param name="obj">The exception.</param>
+    internal static void FatalFileOnly(Exception obj)
+    {
         var filePath = Path.Combine(Kernel.BasePath, "User", "Logs", "Exceptions", $"{DateTime.Now:dd-MM-yyyy}.txt");
         var directory = Path.GetDirectoryName(filePath);
 

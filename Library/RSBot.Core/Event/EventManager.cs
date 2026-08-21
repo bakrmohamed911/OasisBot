@@ -53,13 +53,40 @@ public class EventManager
 
             foreach (var target in targets)
                 if (Thread.CurrentThread.Name == "Network.PacketProcessor")
-                    Task.Run(() => target.DynamicInvoke(parameters));
+                    Task.Run(() => InvokeSafely(target, parameters, name));
                 else
-                    target.DynamicInvoke(parameters);
+                    InvokeSafely(target, parameters, name);
         }
         catch (Exception e)
         {
             Log.Fatal(e);
+        }
+    }
+
+    /// <summary>
+    ///     Invokes a single subscriber, catching per-target instead of only around the whole
+    ///     dispatch loop so one bad handler can't stop the others firing.
+    /// </summary>
+    private static void InvokeSafely(Delegate target, object[] parameters, string name)
+    {
+        try
+        {
+            target.DynamicInvoke(parameters);
+        }
+        catch (Exception e)
+        {
+            // Log.Fatal calls Log.Warn, which fires "OnAddLog" again. If the handler that
+            // just threw IS an "OnAddLog" subscriber (the log window's AppendLog, which
+            // builds a file path from data that can be attacker/server-controlled, e.g.
+            // a corrupted player name), calling Log.Fatal here re-fires "OnAddLog" with
+            // the exact same input that just failed - which fails again, which fires it
+            // again, forever, ending in an uncatchable native stack overflow that kills
+            // the whole process. Write straight to the exception file for this one case
+            // instead of going through the event system again.
+            if (name == "OnAddLog")
+                Log.FatalFileOnly(e);
+            else
+                Log.Fatal(e);
         }
     }
 }

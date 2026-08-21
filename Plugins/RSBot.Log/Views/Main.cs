@@ -44,20 +44,29 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<string, LogLevel>(AppendLog), message, level);
+            // Non-blocking: this is called via a fire-and-forget Task.Run for every event
+            // fired while processing a packet (see EventManager.FireEvent), so a burst of
+            // log lines (e.g. a character load) could otherwise pile up many ThreadPool
+            // threads all blocked here waiting on the UI thread at once.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<string, LogLevel>(AppendLog), message, level);
+
             return;
         }
 
         if (!checkEnabled.Checked)
             return;
 
-        var logFile = Path.Combine(
-            Kernel.BasePath,
-            "User",
-            "Logs",
-            Game.Player == null ? "Environment" : Game.Player.Name,
-            $"{DateTime.Now:dd-MM-yyyy}.txt"
-        );
+        // Game.Player.Name comes straight off the wire - a misparsed/corrupted packet
+        // field (this session chased exactly one) can turn it into something containing
+        // characters that are illegal in a Windows path. Path.Combine won't catch that;
+        // Directory.CreateDirectory/File.AppendText further down would throw, and an
+        // exception thrown by an "OnAddLog" subscriber used to be able to crash the
+        // whole process (see EventManager.InvokeSafely). Sanitize defensively so this
+        // can't throw regardless of whether that recursion is also fixed.
+        var playerName = Game.Player == null ? "Environment" : SanitizeForPath(Game.Player.Name);
+
+        var logFile = Path.Combine(Kernel.BasePath, "User", "Logs", playerName, $"{DateTime.Now:dd-MM-yyyy}.txt");
 
         if (level == LogLevel.Debug && !checkDebug.Checked)
             return;
@@ -72,6 +81,28 @@ public partial class Main : DoubleBufferedControl
             return;
 
         txtLog.Write($"<{level}> \t{message}", true, Kernel.Debug, logFile);
+    }
+
+    /// <summary>
+    ///     Replaces characters that are illegal in a Windows file/directory name, and caps
+    ///     the length, so an untrusted value can safely be used as a single path segment.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    private static string SanitizeForPath(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return "Unknown";
+
+        var invalid = Path.GetInvalidFileNameChars();
+        var chars = value.Length > 64 ? value.Substring(0, 64).ToCharArray() : value.ToCharArray();
+
+        for (var i = 0; i < chars.Length; i++)
+            if (Array.IndexOf(invalid, chars[i]) >= 0)
+                chars[i] = '_';
+
+        var sanitized = new string(chars).Trim();
+
+        return string.IsNullOrEmpty(sanitized) ? "Unknown" : sanitized;
     }
 
     /// <summary>
