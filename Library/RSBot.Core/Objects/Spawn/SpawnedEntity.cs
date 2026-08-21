@@ -219,8 +219,10 @@ public class SpawnedEntity
 
         var speed = ActualSpeed * 0.1f;
 
-        // Don't move if too close to destination
-        if (distance <= 1)
+        // Don't move if too close to destination, or if speed is zero/negative -
+        // distance / speed would otherwise be Infinity/NaN, and TimeSpan.FromSeconds
+        // throws an OverflowException on that instead of just treating it as "not moving".
+        if (distance <= 1 || speed <= 0)
             return;
 
         // Calculate movement and move time

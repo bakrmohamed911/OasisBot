@@ -32,6 +32,9 @@ internal class EntityUpdateMovementResponse : IPacketHandler
         var uniqueId = packet.ReadUInt();
 
         var movement = Movement.MotionFromPacket(packet);
+        if (!Game.IsPlayerReady)
+            return;
+
         if (uniqueId == Game.Player.UniqueId)
         {
             // Set source from movement

@@ -1,4 +1,5 @@
-﻿using RSBot.Core.Components;
+﻿using System.IO;
+using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
 using RSBot.Core.Objects.Quests;
@@ -77,7 +78,7 @@ internal class CharacterDataEndResponse : IPacketHandler
 
         Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after pk/berzerk");
 
-        if (Game.ClientType >= GameClientType.Chinese)
+        if (Game.ClientType >= GameClientType.Chinese || Game.ClientType == GameClientType.Vietnam274)
         {
             if (Game.ClientType != GameClientType.Chinese)
                 packet.ReadByte();
@@ -128,7 +129,9 @@ internal class CharacterDataEndResponse : IPacketHandler
         Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Avatars, remaining={packet.Remaining}");
 
         // JOB2
-        if (Game.ClientType > GameClientType.Vietnam)
+        // vSRO 274 does not include the JOB2 section either (same family of gaps as the
+        // red-arrow-effect flag and collection-book section below).
+        if (Game.ClientType > GameClientType.Vietnam && Game.ClientType != GameClientType.Vietnam274)
         {
             character.Job2SpecialtyBag = new InventoryItemCollection(packet);
 
@@ -157,28 +160,46 @@ internal class CharacterDataEndResponse : IPacketHandler
         }
         Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after collection book, remaining={packet.Remaining}");
 
-        character.ParseBionicDetails(packet);
+        try
+        {
+            character.ParseBionicDetails(packet);
+        }
+        catch (EndOfStreamException ex)
+        {
+            Log.Error($"[CharData] CRASH in ParseBionicDetails: remaining={packet.Remaining}, exception={ex.Message}");
+            Log.Debug($"[CharData] ParseBionicDetails stack: {ex.StackTrace}");
+            throw;
+        }
         Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after bionic, remaining={packet.Remaining}");
 
         character.Name = packet.ReadString();
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Name='{character.Name}', remaining={packet.Remaining}");
+
         character.JobInformation = JobInfo.FromPacket(packet);
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after JobInfo, remaining={packet.Remaining}");
+
         character.State.PvpState = (PvpState)packet.ReadByte();
         character.OnTransport = packet.ReadBool(); //On transport?
         character.InCombat = packet.ReadBool();
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after PvpState/OnTransport/InCombat, remaining={packet.Remaining}");
 
-        if (Game.ClientType >= GameClientType.Chinese)
+        // Kept consistent with the Vietnam274 carve-in above (line ~81): if that client
+        // shares the Chinese+ VIP/serverCap block, it should share these Chinese+ reads
+        // too, otherwise every field from here on is misaligned for Vietnam274.
+        if (Game.ClientType >= GameClientType.Chinese || Game.ClientType == GameClientType.Vietnam274)
             packet.ReadByte();
 
         if (character.OnTransport)
             character.TransportUniqueId = packet.ReadUInt();
 
-        if (Game.ClientType >= GameClientType.Chinese)
+        if (Game.ClientType >= GameClientType.Chinese || Game.ClientType == GameClientType.Vietnam274)
             packet.ReadUInt(); //unkUint2 i think it is using for balloon event or buff for events
 
         if (Game.ClientType > GameClientType.Vietnam)
             packet.ReadByte();
 
         packet.ReadByte(); //PVP dress for the CTF event //0 = Red Side, 1 = Blue Side, 0xFF = None
+        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after transport/CTF, remaining={packet.Remaining}");
 
         if (
             Game.ClientType > GameClientType.Chinese

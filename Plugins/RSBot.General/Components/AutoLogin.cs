@@ -214,7 +214,7 @@ internal static class AutoLogin
     ///     Generates valid MAC address.
     /// </summary>
     /// <returns></returns>
-    private static byte[] GetOrCreateMacAddress()
+    internal static byte[] GetOrCreateMacAddress()
     {
         const string configKey = "RSBot.General.AutoLoginMacAddress";
         var savedMacAddress = GlobalConfig.Get<string>(configKey);
@@ -226,10 +226,12 @@ internal static class AutoLogin
                 var macAddress = Convert.FromBase64String(savedMacAddress);
                 if (macAddress.Length == 6)
                     return macAddress;
+
+                Log.Warn($"Saved MAC address '{savedMacAddress}' has an invalid length, regenerating.");
             }
             catch (FormatException)
             {
-                // Generate and save a replacement for an invalid legacy value.
+                Log.Warn($"Saved MAC address '{savedMacAddress}' is not valid Base64, regenerating.");
             }
         }
 
@@ -244,6 +246,7 @@ internal static class AutoLogin
         }
 
         GlobalConfig.Set(configKey, Convert.ToBase64String(macBytes));
+        GlobalConfig.Save();
 
         return macBytes;
     }
@@ -279,21 +282,32 @@ internal static class AutoLogin
         if (!GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin"))
             return;
 
-        // vSRO 274 servers can close the agent connection when the character
-        // selection request arrives in the same receive cycle as the listing.
-        // Give the client/server state transition a moment to complete first.
-        if (Game.ClientType == GameClientType.Vietnam274)
-            await Task.Delay(1000);
+        try
+        {
+            // vSRO 274 servers can close the agent connection when the character
+            // selection request arrives in the same receive cycle as the listing.
+            // Give the client/server state transition a moment to complete first.
+            if (Game.ClientType == GameClientType.Vietnam274)
+                await Task.Delay(1000);
 
-        if (!GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin"))
-            return;
+            if (!GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin"))
+                return;
 
-        var packet = new Packet(0x7001);
-        packet.WriteString(character);
-        PacketManager.SendPacket(packet, PacketDestination.Server);
+            var packet = new Packet(0x7001);
+            packet.WriteString(character);
+            PacketManager.SendPacket(packet, PacketDestination.Server);
 
-        PlayerConfig.Load(character);
+            PlayerConfig.Load(character);
 
-        EventManager.FireEvent("OnEnterGame");
+            EventManager.FireEvent("OnEnterGame");
+        }
+        catch (Exception ex)
+        {
+            // This runs on a delayed continuation for Vietnam274, outside the try/catch
+            // that normally wraps packet-handler dispatch (Proxy.HandleReceivedPacket) -
+            // without this, an exception here (e.g. the server having already closed the
+            // connection) would go unhandled instead of being logged.
+            Log.Fatal(ex);
+        }
     }
 }

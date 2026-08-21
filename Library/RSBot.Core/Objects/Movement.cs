@@ -98,6 +98,8 @@ public struct Movement
     /// <returns></returns>
     public static Movement FromPacket(Packet packet)
     {
+        Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} before Source, remaining={packet.Remaining}");
+
         var result = new Movement
         {
             Source = Position.FromPacket(packet),
@@ -105,15 +107,19 @@ public struct Movement
             Type = (MovementType)packet.ReadByte(),
         };
 
+        Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} Source={result.Source} HasDest={result.HasDestination} Type={result.Type}, remaining={packet.Remaining}");
+
         if (result.HasDestination)
         {
             result.Destination = Position.FromPacketConditional(packet, false);
+            Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} Dest={result.Destination}, remaining={packet.Remaining}");
         }
         else
         {
             packet.ReadByte(); //0 = Spinning, 1 = Sky-/Key-walking
             result.HasAngle = true;
             result.Angle = packet.ReadShort();
+            Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} Angle={result.Angle}, remaining={packet.Remaining}");
         }
 
         return result;

@@ -29,6 +29,11 @@ public partial class Main : DoubleBufferedControl
             checkWarning.Visible = false;
             checkDebug.Visible = false;
         }
+
+        // Fully-qualified: this file lives under the RSBot.Log namespace, which would
+        // otherwise shadow the RSBot.Core.Log class for an unqualified "Log".
+        RSBot.Core.Log.DebugEnabled = checkDebug.Checked;
+        checkDebug.CheckedChanged += (_, _) => RSBot.Core.Log.DebugEnabled = checkDebug.Checked;
     }
 
     /// <summary>

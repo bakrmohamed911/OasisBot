@@ -144,6 +144,12 @@ public static class Kernel
 
             try
             {
+                if (!Game.IsPlayerReady)
+                {
+                    lastTick = TickCount;
+                    continue;
+                }
+
                 var elapsed = TickCount - lastTick;
 
                 Game.Player.Update(elapsed);

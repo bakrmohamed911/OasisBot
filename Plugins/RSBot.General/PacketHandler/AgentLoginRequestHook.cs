@@ -75,7 +75,14 @@ internal class AgentLoginRequestHook : IPacketHook
         }
 
         packet.WriteByte(Game.ReferenceManager.DivisionInfo.Locale);
+
+        // Game.MacAddress may not have been set yet (e.g. a manual gateway login raced
+        // and cancelled AutoLogin before it could assign one) - the server expects these
+        // 6 bytes unconditionally, so fall back to a fresh/saved one instead of shortening
+        // the packet.
+        Game.MacAddress ??= AutoLogin.GetOrCreateMacAddress();
         packet.WriteBytes(Game.MacAddress);
+
         packet.Lock();
 
         return packet;

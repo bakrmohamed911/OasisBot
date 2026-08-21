@@ -8,6 +8,14 @@ namespace RSBot.Core;
 public class Log
 {
     /// <summary>
+    ///     Whether Debug-level log messages are dispatched. Mirrors the "Debug" checkbox in the
+    ///     log view; callers that build expensive/interpolated debug messages on a hot path
+    ///     should still check this before formatting, since <see cref="Debug(object)" /> itself
+    ///     can only skip the dispatch, not the formatting done by the caller before calling it.
+    /// </summary>
+    public static bool DebugEnabled { get; set; } = true;
+
+    /// <summary>
     ///     Replaces the format item in a specified string with the string
     ///     representation of a corresponding object in a specified array
     /// </summary>
@@ -55,6 +63,9 @@ public class Log
     /// <param name="obj">The message</param>
     public static void Debug(object obj)
     {
+        if (!DebugEnabled)
+            return;
+
         EventManager.FireEvent("OnAddLog", obj.ToString(), LogLevel.Debug);
     }
 
