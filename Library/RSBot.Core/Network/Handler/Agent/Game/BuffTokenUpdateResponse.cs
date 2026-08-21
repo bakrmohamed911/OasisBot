@@ -27,8 +27,13 @@ internal class BuffTokenUpdateResponse : IPacketHandler
     /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
+        // Game.Ready must always be set here regardless of Game.Player, otherwise the
+        // main tick loop (gated on Game.Ready) hangs forever if Game.Player was never
+        // assigned (e.g. character-data parsing failed earlier for this login).
         Game.Ready = true;
-        Game.Player.Teleportation = null;
+
+        if (Game.IsPlayerReady)
+            Game.Player.Teleportation = null;
 
         Log.Debug("Game loaded!");
         EventManager.FireEvent("OnTeleportComplete");
@@ -46,7 +51,7 @@ internal class BuffTokenUpdateResponse : IPacketHandler
             var skillId = packet.ReadUInt();
             var milliseconds = packet.ReadInt();
 
-            var skillInfo = Game.Player.Skills.GetSkillInfoById(skillId);
+            var skillInfo = Game.Player?.Skills.GetSkillInfoById(skillId);
             skillInfo ??= SkillManager.Buffs.Find(p => p.Id == skillId);
 
             skillInfo?.SetCoolDown(milliseconds);

@@ -285,58 +285,76 @@ public sealed class SpawnedPlayer : SpawnedBionic
         Name = packet.ReadString();
         Job = (JobType)packet.ReadByte();
 
-        if (Game.ClientType >= GameClientType.Vietnam274 && WearsJobSuite)
-            if (WearsJobSuite)
+        // Everything from here on is the section of the layout most likely to differ
+        // between client versions (it's already conditioned on the Vietnam274 boundary
+        // in three places below). If our assumption about that boundary is wrong for a
+        // given entity, catch it here instead of letting it throw all the way up through
+        // SpawnManager.Parse - that would drop this entity from tracking entirely (it's
+        // only added to SpawnManager after Deserialize returns) for every single spawn
+        // packet where it happens, instead of just leaving Guild/Stall/PKFlag unset for
+        // this one entity while everything already parsed above (Name, position, state)
+        // stays usable.
+        try
+        {
+            if (Game.ClientType >= GameClientType.Vietnam274 && WearsJobSuite)
             {
                 packet.ReadByte(); // JobRank
                 JobLevel = packet.ReadByte();
                 packet.ReadByte(); // ??
             }
 
-        if (Game.ClientType < GameClientType.Vietnam274)
-        {
-            JobLevel = packet.ReadByte();
-            PvpState = (PvpState)packet.ReadByte();
+            if (Game.ClientType < GameClientType.Vietnam274)
+            {
+                JobLevel = packet.ReadByte();
+                PvpState = (PvpState)packet.ReadByte();
+            }
+
+            OnTransport = packet.ReadBool();
+            InCombat = packet.ReadBool();
+
+            if (OnTransport)
+                TransportUniqueId = packet.ReadUInt();
+
+            ScrollMode = (ScrollMode)packet.ReadByte();
+            InteractMode = (InteractMode)packet.ReadByte();
+
+            if (Game.ClientType < GameClientType.Vietnam274)
+                packet.ReadByte(); //unkByte4
+
+            var guildName = packet.ReadString();
+
+            //Check if the player is wearing job suite, if not the GUILD object has to be parsed!
+            if (!WearsJobSuite)
+            {
+                Guild = SpawnedPlayerGuild.FromPacket(packet);
+                Guild.Name = guildName;
+            }
+            else
+            {
+                Guild = new SpawnedPlayerGuild { Name = guildName };
+            }
+
+            if (Game.ClientType >= GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK2)
+                Stall = SpawnedPlayerStall.FromPacket(packet);
+            else if (Game.ClientType < GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK)
+                Stall = SpawnedPlayerStall.FromPacket(packet);
+
+            if (Game.ClientType >= GameClientType.Chinese)
+                packet.ReadBytes(9);
+
+            packet.ReadByte(); //Equipment Cooldown
+
+            PKFlag = packet.ReadByte(); //PKFlag
+
+            if (Game.ClientType >= GameClientType.Chinese && Game.ClientType < GameClientType.Rigid)
+                packet.ReadByte(); // 0xFF what flag?
         }
-
-        OnTransport = packet.ReadBool();
-        InCombat = packet.ReadBool();
-
-        if (OnTransport)
-            TransportUniqueId = packet.ReadUInt();
-
-        ScrollMode = (ScrollMode)packet.ReadByte();
-        InteractMode = (InteractMode)packet.ReadByte();
-
-        if (Game.ClientType < GameClientType.Vietnam274)
-            packet.ReadByte(); //unkByte4
-
-        var guildName = packet.ReadString();
-
-        //Check if the player is wearing job suite, if not the GUILD object has to be parsed!
-        if (!WearsJobSuite)
+        catch (System.IO.EndOfStreamException ex)
         {
-            Guild = SpawnedPlayerGuild.FromPacket(packet);
-            Guild.Name = guildName;
+            Log.Error(
+                $"[SpawnedPlayer] Failed to fully parse player '{Name}' (ClientType={Game.ClientType}, WearsJobSuite={WearsJobSuite}, remaining={packet.Remaining}): {ex.Message}. "
+                    + "Guild/Stall/PKFlag may be unset for this entity, but it will still be tracked."
+            );
         }
-        else
-        {
-            Guild = new SpawnedPlayerGuild { Name = guildName };
-        }
-
-        if (Game.ClientType >= GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK2)
-            Stall = SpawnedPlayerStall.FromPacket(packet);
-        else if (Game.ClientType < GameClientType.Chinese && InteractMode == InteractMode.P2N_TALK)
-            Stall = SpawnedPlayerStall.FromPacket(packet);
-
-        if (Game.ClientType >= GameClientType.Chinese)
-            packet.ReadBytes(9);
-
-        packet.ReadByte(); //Equipment Cooldown
-
-        PKFlag = packet.ReadByte(); //PKFlag
-
-        if (Game.ClientType >= GameClientType.Chinese && Game.ClientType < GameClientType.Rigid)
-            packet.ReadByte(); // 0xFF what flag?
     }
 }

@@ -67,6 +67,15 @@ public class Game
     public static Player Player { get; internal set; }
 
     /// <summary>
+    ///     Gets a value indicating whether a character is currently loaded, i.e. it is safe
+    ///     to access <see cref="Player" /> without a null-check.
+    /// </summary>
+    /// <value>
+    ///     <c>true</c> if <see cref="Player" /> is non-null; otherwise, <c>false</c>.
+    /// </value>
+    public static bool IsPlayerReady => Player != null;
+
+    /// <summary>
     ///     Gets or sets the selected entity.
     /// </summary>
     /// <value>

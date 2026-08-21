@@ -98,6 +98,13 @@ public struct Movement
     /// <returns></returns>
     public static Movement FromPacket(Packet packet)
     {
+        // This runs once per movement packet per visible entity - dozens of times a
+        // second in a populated area. The per-line debug logging here (added to chase a
+        // Vietnam274 packet-alignment bug that's since been found and fixed) was routing
+        // that volume through synchronous cross-thread UI Invoke calls into a RichTextBox,
+        // which is suspected to have contributed to a native RichEdit stack-overflow crash.
+        // Removed rather than just left disabled, since "off by default" isn't good enough
+        // protection against someone re-enabling Debug logging during normal play.
         var result = new Movement
         {
             Source = Position.FromPacket(packet),

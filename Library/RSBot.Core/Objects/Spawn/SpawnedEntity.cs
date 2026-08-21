@@ -219,12 +219,28 @@ public class SpawnedEntity
 
         var speed = ActualSpeed * 0.1f;
 
-        // Don't move if too close to destination
-        if (distance <= 1)
+        // Don't move if too close to destination, or if speed is zero/negative -
+        // distance / speed would otherwise be Infinity/NaN, and TimeSpan.FromSeconds
+        // throws an OverflowException on that instead of just treating it as "not moving".
+        if (distance <= 1 || speed <= 0)
             return;
 
+        var secondsToMove = distance / speed;
+
+        // A huge-but-finite quotient (e.g. from a corrupted/garbage Source or Destination
+        // position - a misparsed packet field elsewhere) still overflows TimeSpan's range
+        // even though it isn't Infinity/NaN. Guard the exact range TimeSpan.FromSeconds
+        // accepts instead of just the zero-speed case above.
+        if (double.IsNaN(secondsToMove) || secondsToMove >= TimeSpan.MaxValue.TotalSeconds)
+        {
+            Log.Debug(
+                $"[Movement] Skipping bogus move calculation: distance={distance} speed={speed} secondsToMove={secondsToMove}"
+            );
+            return;
+        }
+
         // Calculate movement and move time
-        var remaining = TimeSpan.FromSeconds(distance / speed);
+        var remaining = TimeSpan.FromSeconds(secondsToMove);
         Movement.MovingX = diffX / remaining.TotalSeconds;
         Movement.MovingY = diffY / remaining.TotalSeconds;
         Movement.RemainingTime = remaining;

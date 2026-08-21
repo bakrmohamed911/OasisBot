@@ -6,13 +6,27 @@ namespace RSBot.Party.Bundle;
 
 internal static class Container
 {
+    private static AutoPartyBundle _autoParty;
+
+    private static PartyMatchingBundle _partyMatching;
+
+    private static CommandsBundle _commands;
+
     /// <summary>
     ///     Gets or sets the automatic party.
     /// </summary>
     /// <value>
     ///     The automatic party.
     /// </value>
-    public static AutoPartyBundle AutoParty { get; set; }
+    // Self-initializing: game-event handlers (PartyManager.OnEnterGame, OnPartyMemberLeave,
+    // OnPartyDismiss, ...) can fire before the Party settings UI has ever been opened -
+    // which used to be the only place Refresh() got called - and previously NullReferenceException'd
+    // on this being null since it's an ordinary process-crashing exception on those event threads.
+    public static AutoPartyBundle AutoParty
+    {
+        get => _autoParty ??= new AutoPartyBundle();
+        set => _autoParty = value;
+    }
 
     /// <summary>
     ///     Gets or sets the party matching.
@@ -20,7 +34,11 @@ internal static class Container
     /// <value>
     ///     The party matching.
     /// </value>
-    public static PartyMatchingBundle PartyMatching { get; set; }
+    public static PartyMatchingBundle PartyMatching
+    {
+        get => _partyMatching ??= new PartyMatchingBundle();
+        set => _partyMatching = value;
+    }
 
     /// <summary>
     ///     Gets or sets the party matching.
@@ -28,17 +46,17 @@ internal static class Container
     /// <value>
     ///     The party matching.
     /// </value>
-    public static CommandsBundle Commands { get; set; }
+    public static CommandsBundle Commands
+    {
+        get => _commands ??= new CommandsBundle();
+        set => _commands = value;
+    }
 
     /// <summary>
     ///     Refreshes this instance.
     /// </summary>
     public static void Refresh()
     {
-        AutoParty ??= new AutoPartyBundle();
-        PartyMatching ??= new PartyMatchingBundle();
-        Commands ??= new CommandsBundle();
-
         AutoParty.Refresh();
         Commands.Refresh();
     }

@@ -115,6 +115,8 @@ public class State
     /// <returns></returns>
     public void Deserialize(Packet packet)
     {
+        Log.Debug($"[State] pos={packet.Length - packet.Remaining} before LifeState, remaining={packet.Remaining}");
+
         LifeState = (LifeState)packet.ReadByte();
 
         if (LifeState == 0)
@@ -126,15 +128,26 @@ public class State
         MotionState = (MotionState)packet.ReadByte();
         BodyState = (BodyState)packet.ReadByte();
 
-        // vSRO 274 does not include the red-arrow-effect flag.
-        if (Game.ClientType > GameClientType.Vietnam193 && Game.ClientType != GameClientType.Vietnam274)
+        Log.Debug($"[State] pos={packet.Length - packet.Remaining} LifeState={LifeState} MotionState={MotionState} BodyState={BodyState}, remaining={packet.Remaining}");
+
+        // Reverted the Vietnam274 exclusion here: debug logs showed WalkSpeed/RunSpeed/
+        // BerzerkSpeed reading as garbage denormalized floats immediately after this point
+        // for a Vietnam274 character, while everything read before it (LifeState, MotionState,
+        // BodyState, and Movement.Source/Destination before that) was sane - the classic
+        // signature of the read cursor being 1 byte ahead of where it should be. vSRO 274
+        // does send this byte after all.
+        if (Game.ClientType > GameClientType.Vietnam193)
             packet.ReadByte(); // hasRedArrowEffect
 
         WalkSpeed = packet.ReadFloat();
         RunSpeed = packet.ReadFloat();
         BerzerkSpeed = packet.ReadFloat();
 
+        Log.Debug($"[State] pos={packet.Length - packet.Remaining} speeds walk={WalkSpeed} run={RunSpeed} bzerk={BerzerkSpeed}, remaining={packet.Remaining}");
+
         var buffCount = packet.ReadByte();
+        Log.Debug($"[State] pos={packet.Length - packet.Remaining} buffCount={buffCount}, remaining={packet.Remaining}");
+
         for (var i = 0; i < buffCount; i++)
         {
             var id = packet.ReadUInt();
@@ -142,13 +155,19 @@ public class State
 
             var buff = new SkillInfo(id, token);
             if (buff.Record == null)
+            {
+                Log.Debug($"[State] buff {i}: id={id} token={token} Record=null, remaining={packet.Remaining}");
                 continue;
+            }
 
             if (buff.Record.Params.Contains(1701213281))
                 packet.ReadBool(); //IsCreator
 
+            Log.Debug($"[State] buff {i}: id={id} token={token}, remaining={packet.Remaining}");
             ActiveBuffs.Add(buff);
         }
+
+        Log.Debug($"[State] pos={packet.Length - packet.Remaining} done, remaining={packet.Remaining}");
     }
 
     /// <summary>

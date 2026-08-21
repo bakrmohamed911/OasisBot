@@ -26,6 +26,9 @@ internal class CharacterUpdateStatsResponse : IPacketHandler
     /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
+        if (!Game.IsPlayerReady)
+            return;
+
         var player = Game.Player;
         player.PhysicalAttackMin = packet.ReadUInt();
         player.PhysicalAttackMax = packet.ReadUInt();

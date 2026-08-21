@@ -156,7 +156,9 @@ public struct Position
     /// <returns></returns>
     public static Position FromPacket(Packet packet)
     {
-        return new Position
+        // Removed the per-call debug logging here - see Movement.FromPacket for why
+        // (this runs at the same per-entity, per-packet frequency).
+        var pos = new Position
         {
             Region = packet.ReadUShort(),
             XOffset = packet.ReadFloat(),
@@ -164,6 +166,8 @@ public struct Position
             YOffset = packet.ReadFloat(),
             Angle = packet.ReadShort(),
         };
+
+        return pos;
     }
 
     /// <summary>

@@ -64,6 +64,9 @@ public static class SpawnManager
     {
         entity = null;
 
+        if (!Game.IsPlayerReady)
+            return false;
+
         if (uniqueId == Game.Player.UniqueId)
             entity = Game.Player;
         else if (Game.Player.Transport?.UniqueId == uniqueId)
