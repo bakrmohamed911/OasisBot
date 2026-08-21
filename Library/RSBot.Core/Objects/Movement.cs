@@ -98,8 +98,13 @@ public struct Movement
     /// <returns></returns>
     public static Movement FromPacket(Packet packet)
     {
-        Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} before Source, remaining={packet.Remaining}");
-
+        // This runs once per movement packet per visible entity - dozens of times a
+        // second in a populated area. The per-line debug logging here (added to chase a
+        // Vietnam274 packet-alignment bug that's since been found and fixed) was routing
+        // that volume through synchronous cross-thread UI Invoke calls into a RichTextBox,
+        // which is suspected to have contributed to a native RichEdit stack-overflow crash.
+        // Removed rather than just left disabled, since "off by default" isn't good enough
+        // protection against someone re-enabling Debug logging during normal play.
         var result = new Movement
         {
             Source = Position.FromPacket(packet),
@@ -107,19 +112,15 @@ public struct Movement
             Type = (MovementType)packet.ReadByte(),
         };
 
-        Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} Source={result.Source} HasDest={result.HasDestination} Type={result.Type}, remaining={packet.Remaining}");
-
         if (result.HasDestination)
         {
             result.Destination = Position.FromPacketConditional(packet, false);
-            Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} Dest={result.Destination}, remaining={packet.Remaining}");
         }
         else
         {
             packet.ReadByte(); //0 = Spinning, 1 = Sky-/Key-walking
             result.HasAngle = true;
             result.Angle = packet.ReadShort();
-            Log.Debug($"[Movement] pos={packet.Length - packet.Remaining} Angle={result.Angle}, remaining={packet.Remaining}");
         }
 
         return result;

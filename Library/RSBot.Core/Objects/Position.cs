@@ -156,6 +156,8 @@ public struct Position
     /// <returns></returns>
     public static Position FromPacket(Packet packet)
     {
+        // Removed the per-call debug logging here - see Movement.FromPacket for why
+        // (this runs at the same per-entity, per-packet frequency).
         var pos = new Position
         {
             Region = packet.ReadUShort(),
@@ -164,8 +166,6 @@ public struct Position
             YOffset = packet.ReadFloat(),
             Angle = packet.ReadShort(),
         };
-
-        Log.Debug($"[Position] FromPacket region={pos.Region} x={pos.XOffset} z={pos.ZOffset} y={pos.YOffset} angle={pos.Angle}, remaining={packet.Remaining}");
 
         return pos;
     }
@@ -213,8 +213,6 @@ public struct Position
             position.WorldId = packet.ReadShort();
             position.LayerId = packet.ReadShort();
         }
-
-        Log.Debug($"[Position] FromPacketConditional region={position.Region} isDungeon={position.Region.IsDungeon} x={position.XOffset} z={position.ZOffset} y={position.YOffset} parseLayer={parseLayerWorldId}, remaining={packet.Remaining}");
 
         return position;
     }
