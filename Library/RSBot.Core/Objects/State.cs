@@ -130,8 +130,13 @@ public class State
 
         Log.Debug($"[State] pos={packet.Length - packet.Remaining} LifeState={LifeState} MotionState={MotionState} BodyState={BodyState}, remaining={packet.Remaining}");
 
-        // vSRO 274 does not include the red-arrow-effect flag.
-        if (Game.ClientType > GameClientType.Vietnam193 && Game.ClientType != GameClientType.Vietnam274)
+        // Reverted the Vietnam274 exclusion here: debug logs showed WalkSpeed/RunSpeed/
+        // BerzerkSpeed reading as garbage denormalized floats immediately after this point
+        // for a Vietnam274 character, while everything read before it (LifeState, MotionState,
+        // BodyState, and Movement.Source/Destination before that) was sane - the classic
+        // signature of the read cursor being 1 byte ahead of where it should be. vSRO 274
+        // does send this byte after all.
+        if (Game.ClientType > GameClientType.Vietnam193)
             packet.ReadByte(); // hasRedArrowEffect
 
         WalkSpeed = packet.ReadFloat();
