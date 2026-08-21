@@ -64,22 +64,32 @@ namespace RSBot.Skills
         }
 
         /// <summary>
-        ///     Will be triggered if EXP/SP were gained. Increases the selected mastery level (if available)
+        ///     Will be triggered if EXP/SP were gained. Increases the level of every selected mastery (if available),
+        ///     each capped to stay within <c>gap</c> levels of the player's own level.
         /// </summary>
         private void OnSpUpdated()
         {
-            var gap = PlayerConfig.Get<decimal>("RSBot.Skills.numMasteryGap");
-            var selectedMasteryName = PlayerConfig.Get<string>("RSBot.Skills.selectedMastery");
-            var mastery = Game.Player.Skills.Masteries.FirstOrDefault(m => m.Record.NameCode == selectedMasteryName);
             var checkLearnMastery = PlayerConfig.Get<bool>("RSBot.Skills.checkLearnMastery");
-            var checkLearnMasteryBotStopped = PlayerConfig.Get<bool>("RSBot.Skills.checkLearnMasteryBotStopped");
-            if (selectedMasteryName == null || !checkLearnMastery)
+            if (!checkLearnMastery)
                 return;
+
+            var checkLearnMasteryBotStopped = PlayerConfig.Get<bool>("RSBot.Skills.checkLearnMasteryBotStopped");
             if (!checkLearnMasteryBotStopped && !Kernel.Bot.Running)
                 return;
-            if (mastery.Level + gap == Game.Player.Level)
-                return;
-            UpdateMastery(mastery.Level, mastery.Record, gap);
+
+            var gap = PlayerConfig.Get<decimal>("RSBot.Skills.numMasteryGap");
+
+            foreach (var masteryName in GetMasteriesToLearn())
+            {
+                var mastery = Game.Player.Skills.Masteries.FirstOrDefault(m => m.Record.NameCode == masteryName);
+                if (mastery == null)
+                    continue;
+
+                if (mastery.Level + gap >= Game.Player.Level)
+                    continue;
+
+                UpdateMastery(mastery.Level, mastery.Record, gap);
+            }
         }
         #endregion
         public void UpdateMastery(byte level, RefSkillMastery record, decimal gap = 0)
@@ -271,9 +281,49 @@ namespace RSBot.Skills
             PlayerConfig.Set("RSBot.Skills.ResurrectionSkill", skill == null ? 0 : skill.Id);
         }
 
-        public static void SetMasteryToLearn(string mastery)
+        /// <summary>
+        ///     Gets the name codes of every mastery currently selected for auto-leveling.
+        ///     Transparently migrates the old single-mastery setting the first time it's read.
+        /// </summary>
+        public static string[] GetMasteriesToLearn()
         {
-            PlayerConfig.Set("RSBot.Skills.selectedMastery", mastery);
+            var masteries = PlayerConfig.GetArray<string>("RSBot.Skills.selectedMasteries");
+            if (masteries.Length > 0)
+                return masteries;
+
+            // Migrate the legacy single-mastery selection so existing users don't lose their setting.
+            var legacyMastery = PlayerConfig.Get<string>("RSBot.Skills.selectedMastery");
+            if (string.IsNullOrEmpty(legacyMastery))
+                return masteries;
+
+            masteries = new[] { legacyMastery };
+            PlayerConfig.SetArray("RSBot.Skills.selectedMasteries", masteries);
+
+            return masteries;
+        }
+
+        /// <summary>
+        ///     Adds a mastery (by name code) to the auto-leveling selection, if it isn't already selected.
+        /// </summary>
+        public static void AddMasteryToLearn(string mastery)
+        {
+            var masteries = GetMasteriesToLearn();
+            if (masteries.Contains(mastery))
+                return;
+
+            PlayerConfig.SetArray("RSBot.Skills.selectedMasteries", masteries.Append(mastery));
+        }
+
+        /// <summary>
+        ///     Removes a mastery (by name code) from the auto-leveling selection.
+        /// </summary>
+        public static void RemoveMasteryToLearn(string mastery)
+        {
+            var masteries = GetMasteriesToLearn();
+            if (!masteries.Contains(mastery))
+                return;
+
+            PlayerConfig.SetArray("RSBot.Skills.selectedMasteries", masteries.Where(m => m != mastery));
         }
 
         public static void SetTeleportSkill(uint skillId)

@@ -491,7 +491,14 @@ public class InventoryItemCollection : ICollection<InventoryItem>
         {
             var item = InventoryItem.FromPacket(packet);
 
-            if (item == null) { }
+            // This no-op used to add the null anyway, planting a null into the collection
+            // for every unresolvable item (e.g. "No item found for <id>"). Any later code
+            // that iterates items and dereferences one directly - GetEquippedPartItems's
+            // predicate is exactly this - NREs on it. Previously masked because Inventory's
+            // Capacity was misread as 0 for Vietnam274 (see CharacterDataEndResponse), so
+            // this loop never actually ran; fixing that surfaced this bug too.
+            if (item == null)
+                continue;
 
             _collection.Add(item);
         }

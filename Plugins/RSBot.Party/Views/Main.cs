@@ -52,7 +52,51 @@ public partial class Main : DoubleBufferedControl
         CheckForIllegalCrossThreadCalls = false;
         cbPartySearchPurpose.SelectedIndex = 0;
 
+        BuildPartyMatchingContextMenu();
+
         SubscribeEvents();
+    }
+
+    /// <summary>
+    ///     Adds a right-click menu to the party-matching list so the user can pick a specific,
+    ///     currently listed party as the auto-join target instead of typing the leader's name by
+    ///     hand. The choice is stored the same way as the existing "auto-join by name" setting, so
+    ///     it keeps being retried by <c>AutoPartyBundle</c> even after a client disconnect/reconnect.
+    /// </summary>
+    private void BuildPartyMatchingContextMenu()
+    {
+        var menu = new SDUI.Controls.ContextMenuStrip();
+        var setAsTarget = new ToolStripMenuItem("Auto-join this party (by leader)");
+
+        setAsTarget.Click += (_, _) => SetSelectedPartyAsAutoJoinTarget();
+
+        menu.Opening += (_, _) => setAsTarget.Enabled = lvPartyMatching.SelectedItems.Count == 1;
+
+        menu.Items.Add(setAsTarget);
+
+        lvPartyMatching.ContextMenuStrip = menu;
+    }
+
+    /// <summary>
+    ///     Locks in the leader of the party currently selected in <see cref="lvPartyMatching" /> as
+    ///     the auto-join target (same mechanism as the "Join by name" setting).
+    /// </summary>
+    private void SetSelectedPartyAsAutoJoinTarget()
+    {
+        if (lvPartyMatching.SelectedItems.Count != 1)
+            return;
+
+        var leaderName = lvPartyMatching.SelectedItems[0].SubItems[2].Text;
+        if (string.IsNullOrWhiteSpace(leaderName))
+            return;
+
+        PartyManager.SetPartyAutoJoinByName(true);
+        PartyManager.SetPartyAutoJoinName(leaderName);
+
+        checkBoxJoinByName.Checked = true;
+        textBoxJoinByName.Text = leaderName;
+
+        Log.Notify($"Will auto-join {leaderName}'s party from now on (including after a reconnect).");
     }
 
     /// <summary>

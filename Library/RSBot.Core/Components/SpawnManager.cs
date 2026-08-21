@@ -227,7 +227,16 @@ public static class SpawnManager
                 return;
             }
 
-            //Log.Debug($"Detected: {obj.GetRealName()}   {obj.CodeName}");
+            // Kept on (not commented out like the line above) while a Vietnam274 packet-
+            // misalignment bug is being chased: entity state occasionally deserializes as
+            // garbage (huge buff ids/tokens, denormalized speeds) a minute or so into a
+            // session, eventually overrunning the packet and disconnecting. Logging which
+            // entity (by CodeName + TypeID) was being parsed right before that happens is
+            // the fastest way to narrow down which Deserialize path has the wrong layout
+            // for this client - remove once that's found and fixed.
+            Log.Debug(
+                $"[Spawn] refObjId={refObjId} code={obj.CodeName} TypeID1={obj.TypeID1} TypeID2={obj.TypeID2} TypeID3={obj.TypeID3}"
+            );
 
             switch (obj.TypeID1)
             {

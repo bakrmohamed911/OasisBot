@@ -62,7 +62,7 @@ internal class EntityUpdateStatusResponse : IPacketHandler
             EventManager.FireEvent("OnUpdateMP");
         }
 
-        if ((updateFlag & EntityUpdateStatusFlag.HPMP) != EntityUpdateStatusFlag.HPMP)
+        if ((updateFlag & EntityUpdateStatusFlag.HPMP) != EntityUpdateStatusFlag.None)
             EventManager.FireEvent("OnUpdateHPMP");
 
         if ((updateFlag & EntityUpdateStatusFlag.BadEffect) == EntityUpdateStatusFlag.BadEffect)

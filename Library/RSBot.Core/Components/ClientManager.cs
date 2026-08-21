@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -137,30 +138,77 @@ public class ClientManager
         {
             var handle = OpenProcess(PROCESS_ALL_ACCESS, false, pi.dwProcessId);
             if (handle == IntPtr.Zero)
+            {
+                Log.Error(
+                    $"Could not inject {libraryDllName}: OpenProcess failed (Win32 error {Marshal.GetLastWin32Error()})."
+                );
                 return false;
+            }
 
             IntPtr kernelHandle = GetModuleHandleW("kernel32.dll");
             if (kernelHandle == IntPtr.Zero)
+            {
+                Log.Error(
+                    $"Could not inject {libraryDllName}: GetModuleHandleW(\"kernel32.dll\") failed (Win32 error {Marshal.GetLastWin32Error()})."
+                );
                 return false;
+            }
 
             IntPtr loadLibAddr = GetProcAddress(kernelHandle, "LoadLibraryW");
             if (loadLibAddr == IntPtr.Zero)
+            {
+                Log.Error(
+                    $"Could not inject {libraryDllName}: GetProcAddress(\"LoadLibraryW\") failed (Win32 error {Marshal.GetLastWin32Error()})."
+                );
                 return false;
+            }
 
             IntPtr remotePath = VirtualAllocEx(handle, IntPtr.Zero, pathLen, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
             if (remotePath == IntPtr.Zero)
+            {
+                Log.Error(
+                    $"Could not inject {libraryDllName}: VirtualAllocEx failed (Win32 error {Marshal.GetLastWin32Error()})."
+                );
                 return false;
+            }
 
             if (!WriteProcessMemory(handle, remotePath, buffer, pathLen, out _))
+            {
+                Log.Error(
+                    $"Could not inject {libraryDllName}: WriteProcessMemory failed (Win32 error {Marshal.GetLastWin32Error()})."
+                );
                 return false;
+            }
 
             IntPtr remoteThread = CreateRemoteThread(handle, IntPtr.Zero, 0, loadLibAddr, remotePath, 0, IntPtr.Zero);
 
             if (remoteThread == IntPtr.Zero)
+            {
+                Log.Error(
+                    $"Could not inject {libraryDllName}: CreateRemoteThread failed (Win32 error {Marshal.GetLastWin32Error()})."
+                );
                 return false;
+            }
 
             WaitForSingleObject(remoteThread, uint.MaxValue);
+
+            // The remote thread's entry point *is* LoadLibraryW, so its exit code is the
+            // HMODULE LoadLibraryW returned in the target process - zero means the load
+            // itself failed there (missing/blocked/wrong-architecture DLL, AV interference,
+            // etc.). Previously this was never checked, so a failed injection looked
+            // identical to a successful one: the client process kept running normally,
+            // just never got the redirect/hooks it needed - exactly the silent "client
+            // shows the login screen but never talks to the bot" symptom this was chasing.
+            GetExitCodeThread(remoteThread, out var injectionExitCode);
+            if (injectionExitCode == 0)
+                Log.Error(
+                    $"Could not inject {libraryDllName}: LoadLibraryW returned NULL inside the client process. "
+                        + "The client will run, but won't be hooked/redirected through the bot. "
+                        + "Common causes: antivirus blocking the DLL, a missing dependency, or leftover file locks."
+                );
+            else
+                Log.Debug($"{libraryDllName} injected successfully (module handle 0x{injectionExitCode:X}).");
 
             if (Game.ClientType == GameClientType.Chinese)
             {
@@ -179,6 +227,9 @@ public class ClientManager
 
             _process = Process.GetProcessById((int)pi.dwProcessId);
             if (_process == null || _process.HasExited)
+                return false;
+
+            if (injectionExitCode == 0)
                 return false;
         }
 

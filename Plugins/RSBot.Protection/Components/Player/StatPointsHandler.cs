@@ -12,6 +12,16 @@ public class StatPointsHandler
     public static bool CancellationRequested;
 
     /// <summary>
+    ///     Last tick the periodic catch-up check ran at.
+    /// </summary>
+    private static int _lastCatchUpTick;
+
+    /// <summary>
+    ///     Guards against the periodic catch-up overlapping with itself or a level-up triggered run.
+    /// </summary>
+    private static bool _isDistributing;
+
+    /// <summary>
     ///     Initializes this instance.
     /// </summary>
     public static void Initialize()
@@ -25,6 +35,55 @@ public class StatPointsHandler
     private static void SubscribeEvents()
     {
         EventManager.SubscribeEvent("OnLevelUp", new Action<byte>(OnPlayerLevelUp));
+        EventManager.SubscribeEvent("OnTick", OnTick);
+    }
+
+    /// <summary>
+    ///     Periodic safety net: catches any stat points that piled up without a matching "OnLevelUp"
+    ///     (e.g. points banked while the bot/app was closed, or granted by a stat-reset/event scroll).
+    /// </summary>
+    private static void OnTick()
+    {
+        var elapsed = Kernel.TickCount - _lastCatchUpTick;
+        if (elapsed < 5000)
+            return;
+
+        _lastCatchUpTick = Kernel.TickCount;
+
+        if (_isDistributing || Game.Player == null || Game.Player.StatPoints == 0)
+            return;
+
+        var enabledIfBotIsStopped = PlayerConfig.Get<bool>("RSBot.Protection.checkIncBotStopped", true);
+        if (!Kernel.Bot.Running && !enabledIfBotIsStopped)
+            return;
+
+        var incStr = PlayerConfig.Get<bool>("RSBot.Protection.checkIncStr");
+        var incInt = PlayerConfig.Get<bool>("RSBot.Protection.checkIncInt");
+        if (!incStr && !incInt)
+            return;
+
+        var numStr = PlayerConfig.Get("RSBot.Protection.numIncStr", 0);
+        var numInt = PlayerConfig.Get("RSBot.Protection.numIncInt", 0);
+
+        var cycle = (incStr ? numStr : 0) + (incInt ? numInt : 0);
+        if (cycle <= 0)
+            return;
+
+        // Enough "steps" to drain every currently banked stat point at the configured STR/INT ratio.
+        var stepCount = (Game.Player.StatPoints + cycle - 1) / cycle;
+
+        Task.Run(() =>
+        {
+            _isDistributing = true;
+            try
+            {
+                IncreaseStatPoints(stepCount);
+            }
+            finally
+            {
+                _isDistributing = false;
+            }
+        });
     }
 
     /// <summary>
@@ -38,7 +97,18 @@ public class StatPointsHandler
 
         var levelUps = Game.Player.Level - oldLevel;
 
-        Task.Run(() => IncreaseStatPoints(levelUps));
+        Task.Run(() =>
+        {
+            _isDistributing = true;
+            try
+            {
+                IncreaseStatPoints(levelUps);
+            }
+            finally
+            {
+                _isDistributing = false;
+            }
+        });
     }
 
     public static void IncreaseStatPoints(int stepCount)

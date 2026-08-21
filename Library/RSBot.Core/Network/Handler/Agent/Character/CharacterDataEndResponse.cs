@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
+using RSBot.Core.Extensions;
 using RSBot.Core.Objects;
 using RSBot.Core.Objects.Quests;
 
@@ -108,137 +109,175 @@ internal class CharacterDataEndResponse : IPacketHandler
             var serverCap = packet.ReadByte();
             Log.Notify($"The game server cap is {serverCap}!");
 
+            // vSRO 274 does not include this trailing unknown ushort either (same family
+            // of gaps as the JOB2 and collection-book exclusions below) - a hex dump of a
+            // failing CharacterDataEndResponse packet showed the very next byte, read here
+            // as this ushort's low byte, is actually Inventory's Capacity: with this read
+            // in place it decoded as 0 (InventoryItemCollection.Deserialize returns
+            // immediately on Capacity<=0, explaining the suspiciously 1-byte-only
+            // "before/after Inventory" gap), while the byte 2 positions earlier - where
+            // Capacity lands once this read is skipped - decodes to a plausible 47.
             if (
                 Game.ClientType != GameClientType.Korean
                 && Game.ClientType != GameClientType.Chinese
                 && Game.ClientType != GameClientType.Japanese
+                && Game.ClientType != GameClientType.Vietnam274
             )
                 packet.ReadUShort();
 
             Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after client-specific block, remaining={packet.Remaining}");
         }
 
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} before Inventory, remaining={packet.Remaining}");
-        character.Inventory = new CharacterInventory(packet);
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Inventory, remaining={packet.Remaining}");
-
-        if (Game.ClientType >= GameClientType.Thailand)
-            character.Avatars = new InventoryItemCollection(packet);
-        else
-            character.Avatars = new InventoryItemCollection(5);
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Avatars, remaining={packet.Remaining}");
-
-        // JOB2
-        // vSRO 274 does not include the JOB2 section either (same family of gaps as the
-        // red-arrow-effect flag and collection-book section below).
-        if (Game.ClientType > GameClientType.Vietnam && Game.ClientType != GameClientType.Vietnam274)
-        {
-            character.Job2SpecialtyBag = new InventoryItemCollection(packet);
-
-            character.Job2 = new InventoryItemCollection(packet);
-        }
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after JOB2, remaining={packet.Remaining}");
-
-        character.Skills = Skills.FromPacket(packet);
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Skills, remaining={packet.Remaining}");
-
-        character.QuestLog = QuestLog.FromPacket(packet);
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after QuestLog, remaining={packet.Remaining}");
-
-        packet.ReadByte(); // Unknown
-
-        // vSRO 274 does not include the collection-book section here.
-        if (Game.ClientType > GameClientType.Thailand && Game.ClientType != GameClientType.Vietnam274)
-        {
-            var collectionBookStartedThemeCount = packet.ReadUInt();
-            for (var i = 0; i < collectionBookStartedThemeCount; i++)
-            {
-                packet.ReadUInt(); //index
-                packet.ReadUInt(); //Starttime
-                packet.ReadUInt(); //pages
-            }
-        }
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after collection book, remaining={packet.Remaining}");
-
+        // Wraps everything from here through the final reads: a Vietnam274 misalignment
+        // anywhere in this chain (Inventory/Avatars/Skills/QuestLog/collection-book/
+        // ParseBionicDetails/Name/JobInfo/transport-CTF fields) can leave a later section
+        // parsing without throwing right away (e.g. Skills' 0x01-terminated loops just exit
+        // immediately on a wrong byte instead of failing) - the drifted cursor only actually
+        // runs off the end of the packet somewhere further along. The hex dump is what's
+        // needed to pin down which section is actually off, the same way it did for the
+        // Vietnam274 State.Deserialize bug (see State.cs) and the Inventory Capacity bug
+        // (see the Vietnam274 exclusion added above, near serverCap).
         try
         {
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} before Inventory, remaining={packet.Remaining}");
+            character.Inventory = new CharacterInventory(packet);
+            Log.Debug(
+                $"[CharData] pos={packet.Length - packet.Remaining} after Inventory (Capacity={character.Inventory.Capacity}, Count={character.Inventory.Count}), remaining={packet.Remaining}"
+            );
+
+            if (Game.ClientType >= GameClientType.Thailand)
+                character.Avatars = new InventoryItemCollection(packet);
+            else
+                character.Avatars = new InventoryItemCollection(5);
+            Log.Debug(
+                $"[CharData] pos={packet.Length - packet.Remaining} after Avatars (Capacity={character.Avatars.Capacity}, Count={character.Avatars.Count}), remaining={packet.Remaining}"
+            );
+
+            // JOB2
+            // vSRO 274 does not include the JOB2 section either (same family of gaps as the
+            // red-arrow-effect flag and collection-book section below).
+            if (Game.ClientType > GameClientType.Vietnam && Game.ClientType != GameClientType.Vietnam274)
+            {
+                character.Job2SpecialtyBag = new InventoryItemCollection(packet);
+
+                character.Job2 = new InventoryItemCollection(packet);
+            }
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after JOB2, remaining={packet.Remaining}");
+
+            character.Skills = Skills.FromPacket(packet);
+            Log.Debug(
+                $"[CharData] pos={packet.Length - packet.Remaining} after Skills (Masteries={character.Skills.Masteries.Count}, KnownSkills={character.Skills.KnownSkills.Count}), remaining={packet.Remaining}"
+            );
+
+            character.QuestLog = QuestLog.FromPacket(packet);
+            Log.Debug(
+                $"[CharData] pos={packet.Length - packet.Remaining} after QuestLog (Active={character.QuestLog.ActiveQuests.Count}, Completed={character.QuestLog.CompletedQuests.Length}), remaining={packet.Remaining}"
+            );
+
+            packet.ReadByte(); // Unknown
+
+            // vSRO 274 does not include the collection-book section here.
+            if (Game.ClientType > GameClientType.Thailand && Game.ClientType != GameClientType.Vietnam274)
+            {
+                var collectionBookStartedThemeCount = packet.ReadUInt();
+                for (var i = 0; i < collectionBookStartedThemeCount; i++)
+                {
+                    packet.ReadUInt(); //index
+                    packet.ReadUInt(); //Starttime
+                    packet.ReadUInt(); //pages
+                }
+            }
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after collection book, remaining={packet.Remaining}");
+
             character.ParseBionicDetails(packet);
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after bionic, remaining={packet.Remaining}");
+
+            character.Name = packet.ReadString();
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Name='{character.Name}', remaining={packet.Remaining}");
+
+            character.JobInformation = JobInfo.FromPacket(packet);
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after JobInfo, remaining={packet.Remaining}");
+
+            character.State.PvpState = (PvpState)packet.ReadByte();
+            character.OnTransport = packet.ReadBool(); //On transport?
+            character.InCombat = packet.ReadBool();
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after PvpState/OnTransport/InCombat, remaining={packet.Remaining}");
+
+            // Kept consistent with the Vietnam274 carve-in above (line ~81): if that client
+            // shares the Chinese+ VIP/serverCap block, it should share these Chinese+ reads
+            // too, otherwise every field from here on is misaligned for Vietnam274.
+            if (Game.ClientType >= GameClientType.Chinese || Game.ClientType == GameClientType.Vietnam274)
+                packet.ReadByte();
+
+            if (character.OnTransport)
+                character.TransportUniqueId = packet.ReadUInt();
+
+            if (Game.ClientType >= GameClientType.Chinese || Game.ClientType == GameClientType.Vietnam274)
+                packet.ReadUInt(); //unkUint2 i think it is using for balloon event or buff for events
+
+            if (Game.ClientType > GameClientType.Vietnam)
+                packet.ReadByte();
+
+            packet.ReadByte(); //PVP dress for the CTF event //0 = Red Side, 1 = Blue Side, 0xFF = None
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after transport/CTF, remaining={packet.Remaining}");
+
+            if (
+                Game.ClientType > GameClientType.Chinese
+                && Game.ClientType != GameClientType.Global
+                && Game.ClientType != GameClientType.Rigid
+                && Game.ClientType != GameClientType.RuSro
+                && Game.ClientType != GameClientType.Korean
+                && Game.ClientType != GameClientType.VTC_Game
+                && Game.ClientType != GameClientType.Japanese
+            )
+            {
+                packet.ReadByte(); // 0xFF
+                packet.ReadUShort(); // 0xFF
+                packet.ReadUShort(); // 0xFF
+            }
+
+            //GuideFlag
+            if (Game.ClientType >= GameClientType.Thailand)
+                packet.ReadULong();
+            else
+                packet.ReadUInt();
+
+            if (
+                Game.ClientType == GameClientType.Chinese_Old
+                || Game.ClientType == GameClientType.Chinese
+                || Game.ClientType == GameClientType.Global
+                || Game.ClientType == GameClientType.RuSro
+                || Game.ClientType == GameClientType.Korean
+                || Game.ClientType == GameClientType.VTC_Game
+                || Game.ClientType == GameClientType.Japanese
+            )
+                packet.ReadByte();
+
+            if (Game.ClientType == GameClientType.Chinese)
+                packet.ReadByte();
+
+            character.JID = packet.ReadUInt();
+            character.IsGameMaster = packet.ReadBool();
+            Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} FINAL remaining={packet.Remaining}, name={character.Name}");
         }
         catch (EndOfStreamException ex)
         {
-            Log.Error($"[CharData] CRASH in ParseBionicDetails: remaining={packet.Remaining}, exception={ex.Message}");
-            Log.Debug($"[CharData] ParseBionicDetails stack: {ex.StackTrace}");
+            Log.Error($"[CharData] CRASH parsing bionic/name/job/etc: remaining={packet.Remaining}, exception={ex.Message}");
+            Log.Debug($"[CharData] stack: {ex.StackTrace}");
+
+            // Log.Debug's underlying TextBoxBaseExtensions.Write truncates any single line
+            // past 4000 chars (a defensive cap against a native RichEdit crash - see its own
+            // comment), which silently cut off this packet's hex dump well before its actual
+            // end when it was logged that way. Writing straight to its own file has no such
+            // cap and doesn't touch the log RichTextBox at all, so it's still safe to do
+            // unconditionally here (this only runs on the rare parse-failure path, not
+            // per-entity/per-tick).
+            var dumpPath = Path.Combine(Kernel.BasePath, "User", "Logs", "CharDataCrashDump.txt");
+            File.WriteAllText(dumpPath, packet.GetBytes().HexDump(0, packet.Length));
+            Log.Debug($"[CharData] Raw packet bytes written to {dumpPath}");
+
             throw;
         }
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after bionic, remaining={packet.Remaining}");
-
-        character.Name = packet.ReadString();
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after Name='{character.Name}', remaining={packet.Remaining}");
-
-        character.JobInformation = JobInfo.FromPacket(packet);
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after JobInfo, remaining={packet.Remaining}");
-
-        character.State.PvpState = (PvpState)packet.ReadByte();
-        character.OnTransport = packet.ReadBool(); //On transport?
-        character.InCombat = packet.ReadBool();
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after PvpState/OnTransport/InCombat, remaining={packet.Remaining}");
-
-        // Kept consistent with the Vietnam274 carve-in above (line ~81): if that client
-        // shares the Chinese+ VIP/serverCap block, it should share these Chinese+ reads
-        // too, otherwise every field from here on is misaligned for Vietnam274.
-        if (Game.ClientType >= GameClientType.Chinese || Game.ClientType == GameClientType.Vietnam274)
-            packet.ReadByte();
-
-        if (character.OnTransport)
-            character.TransportUniqueId = packet.ReadUInt();
-
-        if (Game.ClientType >= GameClientType.Chinese || Game.ClientType == GameClientType.Vietnam274)
-            packet.ReadUInt(); //unkUint2 i think it is using for balloon event or buff for events
-
-        if (Game.ClientType > GameClientType.Vietnam)
-            packet.ReadByte();
-
-        packet.ReadByte(); //PVP dress for the CTF event //0 = Red Side, 1 = Blue Side, 0xFF = None
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after transport/CTF, remaining={packet.Remaining}");
-
-        if (
-            Game.ClientType > GameClientType.Chinese
-            && Game.ClientType != GameClientType.Global
-            && Game.ClientType != GameClientType.Rigid
-            && Game.ClientType != GameClientType.RuSro
-            && Game.ClientType != GameClientType.Korean
-            && Game.ClientType != GameClientType.VTC_Game
-            && Game.ClientType != GameClientType.Japanese
-        )
-        {
-            packet.ReadByte(); // 0xFF
-            packet.ReadUShort(); // 0xFF
-            packet.ReadUShort(); // 0xFF
-        }
-
-        //GuideFlag
-        if (Game.ClientType >= GameClientType.Thailand)
-            packet.ReadULong();
-        else
-            packet.ReadUInt();
-
-        if (
-            Game.ClientType == GameClientType.Chinese_Old
-            || Game.ClientType == GameClientType.Chinese
-            || Game.ClientType == GameClientType.Global
-            || Game.ClientType == GameClientType.RuSro
-            || Game.ClientType == GameClientType.Korean
-            || Game.ClientType == GameClientType.VTC_Game
-            || Game.ClientType == GameClientType.Japanese
-        )
-            packet.ReadByte();
-
-        if (Game.ClientType == GameClientType.Chinese)
-            packet.ReadByte();
-
-        character.JID = packet.ReadUInt();
-        character.IsGameMaster = packet.ReadBool();
-        Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} FINAL remaining={packet.Remaining}, name={character.Name}");
 
         // Load Notification sound settings
         character.NotificationSounds.LoadPlayerSettings();

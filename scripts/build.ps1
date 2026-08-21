@@ -73,6 +73,22 @@ Write-Output "Step 2: Building C++ loader with VS MSBuild..."
 & $msBuildPath "Library\RSBot.Loader.Library\RSBot.Loader.Library.vcxproj" /p:Configuration=Release 2>&1 | Tee-Object -FilePath build.log -Append
 $msBuildExitCode = $LASTEXITCODE
 
+# The vcxproj's OutDir ("$(SolutionDir)Build\") only resolves correctly when MSBuild
+# builds through the .sln - $(SolutionDir) is never defined when building this .vcxproj
+# directly (which is why it's built this way at all - see the comment on Step 1). So the
+# DLL actually lands in Library\RSBot.Loader.Library\Build\, never in .\Build\ where
+# ClientManager.Start() looks for it to inject into the game client - injection then fails
+# with no obvious error (the client still launches normally, it just never gets hooked).
+if ($msBuildExitCode -eq 0) {
+    $loaderDll = "Library\RSBot.Loader.Library\Build\Client.Library.dll"
+    if (Test-Path $loaderDll) {
+        Copy-Item $loaderDll ".\Build\Client.Library.dll" -Force
+    }
+    else {
+        Write-Output "Warning: $loaderDll not found after a successful build - client injection will fail."
+    }
+}
+
 # $LASTEXITCODE only reflects whichever native command ran most recently, so it must be
 # captured right after each step - otherwise a failing dotnet build (Step 1) is masked by
 # a succeeding MSBuild step (Step 2).

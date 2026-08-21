@@ -130,13 +130,16 @@ public class State
 
         Log.Debug($"[State] pos={packet.Length - packet.Remaining} LifeState={LifeState} MotionState={MotionState} BodyState={BodyState}, remaining={packet.Remaining}");
 
-        // Reverted the Vietnam274 exclusion here: debug logs showed WalkSpeed/RunSpeed/
-        // BerzerkSpeed reading as garbage denormalized floats immediately after this point
-        // for a Vietnam274 character, while everything read before it (LifeState, MotionState,
-        // BodyState, and Movement.Source/Destination before that) was sane - the classic
-        // signature of the read cursor being 1 byte ahead of where it should be. vSRO 274
-        // does send this byte after all.
-        if (Game.ClientType > GameClientType.Vietnam193)
+        // Re-excluded Vietnam274: the previous fix here (re-adding this read for Vietnam274)
+        // was validated only against the local player's own character data and got it
+        // backwards. A raw hex dump of a failing MOB_CA_PERYTON_CLON spawn packet proved it:
+        // reading this byte put WalkSpeed/RunSpeed/BerzerkSpeed one byte off, decoding as
+        // garbage denormalized floats (e.g. ~6E-39) and buffCount as a nonsensical 2 with
+        // only 4 bytes left in the packet (guaranteed EndOfStreamException). Shifting the
+        // read window back by exactly this one byte - i.e. NOT reading it - decodes the same
+        // bytes as WalkSpeed=21.0, sane Run/BerzerkSpeed values, and buffCount=0 with the
+        // parse finishing cleanly. vSRO 274 does not send this byte after all.
+        if (Game.ClientType > GameClientType.Vietnam193 && Game.ClientType != GameClientType.Vietnam274)
             packet.ReadByte(); // hasRedArrowEffect
 
         WalkSpeed = packet.ReadFloat();

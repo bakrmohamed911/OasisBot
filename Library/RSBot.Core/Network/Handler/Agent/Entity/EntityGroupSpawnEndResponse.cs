@@ -1,6 +1,7 @@
 ﻿using System;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
+using RSBot.Core.Extensions;
 
 namespace RSBot.Core.Network.Handler.Agent.Entity;
 
@@ -49,9 +50,20 @@ internal class EntityGroupSpawnEndResponse : IPacketHandler
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Log.Debug($"Spawn parse failed at index {i}!");
+                // Logged at Warn (was Debug, with no exception detail) while a Vietnam274
+                // packet-misalignment bug is being chased - see the matching comment in
+                // SpawnManager.Parse. Breaking out of the loop is intentional: the shared
+                // packet buffer's read cursor is left at an unknown position once one
+                // entity in the group misparses, so the remaining entities in this group
+                // can't be parsed either.
+                Log.Warn($"Spawn parse failed at index {i}/{Game.SpawnInfo.Amount}: {ex}");
+
+                // Rare (only on an actual parse failure, not per-entity/per-tick) - see the
+                // matching comment in EntitySingleSpawnResponse for why this is safe here
+                // despite the log-volume crash risk documented on Movement.FromPacket.
+                Log.Debug($"[Spawn] Raw packet bytes for the failed group spawn:\n{packet.GetBytes().HexDump(0, packet.Length)}");
                 break;
             }
 

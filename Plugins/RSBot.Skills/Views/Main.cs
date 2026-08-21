@@ -31,6 +31,8 @@ public partial class Main : DoubleBufferedControl
         listSkills.SmallImageList = ListViewExtensions.StaticImageList;
         listActiveBuffs.SmallImageList = ListViewExtensions.StaticImageList;
 
+        BuildMasterySelectionMenu();
+
         _lock = new object();
     }
 
@@ -188,24 +190,101 @@ public partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
-    ///     Loads the masteries.
+    ///     Loads the masteries. Multiple masteries can be selected for auto-leveling via the
+    ///     combo box's right-click menu (<see cref="BuildMasterySelectionMenu" />) - selected ones
+    ///     are marked with a checkmark and summarized in the combo box's tooltip.
     /// </summary>
     private void LoadMasteries()
     {
-        var selectedMastery = PlayerConfig.Get<string>("RSBot.Skills.selectedMastery");
+        var selectedMasteries = SkillsManager.GetMasteriesToLearn();
         comboLearnMastery.BeginUpdate();
         comboLearnMastery.Items.Clear();
 
         foreach (var mastery in Game.Player.Skills.Masteries)
-            comboLearnMastery.Items.Add(new MasteryComboBoxItem { Level = mastery.Level, Record = mastery.Record });
+            comboLearnMastery.Items.Add(
+                new MasteryComboBoxItem
+                {
+                    Level = mastery.Level,
+                    Record = mastery.Record,
+                    IsSelectedForAutoLevel = selectedMasteries.Contains(mastery.Record.NameCode),
+                }
+            );
 
-        foreach (MasteryComboBoxItem item in comboLearnMastery.Items)
-            if (item.Record.NameCode == selectedMastery)
-                comboLearnMastery.SelectedItem = item;
+        if (comboLearnMastery.Items.Count > 0)
+            comboLearnMastery.SelectedIndex = 0;
 
         comboLearnMastery.EndUpdate();
 
         comboLearnMastery.Update();
+
+        UpdateMasterySelectionTooltip();
+    }
+
+    /// <summary>
+    ///     Refreshes the tooltip summarizing which masteries are currently selected for auto-leveling.
+    /// </summary>
+    private void UpdateMasterySelectionTooltip()
+    {
+        var names = comboLearnMastery
+            .Items.Cast<MasteryComboBoxItem>()
+            .Where(item => item.IsSelectedForAutoLevel)
+            .Select(item => item.Record.Name);
+
+        var summary = string.Join(", ", names);
+
+        _masterySelectionToolTip ??= new ToolTip();
+        _masterySelectionToolTip.SetToolTip(
+            comboLearnMastery,
+            string.IsNullOrEmpty(summary)
+                ? "No masteries selected for auto-leveling. Right-click to add one."
+                : "Auto-leveling: " + summary
+        );
+    }
+
+    /// <summary>
+    ///     Builds (once) the right-click menu on <see cref="comboLearnMastery" /> that lets the user
+    ///     add/remove the currently browsed mastery from the auto-leveling selection.
+    /// </summary>
+    private void BuildMasterySelectionMenu()
+    {
+        var menu = new SDUI.Controls.ContextMenuStrip();
+        var addItem = new ToolStripMenuItem("Add to auto-leveling selection");
+        var removeItem = new ToolStripMenuItem("Remove from auto-leveling selection");
+
+        addItem.Click += (_, _) => ToggleSelectedMastery(true);
+        removeItem.Click += (_, _) => ToggleSelectedMastery(false);
+
+        menu.Opening += (_, _) =>
+        {
+            var selected = comboLearnMastery.SelectedItem as MasteryComboBoxItem;
+            addItem.Enabled = selected is { IsSelectedForAutoLevel: false };
+            removeItem.Enabled = selected is { IsSelectedForAutoLevel: true };
+        };
+
+        menu.Items.Add(addItem);
+        menu.Items.Add(removeItem);
+
+        comboLearnMastery.ContextMenuStrip = menu;
+    }
+
+    /// <summary>
+    ///     Adds or removes the mastery currently browsed in <see cref="comboLearnMastery" /> from the
+    ///     auto-leveling selection.
+    /// </summary>
+    private void ToggleSelectedMastery(bool select)
+    {
+        if (comboLearnMastery.SelectedItem is not MasteryComboBoxItem item)
+            return;
+
+        if (select)
+            SkillsManager.AddMasteryToLearn(item.Record.NameCode);
+        else
+            SkillsManager.RemoveMasteryToLearn(item.Record.NameCode);
+
+        item.IsSelectedForAutoLevel = select;
+
+        comboLearnMastery.Invalidate();
+        UpdateMasterySelectionTooltip();
     }
 
     /// <summary>
@@ -796,10 +875,9 @@ public partial class Main : DoubleBufferedControl
         if (comboLearnMastery.SelectedIndex < 0)
             return;
 
-        var selectedItem = (MasteryComboBoxItem)comboLearnMastery.SelectedItem;
-        _selectedMastery = selectedItem;
-
-        SkillsManager.SetMasteryToLearn(selectedItem.Record.NameCode);
+        // Just tracks which mastery is being browsed - use the right-click menu to
+        // add/remove it from the auto-leveling selection (see BuildMasterySelectionMenu).
+        _selectedMastery = (MasteryComboBoxItem)comboLearnMastery.SelectedItem;
     }
 
     private void listSkills_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -914,10 +992,12 @@ public partial class Main : DoubleBufferedControl
     {
         public byte Level;
         public RefSkillMastery Record;
+        public bool IsSelectedForAutoLevel;
 
         public override string ToString()
         {
-            return Record.Name + $" lv.{Level}";
+            var prefix = IsSelectedForAutoLevel ? "✓ " : "";
+            return prefix + Record.Name + $" lv.{Level}";
         }
     }
 
@@ -937,6 +1017,7 @@ public partial class Main : DoubleBufferedControl
     private readonly object _lock;
     private MasteryComboBoxItem _selectedMastery;
     private bool _settingsLoaded;
+    private ToolTip _masterySelectionToolTip;
 
     #endregion Fields
 }
