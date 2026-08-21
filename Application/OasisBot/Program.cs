@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using CommandLine;
 using CommandLine.Text;
@@ -69,6 +70,25 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        // There was previously no global handler at all: an unhandled exception on any
+        // non-UI thread (a ThreadPool continuation from an "async void" event handler,
+        // for example) terminated the process instantly with nothing written to our own
+        // exception log - the only trace was Windows' own Application event log. This
+        // can't prevent termination for background-thread exceptions (the CLR always
+        // tears the process down for those), but it does get one last diagnosable entry
+        // into User/Logs/Exceptions before that happens.
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is Exception ex)
+                Log.Fatal(ex);
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            Log.Fatal(e.Exception);
+            e.SetObserved();
+        };
+
         var parser = new Parser(with => with.HelpWriter = null);
         var parserResult = parser.ParseArguments<CommandLineOptions>(args);
 
@@ -104,6 +124,12 @@ internal static class Program
         else
         {
             FreeConsole();
+
+            // Unlike the background-thread case above, WinForms actually catches
+            // exceptions raised on the UI message-pump thread and routes them here
+            // instead of crashing - so this one can keep the app alive, not just log.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (_, e) => Log.Fatal(e.Exception);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
