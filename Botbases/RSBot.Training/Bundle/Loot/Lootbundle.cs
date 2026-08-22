@@ -1,7 +1,6 @@
 ﻿using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Objects;
-using RSBot.Core.Objects.Spawn;
 
 namespace RSBot.Training.Bundle.Loot;
 
@@ -30,8 +29,18 @@ internal class LootBundle : IBundle
         if ((Bundles.Loot.Config.DontPickupInBerzerk && Game.Player.Berzerking) || ScriptManager.Running)
             return;
 
-        //Don't pickup if a mob is selected
-        if (Game.SelectedEntity is SpawnedMonster monster && monster.State.LifeState == LifeState.Alive)
+        // Used to unconditionally skip the whole loot pass whenever ANY monster happened to
+        // be selected and alive - not just the one actually being fought. Botbase.Tick() calls
+        // Loot before Target, so on every tick after the very first one, Game.SelectedEntity is
+        // whatever Target.Invoke() picked as the *next* target the tick before; while training
+        // in an area with more than one mob around (i.e. almost always), there's essentially
+        // always another live mob selected, so this gate was blocking pickup permanently rather
+        // than just during an actual attack - "pick up gold/loot right away after a kill" never
+        // got a chance to run. PickupManager.RunPlayer (and SpawnedItem.Pickup itself) already
+        // check Game.Player.InAction before moving/picking up per item, which is the actual
+        // thing worth guarding against (walking off mid-swing) - so that's the only check
+        // needed here now.
+        if (Game.Player.InAction)
             return;
 
         PickupManager.RunPlayer(Game.Player.Position, Container.Bot.Area.Position, Container.Bot.Area.Radius);

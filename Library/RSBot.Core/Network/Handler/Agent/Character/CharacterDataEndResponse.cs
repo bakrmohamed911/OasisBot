@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
@@ -449,7 +450,7 @@ internal class CharacterDataEndResponse : IPacketHandler
     /// </summary>
     private static void RecoverItems(Packet packet, InventoryItemCollection collection, int effectiveCapacity, string label)
     {
-        var wireCapacity = packet.ReadByte();
+        packet.ReadByte(); // Capacity - not trusted as a position anchor, only the item scan below is
         packet.ReadByte(); // Count - not trusted as a position anchor, only the item scan below is
 
         var searchStart = (int)(packet.Length - packet.Remaining);
@@ -467,12 +468,43 @@ internal class CharacterDataEndResponse : IPacketHandler
             // failing is harmless on its own. Always put the cursor back to right after
             // Capacity/Count before giving up, so a failed scan only costs this collection.
             packet.SeekRead(searchStart, SeekOrigin.Begin);
-            Log.Debug($"[CharData] Vietnam274 {label} item-list signature not found - {label} will likely come back empty.");
+            Log.Debug($"[CharData] Vietnam274 {label} item-list signature not found - {label} will come back empty.");
             return;
         }
 
-        packet.SeekRead(itemsStart, SeekOrigin.Begin);
+        // maxResyncs=8: generous for the one real extraction pass (only runs once, on the
+        // winning start position).
+        var items = WalkItemChain(packet, itemsStart, effectiveCapacity, maxResyncs: 8);
+        foreach (var item in items)
+        {
+            Log.Debug($"[CharData] {label} item: slot={item.Slot} amount={item.Amount} name={item.Record?.GetRealName()}");
+            collection.Add(item);
+        }
+    }
+
+    /// <summary>
+    ///     Walks a chain of items starting at <paramref name="start" />, the shared core used by
+    ///     both the real extraction pass (<see cref="RecoverItems" />) and the candidate search
+    ///     (<see cref="CountValidItemChain" />). Stops on the first null/EOF/out-of-range/
+    ///     non-ascending item, but - up to <paramref name="maxResyncs" /> times - first tries to
+    ///     resynchronize past it (<see cref="FindNextItemStart" />) rather than giving up
+    ///     immediately, so one malformed/unrecognized item (e.g. a magic-option layout this
+    ///     reference client's InventoryItem.FromPacket doesn't fully understand) doesn't end the
+    ///     chain right there. This matters for the search phase too, not just extraction: without
+    ///     it, a start position whose real chain happens to hit one such item early loses the
+    ///     "longest chain wins" comparison to a start further into the packet that never hits one
+    ///     - even though the earlier start is the real one and the later one is a coincidental
+    ///     false positive - silently dropping every real item between them (an owned, unequipped
+    ///     ring was lost exactly this way: the winning start turned out to begin one hiccup after
+    ///     the true start).
+    /// </summary>
+    private static List<InventoryItem> WalkItemChain(Packet packet, int start, int effectiveCapacity, int maxResyncs)
+    {
+        packet.SeekRead(start, SeekOrigin.Begin);
+
+        var items = new List<InventoryItem>();
         var lastSlot = -1;
+        var resyncsUsed = 0;
 
         for (var i = 0; i < effectiveCapacity; i++)
         {
@@ -483,7 +515,7 @@ internal class CharacterDataEndResponse : IPacketHandler
             {
                 item = InventoryItem.FromPacket(packet);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // Not just EndOfStreamException: this is walking real (if misaligned) bytes
                 // through every branch of InventoryItem.FromPacket - including rarely-exercised
@@ -495,25 +527,77 @@ internal class CharacterDataEndResponse : IPacketHandler
                 // predict - means "this position doesn't work", not "abort the whole
                 // CharacterData parse and leave Game.Player unset" (which is what letting an
                 // uncaught exception escape this loop actually did).
-                Log.Debug($"[CharData] {label} scan: FromPacket threw {e.GetType().Name} at attempt {i}, stopping this candidate.");
-                break;
+                item = null;
             }
 
             if (item == null || item.Slot >= effectiveCapacity || item.Slot <= lastSlot)
             {
-                Log.Debug(
-                    $"[CharData] {label} scan stopped at attempt {i}: "
-                        + (item == null ? "item was null" : $"slot={item.Slot} (lastSlot={lastSlot}, wireCapacity={wireCapacity})")
-                );
-                packet.SeekRead(beforeItem, SeekOrigin.Begin);
-                break;
+                var resyncPos = resyncsUsed < maxResyncs ? FindNextItemStart(packet, beforeItem + 1, lastSlot, effectiveCapacity) : -1;
+
+                if (resyncPos < 0)
+                {
+                    packet.SeekRead(beforeItem, SeekOrigin.Begin);
+                    break;
+                }
+
+                resyncsUsed++;
+                packet.SeekRead(resyncPos, SeekOrigin.Begin);
+                continue;
             }
 
-            Log.Debug($"[CharData] {label} item: slot={item.Slot} amount={item.Amount} name={item.Record?.GetRealName()}");
-
             lastSlot = item.Slot;
-            collection.Add(item);
+            items.Add(item);
         }
+
+        return items;
+    }
+
+    /// <summary>
+    ///     Scans forward (bounded - real items are at most a few dozen bytes each, so a stalled
+    ///     chain is never more than that away from its next real item) for the next position
+    ///     that both looks like an item start (<see cref="LooksLikeItemStart" />) and actually
+    ///     parses into a valid, in-range, ascending-slot item - used by <see cref="WalkItemChain" />
+    ///     to resume after one unparseable item instead of abandoning everything after it.
+    /// </summary>
+    private static int FindNextItemStart(Packet packet, int searchFrom, int lastSlot, int effectiveCapacity)
+    {
+        var data = packet.GetBytes();
+        var searchEnd = Math.Min(searchFrom + 300, data.Length - 9);
+
+        // Same reasoning as FindInventoryItemsStart's own Log.Suppressed use: this tries a
+        // trial parse at every candidate offset, and InventoryItem.FromPacket calls Log.Notify
+        // on every failed item-id lookup - unsuppressed, that's the same flood that previously
+        // exhausted the process's Windows USER handle quota.
+        Log.Suppressed = true;
+        try
+        {
+            for (var i = searchFrom; i <= searchEnd; i++)
+            {
+                if (!LooksLikeItemStart(data, i))
+                    continue;
+
+                packet.SeekRead(i, SeekOrigin.Begin);
+
+                InventoryItem item;
+                try
+                {
+                    item = InventoryItem.FromPacket(packet);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (item != null && item.Slot < effectiveCapacity && item.Slot > lastSlot)
+                    return i;
+            }
+        }
+        finally
+        {
+            Log.Suppressed = false;
+        }
+
+        return -1;
     }
 
     /// <summary>
@@ -573,42 +657,18 @@ internal class CharacterDataEndResponse : IPacketHandler
     }
 
     /// <summary>
-    ///     Walks a full chain of items starting at <paramref name="start" />, stopping on the
-    ///     same conditions the real extraction loop uses (null/EOF/non-ascending/out-of-range
-    ///     slot), and returns how many valid items were found - used to compare candidate start
-    ///     positions by how far their alignment actually holds up, not just their first item.
+    ///     Counts how many valid items a candidate start position yields - used to compare
+    ///     candidates by how far their alignment actually holds up, not just their first item.
+    ///     Delegates to <see cref="WalkItemChain" /> with a small resync budget: without any
+    ///     tolerance here, a candidate whose real chain happens to hit one malformed/unrecognized
+    ///     item early loses the "longest chain wins" comparison to a coincidental false-positive
+    ///     start further into the packet that never hits one - even though the earlier candidate
+    ///     is the real start. A small (not the full 8) budget keeps this cheap across the
+    ///     hundreds of candidates <see cref="FindInventoryItemsStart" /> tries.
     /// </summary>
     private static int CountValidItemChain(Packet packet, int start, int effectiveCapacity)
     {
-        packet.SeekRead(start, SeekOrigin.Begin);
-
-        var lastSlot = -1;
-        var count = 0;
-
-        for (var i = 0; i < effectiveCapacity; i++)
-        {
-            InventoryItem item;
-            try
-            {
-                item = InventoryItem.FromPacket(packet);
-            }
-            catch (Exception)
-            {
-                // Broad on purpose - see the matching catch in RecoverItems for why (this is
-                // the exploratory half of the same speculative-parsing scan, so it needs the
-                // same tolerance for hitting FromPacket's rarely-exercised, not-fully-defensive
-                // branches on essentially-random candidate bytes).
-                break;
-            }
-
-            if (item == null || item.Slot >= effectiveCapacity || item.Slot <= lastSlot)
-                break;
-
-            lastSlot = item.Slot;
-            count++;
-        }
-
-        return count;
+        return WalkItemChain(packet, start, effectiveCapacity, maxResyncs: 3).Count;
     }
 
     /// <summary>

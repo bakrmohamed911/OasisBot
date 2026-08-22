@@ -133,8 +133,17 @@ public class PickupManager
                 if (!RunningPlayerPickup)
                     return;
 
-                while (Game.Player.InAction)
-                    Thread.Sleep(50);
+                // Used to busy-wait here until InAction cleared. Botbase.Tick() runs every
+                // 100ms but skips attack/movement/everything else entirely while
+                // RunningPlayerPickup is true, so this wasn't a harmless pause - during
+                // continuous combat, InAction can flip back to true asynchronously (server
+                // packets, not this tick's own Attack.Invoke()) before the sleep loop ever
+                // exits, stalling the *whole bot* for seconds per item, not just pickup. Bail
+                // instead: the very next tick's LootBundle.Invoke() already re-checks
+                // Game.Player.InAction cheaply (no blocking) before calling RunPlayer again, so
+                // deferring the rest of this pass to then costs at most ~100ms, not seconds.
+                if (Game.Player.InAction)
+                    break;
 
                 if (item.Record.IsSpecialtyGoodBox && Game.Player.Job2SpecialtyBag.Full)
                     continue;

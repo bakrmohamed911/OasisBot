@@ -604,8 +604,15 @@ public partial class Main : DoubleBufferedControl
             cbDontPickupWhileBotting.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.DontPickupWhileBotting");
 
             checkQuestItems.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.Quest", true);
-            checkAllEquips.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.AnyEquips");
-            checkEverything.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.Everything");
+            // These two used to load with no default (i.e. false) while the backing
+            // PickupManager.PickupAnyEquips/PickupEverything properties they mirror both
+            // default to true - so on a fresh config the checkboxes showed unchecked even
+            // though pickup was actually still on under the hood. Kept harmless only because
+            // the CheckedChanged handler is guarded by _loadingSettings during this load, but
+            // still confusing/wrong to display. Match the backing default so what's shown here
+            // is what's actually in effect.
+            checkAllEquips.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.AnyEquips", true);
+            checkEverything.Checked = PlayerConfig.Get<bool>("RSBot.Items.Pickup.Everything", true);
 
             ShoppingManager.Enabled = checkEnable.Checked;
             ShoppingManager.RepairGear = checkRepairGear.Checked;

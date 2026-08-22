@@ -86,7 +86,30 @@ public class BotbaseManager
         var bots = new Dictionary<string, IBotbase>();
         var views = new Dictionary<string, IBotbaseView>();
 
-        var assembly = Assembly.LoadFrom(file);
+        Assembly assembly;
+        try
+        {
+            assembly = Assembly.LoadFrom(file);
+        }
+        catch (FileLoadException)
+        {
+            // Each botbase project's own build output naturally includes copies of the
+            // shared dependencies it references (RSBot.FileSystem, RSBot.NavMeshApi, SDUI,
+            // ...) sitting right next to its own DLL in this directory, since that's just
+            // how project-reference output copying works - Directory.GetFiles in
+            // LoadAssemblies picks those up too. By the time this runs, the main app has
+            // almost always already loaded that exact assembly (by simple name) from its
+            // own directory, and Assembly.LoadFrom throws "Assembly with same name is
+            // already loaded" for the second path instead of just handing back the one
+            // already loaded - which used to abort loading every botbase after it in the
+            // same Directory.GetFiles enumeration. Reuse the already-loaded one instead of
+            // treating a perfectly normal shared dependency as a load failure.
+            var simpleName = Path.GetFileNameWithoutExtension(file);
+            assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == simpleName);
+
+            if (assembly == null)
+                throw;
+        }
 
         try
         {
