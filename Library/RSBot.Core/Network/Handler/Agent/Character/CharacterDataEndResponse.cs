@@ -164,6 +164,28 @@ internal class CharacterDataEndResponse : IPacketHandler
             }
             Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after JOB2, remaining={packet.Remaining}");
 
+            // vSRO274 (at least on this server) has a per-item option-block layout that
+            // InventoryItem.FromPacket doesn't understand: Capacity/Count read fine (verified
+            // against a raw hex capture - e.g. Capacity=48, Count=3), but RentInfo/ItemId then
+            // drift into garbage for each item, so the cursor is NOT reliably positioned here.
+            // Rather than also reverse-engineer that item format, recover alignment by content:
+            // the Masteries+Skills list itself already uses the exact same wire format every
+            // other client type uses (confirmed byte-for-byte against a real character's
+            // Sword/Cold/Lightning/Fire mastery levels captured from another tool's UI) - only
+            // its *offset* is unknown here. Scan forward for its self-describing signature (a
+            // run of 6-byte [0x01][id-lo][id-hi][0x00][0x00][level] records whose id resolves
+            // in the real SkillMasteryData table) and seek there before calling the existing,
+            // unmodified Skills.FromPacket.
+            if (Game.ClientType == GameClientType.Vietnam274)
+            {
+                var searchStart = packet.Length - packet.Remaining;
+                var masteryListOffset = FindMasteryListOffset(packet.GetBytes(), searchStart);
+                if (masteryListOffset > 0)
+                    packet.SeekRead(masteryListOffset - 1, SeekOrigin.Begin); // -1: Skills.FromPacket reads one "unknown" byte before its first flag check
+                else
+                    Log.Debug("[CharData] Vietnam274 mastery-list signature not found - Skills will likely come back empty.");
+            }
+
             character.Skills = Skills.FromPacket(packet);
             Log.Debug(
                 $"[CharData] pos={packet.Length - packet.Remaining} after Skills (Masteries={character.Skills.Masteries.Count}, KnownSkills={character.Skills.KnownSkills.Count}), remaining={packet.Remaining}"
@@ -188,6 +210,23 @@ internal class CharacterDataEndResponse : IPacketHandler
                 }
             }
             Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after collection book, remaining={packet.Remaining}");
+
+            // Now that Skills/QuestLog land at the right offset (see the mastery-list scan
+            // above), this position is confirmed correct too - decoded against known-good
+            // markers in a captured packet (UniqueId, then a Position/Movement, then a
+            // WalkSpeed/RunSpeed/BerzerkSpeed=19.2/60/100 triplet with sane LifeState/
+            // Motion/BodyState, ending exactly at the real Name field). The one gap: an
+            // extra 4-byte field sits before UniqueId here that ParseBionicDetails doesn't
+            // read - reading UniqueId straight off the wire without it produces 0, which is
+            // exactly the corrupted-UniqueId symptom behind the "HP/MP/EXP live updates"
+            // bug (EntityUpdateStatusResponse's "uniqueId == Game.Player.UniqueId" check
+            // never matches real update packets when Game.Player.UniqueId is 0). This 4-byte
+            // field isn't part of the shared ParseBionicDetails/Movement/State helpers used
+            // by entity-spawn parsing too (already confirmed working there without it) - so
+            // it's consumed here, specific to this CHAR_DATA call site, rather than inside
+            // ParseBionicDetails itself.
+            if (Game.ClientType == GameClientType.Vietnam274)
+                packet.ReadUInt(); // unknown - precedes UniqueId only in CHAR_DATA's own bionic block
 
             character.ParseBionicDetails(packet);
             Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} after bionic, remaining={packet.Remaining}");
@@ -259,6 +298,21 @@ internal class CharacterDataEndResponse : IPacketHandler
             character.JID = packet.ReadUInt();
             character.IsGameMaster = packet.ReadBool();
             Log.Debug($"[CharData] pos={packet.Length - packet.Remaining} FINAL remaining={packet.Remaining}, name={character.Name}");
+
+            // A misalignment doesn't always throw - if the drifted cursor happens to land
+            // on byte(s) that still form a "valid" read (e.g. a string length prefix that
+            // decodes to 0, or a field within the buffer that just holds a small number),
+            // this reaches here having silently parsed garbage instead of throwing: an
+            // empty Name and/or a large chunk of the packet left completely unconsumed are
+            // the tell. Dump in that case too, the same way the throwing case already does.
+            if (string.IsNullOrEmpty(character.Name) || packet.Remaining > 8)
+            {
+                var suspiciousDumpPath = Path.Combine(Kernel.BasePath, "User", "Logs", "CharDataSuspiciousDump.txt");
+                File.WriteAllText(suspiciousDumpPath, packet.GetBytes().HexDump(0, packet.Length));
+                Log.Debug(
+                    $"[CharData] Finished without throwing but looks wrong (name='{character.Name}', remaining={packet.Remaining}) - raw packet bytes written to {suspiciousDumpPath}"
+                );
+            }
         }
         catch (EndOfStreamException ex)
         {
@@ -295,5 +349,48 @@ internal class CharacterDataEndResponse : IPacketHandler
 
         PacketManager.SendPacket(new Packet(0x3012), PacketDestination.Server);
         Game.Ready = true;
+    }
+
+    /// <summary>
+    ///     Finds the absolute offset of the first Mastery record's flag byte in the raw packet,
+    ///     by scanning for a run of well-formed, self-consistent records rather than trusting
+    ///     the reader's current (possibly drifted) position. See the call site's comment for
+    ///     why this is needed on Vietnam274.
+    /// </summary>
+    /// <param name="data">The full raw packet bytes.</param>
+    /// <param name="searchStart">Where to start scanning (never before the already-consumed header).</param>
+    /// <returns>The absolute offset of the first record's flag byte, or -1 if no confident match was found.</returns>
+    private static int FindMasteryListOffset(byte[] data, int searchStart)
+    {
+        const int recordSize = 6;
+        const int requiredConsecutiveRecords = 3;
+
+        for (var i = searchStart; i + recordSize * requiredConsecutiveRecords <= data.Length; i++)
+        {
+            var allValid = true;
+
+            for (var r = 0; r < requiredConsecutiveRecords; r++)
+            {
+                var pos = i + r * recordSize;
+
+                if (data[pos] != 0x01 || data[pos + 3] != 0x00 || data[pos + 4] != 0x00)
+                {
+                    allValid = false;
+                    break;
+                }
+
+                var id = (uint)(data[pos + 1] + data[pos + 2] * 256);
+                if (Game.ReferenceManager.GetRefSkillMastery(id) == null)
+                {
+                    allValid = false;
+                    break;
+                }
+            }
+
+            if (allValid)
+                return i;
+        }
+
+        return -1;
     }
 }
