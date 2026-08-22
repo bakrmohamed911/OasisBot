@@ -207,10 +207,26 @@ public static class SkillManager
         if (skill.ReqCommon_Mastery1 == 1)
             return true;
 
+        // On this Vietnam274 server, per-item parsing in Inventory.Deserialize doesn't match
+        // this custom item layout (Capacity/Count read fine, but RentInfo/ItemId per item
+        // drift into garbage - see CharacterDataEndResponse's Inventory handling), so
+        // Inventory never actually tracks any items even though the character has them
+        // equipped. That left this weapon-type check permanently unable to find a "current
+        // weapon", silently failing CheckSkillRequired for every attack skill (any skill
+        // needing a specific weapon type) while self-buffs mostly bypass this check entirely
+        // (WeaponType.Any with no sub-requirements) - exactly matching "buffs run fine, but
+        // mobs never get attacked". Until Inventory item parsing is fixed for this server,
+        // there's no reliable way to verify weapon type client-side; trust the skill
+        // selection the player made in the Skills UI instead of blocking every attack on a
+        // check that can never pass. The server still enforces this on its own regardless.
+        if (Game.Player.Inventory.Count == 0)
+            return true;
+
         InventoryItem requiredItem = null;
         TypeIdFilter filter = null;
 
         var currentWeapon = Game.Player.Inventory.GetItemAt(6);
+
         if (skill.ReqCast_Weapon1 == WeaponType.Any)
         {
             var list = new List<TypeIdFilter>(8);

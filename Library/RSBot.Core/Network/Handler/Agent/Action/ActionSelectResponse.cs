@@ -28,8 +28,12 @@ internal class ActionSelectResponse : IPacketHandler
     /// <param name="packet">The packet.</param>
     public void Invoke(Packet packet)
     {
-        if (packet.ReadByte() != 0x01)
+        var resultByte = packet.ReadByte();
+        if (resultByte != 0x01)
+        {
+            Log.Debug($"[ActionSelectResponse] Server rejected the select request (resultByte=0x{resultByte:X2}), remaining={packet.Remaining}");
             return;
+        }
 
         var uniqueId = packet.ReadUInt();
         if (!SpawnManager.TryGetEntity<SpawnedBionic>(uniqueId, out var entity))
@@ -39,6 +43,8 @@ internal class ActionSelectResponse : IPacketHandler
         }
 
         Game.SelectedEntity = entity;
+
+        Log.Debug($"[ActionSelectResponse] Selected uniqueId={uniqueId}, type={entity.GetType().Name}, LifeState={entity.State.LifeState}, remaining={packet.Remaining}");
 
         if (entity is SpawnedMonster)
         {

@@ -16,6 +16,7 @@ internal class TargetBundle : IBundle
     #region Fields
 
     private Dictionary<uint, int> _blacklist;
+    private int _lastDiagnosticTick;
 
     #endregion Fields
 
@@ -108,13 +109,52 @@ internal class TargetBundle : IBundle
 
         var monster = GetNearestEnemy();
         if (monster == null)
+        {
+            DiagnoseNoTarget();
             return;
+        }
 
         if (!Container.Bot.Area.IsInSight(monster))
             return;
 
         if (monster.TrySelect())
             Bundles.Movement.LastEntityWasBehindObstacle = false;
+    }
+
+    /// <summary>
+    ///     Logs why GetNearestEnemy() came back empty (no alive monsters spawned at all vs.
+    ///     some spawned but all filtered out - most commonly because the training Area
+    ///     doesn't actually cover where the player/mobs are). Surfaces a config mistake
+    ///     that otherwise looks identical to a crash: bot runs, buffs itself, but never
+    ///     attacks anything, with no error anywhere. Throttled to avoid spamming every tick.
+    /// </summary>
+    private void DiagnoseNoTarget()
+    {
+        if (Kernel.TickCount - _lastDiagnosticTick < 3000)
+            return;
+
+        _lastDiagnosticTick = Kernel.TickCount;
+
+        var hasAny = SpawnManager.TryGetEntities<SpawnedMonster>(
+            m => m.State.LifeState == LifeState.Alive,
+            out var aliveMonsters
+        );
+
+        if (!hasAny || !aliveMonsters.Any())
+        {
+            Log.Debug("[TargetBundle] No alive monsters spawned nearby at all.");
+            return;
+        }
+
+        var aliveMonstersList = aliveMonsters.ToList();
+        var inSightCount = aliveMonstersList.Count(m => Container.Bot.Area.IsInSight(m));
+
+        Log.Debug(
+            $"[TargetBundle] {aliveMonstersList.Count} alive monster(s) spawned, {inSightCount} inside training area "
+                + $"(Area pos={Container.Bot.Area.Position}, radius={Container.Bot.Area.Radius}; Player pos={Game.Player.Position}). "
+                + $"Nearest spawned: {aliveMonstersList.OrderBy(m => m.Movement.Source.DistanceTo(Container.Bot.Area.Position)).First().Record.GetRealName()} "
+                + $"at {aliveMonstersList.Min(m => m.Movement.Source.DistanceTo(Container.Bot.Area.Position)):0.0}m from area center."
+        );
     }
 
     private SpawnedMonster GetFromCurrentAttackers()

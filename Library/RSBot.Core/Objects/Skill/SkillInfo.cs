@@ -156,8 +156,40 @@ public class SkillInfo
             if (CanNotBeCasted)
                 return false;
 
+            if (!MeetsMasteryRequirement())
+                return false;
+
             return true;
         }
+    }
+
+    /// <summary>
+    ///     Checks whether the player's own mastery level(s) actually meet this skill's
+    ///     requirement. A skill can end up in KnownSkills without this necessarily holding
+    ///     (e.g. a higher-tier version learned via an item, or - as chased here - the
+    ///     bundled buff-casting loop retrying a too-high tier every tick forever, since the
+    ///     server silently ignores the cast and nothing was checking this before: with no
+    ///     cooldown ever getting set on a rejected cast, and no way to ever succeed, the
+    ///     retry-every-tick loop never advances, holding Player.InAction just long enough
+    ///     each time to also starve the Attack bundle - "buffs run but never attacks mobs").
+    /// </summary>
+    private bool MeetsMasteryRequirement()
+    {
+        if (Record.ReqCommon_Mastery1 > 0)
+        {
+            var mastery = Game.Player.Skills.GetMasteryInfoById((uint)Record.ReqCommon_Mastery1);
+            if (mastery == null || mastery.Level < Record.ReqCommon_MasteryLevel1)
+                return false;
+        }
+
+        if (Record.ReqCommon_Mastery2 > 0)
+        {
+            var mastery = Game.Player.Skills.GetMasteryInfoById((uint)Record.ReqCommon_Mastery2);
+            if (mastery == null || mastery.Level < Record.ReqCommon_MasteryLevel2)
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
