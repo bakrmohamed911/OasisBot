@@ -39,6 +39,16 @@ public class CharacterInventory : InventoryItemCollection
         : base(packet) { }
 
     /// <summary>
+    ///     Constructs an empty inventory with a known capacity, for callers that recover its
+    ///     items themselves (e.g. by scanning for them, when Deserialize's own item-position
+    ///     assumption doesn't hold - see CharacterDataEndResponse's Vietnam274 handling) instead
+    ///     of via the normal packet-driven <see cref="Deserialize" /> flow.
+    /// </summary>
+    /// <param name="capacity">The capacity.</param>
+    public CharacterInventory(byte capacity)
+        : base(capacity) { }
+
+    /// <summary>
     ///     Gets the size of NormalPart.
     /// </summary>
     public byte NormalPartSize => (byte)(Capacity - NORMAL_PART_MIN_SLOT);

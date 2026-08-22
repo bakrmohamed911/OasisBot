@@ -67,12 +67,19 @@ public partial class Main : DoubleBufferedControl
     {
         var menu = new SDUI.Controls.ContextMenuStrip();
         var setAsTarget = new ToolStripMenuItem("Auto-join this party (by leader)");
+        var cancelAutoJoin = new ToolStripMenuItem("Cancel auto-join");
 
         setAsTarget.Click += (_, _) => SetSelectedPartyAsAutoJoinTarget();
+        cancelAutoJoin.Click += (_, _) => CancelAutoJoin();
 
-        menu.Opening += (_, _) => setAsTarget.Enabled = lvPartyMatching.SelectedItems.Count == 1;
+        menu.Opening += (_, _) =>
+        {
+            setAsTarget.Enabled = lvPartyMatching.SelectedItems.Count == 1;
+            cancelAutoJoin.Enabled = PartyManager.IsAutoJoinEnabled();
+        };
 
         menu.Items.Add(setAsTarget);
+        menu.Items.Add(cancelAutoJoin);
 
         lvPartyMatching.ContextMenuStrip = menu;
     }
@@ -97,6 +104,23 @@ public partial class Main : DoubleBufferedControl
         textBoxJoinByName.Text = leaderName;
 
         Log.Notify($"Will auto-join {leaderName}'s party from now on (including after a reconnect).");
+    }
+
+    /// <summary>
+    ///     Turns off both auto-join modes (by leader name and by party title) - the only way to
+    ///     stop <c>AutoPartyBundle</c> from keeping on retrying an auto-join target that was set
+    ///     earlier, whether that was via <see cref="SetSelectedPartyAsAutoJoinTarget" /> or the
+    ///     "Join by name/title" config panel.
+    /// </summary>
+    private void CancelAutoJoin()
+    {
+        PartyManager.SetPartyAutoJoinByName(false);
+        PartyManager.SetPartyAutoJoinByTitle(false);
+
+        checkBoxJoinByName.Checked = false;
+        checkBoxJoinByTitle.Checked = false;
+
+        Log.Notify("Auto-join cancelled.");
     }
 
     /// <summary>

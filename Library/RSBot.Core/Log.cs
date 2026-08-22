@@ -16,6 +16,18 @@ public class Log
     public static bool DebugEnabled { get; set; } = true;
 
     /// <summary>
+    ///     When true, <see cref="Notify(object)" /> drops its message instead of dispatching it.
+    ///     For code that deliberately calls something many times in a tight loop purely to
+    ///     probe/validate (e.g. a packet-alignment recovery scan trying hundreds of candidate
+    ///     offsets), where the callee's own "not found"-style Notify calls would otherwise flood
+    ///     the log UI - each one marshals onto the UI thread and creates/touches a native
+    ///     RichEdit handle, and a big enough burst can exhaust the process's Windows USER handle
+    ///     quota, taking down logging entirely ("Error creating window handle"). Always reset in
+    ///     a finally block - this is a static flag, not scoped to one call.
+    /// </summary>
+    public static bool Suppressed { get; set; }
+
+    /// <summary>
     ///     Replaces the format item in a specified string with the string
     ///     representation of a corresponding object in a specified array
     /// </summary>
@@ -44,6 +56,9 @@ public class Log
     /// <param name="level">The level.</param>
     public static void Notify(object obj)
     {
+        if (Suppressed)
+            return;
+
         EventManager.FireEvent("OnAddLog", obj.ToString(), LogLevel.Notify);
     }
 

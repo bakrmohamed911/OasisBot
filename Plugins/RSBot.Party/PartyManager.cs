@@ -252,6 +252,15 @@ namespace RSBot.Party
             Bundle.Container.AutoParty.Refresh();
         }
 
+        /// <summary>
+        ///     Whether either auto-join mode (by leader name or by party title) is currently on.
+        /// </summary>
+        public static bool IsAutoJoinEnabled()
+        {
+            return PlayerConfig.Get("RSBot.Party.AutoJoin.ByName", false)
+                || PlayerConfig.Get("RSBot.Party.AutoJoin.ByTitle", false);
+        }
+
         public static void BanishMemberFromParty(string memberName)
         {
             if (Game.Party.IsLeader)

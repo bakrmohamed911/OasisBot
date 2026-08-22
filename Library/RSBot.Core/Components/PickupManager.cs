@@ -139,8 +139,14 @@ public class PickupManager
                 if (item.Record.IsSpecialtyGoodBox && Game.Player.Job2SpecialtyBag.Full)
                     continue;
 
-                //Make sure the player is at the item's location
-                //Game.Player.MoveTo(item.Movement.Source);
+                // Pickup() just sends a "pick this up" request - the server enforces its own
+                // range check and silently ignores it if the player isn't close enough, with
+                // no retry here. Without walking over first, loot sitting anywhere beyond
+                // pickup range (e.g. dropped while chasing a different mob mid-fight, or from
+                // an earlier kill by the time the loot bundle gets a turn) never actually gets
+                // picked up despite passing every filter - indistinguishable from "the bot is
+                // just being lazy about it" to anyone watching.
+                MoveToItem(item);
                 item.Pickup();
             }
         }
@@ -151,6 +157,36 @@ public class PickupManager
         finally
         {
             RunningPlayerPickup = false;
+        }
+    }
+
+    /// <summary>
+    ///     Walks the player to within pickup range of an item, if not already close enough.
+    ///     <see cref="SpawnedItem.Pickup" /> only sends the pickup request - the server enforces
+    ///     its own range check and just ignores it if the player is too far, with no feedback
+    ///     or retry - so without this, loot outside pickup range (e.g. dropped while chasing a
+    ///     different mob, or sitting from an earlier kill) silently never gets picked up despite
+    ///     passing every filter.
+    /// </summary>
+    /// <param name="item">The item to move toward.</param>
+    private static void MoveToItem(SpawnedItem item)
+    {
+        const int pickupRange = 5;
+        const int moveTimeoutMs = 5000;
+
+        if (Game.Player.Position.DistanceTo(item.Movement.Source) <= pickupRange)
+            return;
+
+        if (!Game.Player.MoveTo(item.Movement.Source))
+            return;
+
+        var deadline = Kernel.TickCount + moveTimeoutMs;
+        while (RunningPlayerPickup && Kernel.TickCount < deadline)
+        {
+            if (Game.Player.Position.DistanceTo(item.Movement.Source) <= pickupRange)
+                return;
+
+            Thread.Sleep(100);
         }
     }
 
