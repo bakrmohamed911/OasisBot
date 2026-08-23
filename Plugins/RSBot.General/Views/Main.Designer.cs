@@ -505,6 +505,8 @@ namespace RSBot.General.Views
             // groupBox1
             //
             groupBox1.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            groupBox1.AutoSize = true;
+            groupBox1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             groupBox1.BackColor = System.Drawing.Color.Transparent;
             groupBox1.Controls.Add(panel3);
             groupBox1.Controls.Add(captchaPanel);
@@ -515,7 +517,7 @@ namespace RSBot.General.Views
             groupBox1.Padding = new System.Windows.Forms.Padding(4, 18, 4, 8);
             groupBox1.Radius = 10;
             groupBox1.ShadowDepth = 4;
-            groupBox1.Size = new System.Drawing.Size(398, 350);
+            groupBox1.Size = new System.Drawing.Size(398, 464);
             groupBox1.TabIndex = 14;
             groupBox1.TabStop = false;
             groupBox1.Text = "Automated login";
@@ -535,11 +537,11 @@ namespace RSBot.General.Views
             panel3.Controls.Add(checkEnableLoginDelay);
             panel3.Controls.Add(checkStartBot);
             panel3.Controls.Add(checkUseReturnScroll);
-            panel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            panel3.Dock = System.Windows.Forms.DockStyle.Top;
             panel3.Location = new System.Drawing.Point(4, 303);
             panel3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             panel3.Name = "panel3";
-            panel3.Size = new System.Drawing.Size(390, 258);
+            panel3.Size = new System.Drawing.Size(390, 200);
             panel3.TabIndex = 1;
             //
             // lblWaitAfterDC

@@ -32,6 +32,7 @@
             label1 = new SDUI.Controls.Label();
             lblEntityName = new SDUI.Controls.Label();
             progressHP = new SDUI.Controls.ProgressBar();
+            lblEntityHpValue = new SDUI.Controls.Label();
             SuspendLayout();
             // 
             // lblType
@@ -111,18 +112,37 @@
             progressHP.TabIndex = 15;
             progressHP.Text = "0,00%";
             progressHP.Value = 0L;
-            // 
+            //
+            // lblEntityHpValue
+            //
+            lblEntityHpValue.ApplyGradient = false;
+            lblEntityHpValue.AutoSize = false;
+            lblEntityHpValue.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            lblEntityHpValue.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            lblEntityHpValue.Gradient = new System.Drawing.Color[]
+    {
+    System.Drawing.Color.Gray,
+    System.Drawing.Color.Black
+    };
+            lblEntityHpValue.GradientAnimation = false;
+            lblEntityHpValue.Location = new System.Drawing.Point(52, 60);
+            lblEntityHpValue.Name = "lblEntityHpValue";
+            lblEntityHpValue.Size = new System.Drawing.Size(180, 18);
+            lblEntityHpValue.TabIndex = 19;
+            lblEntityHpValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
             // Entity
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             Controls.Add(lblType);
+            Controls.Add(lblEntityHpValue);
             Controls.Add(label1);
             Controls.Add(lblEntityName);
             Controls.Add(progressHP);
-            MinimumSize = new System.Drawing.Size(250, 76);
+            MinimumSize = new System.Drawing.Size(250, 96);
             Name = "Entity";
-            Size = new System.Drawing.Size(250, 83);
+            Size = new System.Drawing.Size(250, 103);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -133,5 +153,6 @@
         private SDUI.Controls.Label lblEntityName;
         private SDUI.Controls.ProgressBar progressHP;
         private SDUI.Controls.Label lblType;
+        private SDUI.Controls.Label lblEntityHpValue;
     }
 }

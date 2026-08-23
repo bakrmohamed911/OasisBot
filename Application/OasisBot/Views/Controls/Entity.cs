@@ -50,6 +50,7 @@ public partial class Entity : DoubleBufferedControl
         {
             progressHP.Value = monster.Health;
             progressHP.Maximum = monster.MaxHealth;
+            lblEntityHpValue.Text = $"{monster.Health:N0} / {monster.MaxHealth:N0}";
 
             lblType.Text = monster.Rarity.GetName();
         }
@@ -57,6 +58,7 @@ public partial class Entity : DoubleBufferedControl
         {
             progressHP.Value = 100;
             progressHP.Maximum = 100;
+            lblEntityHpValue.Text = string.Empty;
 
             if (Game.Player.State.DialogState is { IsInDialog: true })
                 lblType.Text = "<in conversation>";
@@ -75,6 +77,7 @@ public partial class Entity : DoubleBufferedControl
         {
             progressHP.Value = 100;
             progressHP.Maximum = 100;
+            lblEntityHpValue.Text = string.Empty;
             return;
         }
 
@@ -82,6 +85,7 @@ public partial class Entity : DoubleBufferedControl
         {
             progressHP.Value = monster.Health;
             progressHP.Maximum = monster.MaxHealth;
+            lblEntityHpValue.Text = $"{monster.Health:N0} / {monster.MaxHealth:N0}";
         }
     }
 
@@ -117,6 +121,7 @@ public partial class Entity : DoubleBufferedControl
         lblEntityName.Text = LanguageManager.GetLang("LabelEntityName");
         progressHP.Value = 0;
         progressHP.Maximum = 100;
+        lblEntityHpValue.Text = string.Empty;
         lblType.Text = "";
     }
 }
