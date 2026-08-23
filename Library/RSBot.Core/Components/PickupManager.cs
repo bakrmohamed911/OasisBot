@@ -99,6 +99,26 @@ public class PickupManager
     public static bool JustPickMyItems => PlayerConfig.Get("RSBot.Items.Pickup.JustPickMyItems", false);
 
     /// <summary>
+    ///     Cheap existence check for whether any item near <paramref name="centerPosition" />
+    ///     currently passes <see cref="Condition" /> - i.e. whether <see cref="RunPlayer" />
+    ///     would actually have something to do, without doing any of its walking/pickup work.
+    ///     Used to hold off engaging a new target while there's still loot from the last kill
+    ///     to grab: during a long/chained fight (a tanky champion in particular - see the call
+    ///     site) <see cref="Game.Player" />'s InAction flag can stay continuously true with no
+    ///     clean gap for <see cref="RunPlayer" /> to ever get a turn before the next fight is
+    ///     already underway, so the previous kill's drop - often the more valuable one, for a
+    ///     champion - gets left behind and risks despawning while the bot moves on.
+    /// </summary>
+    /// <param name="playerPosition">The player position.</param>
+    /// <param name="centerPosition">The center position.</param>
+    /// <param name="radius">The radius.</param>
+    public static bool HasPendingLoot(Position playerPosition, Position centerPosition, int radius = 50)
+    {
+        var flag = UseAbilityPet && Game.Player.HasActiveAbilityPet;
+        return SpawnManager.TryGetEntities<SpawnedItem>(i => Condition(i, centerPosition, radius, flag, flag), out _);
+    }
+
+    /// <summary>
     ///     Runs the specified center position.
     /// </summary>
     /// <param name="playerPosition">The player position.</param>
@@ -252,6 +272,19 @@ public class PickupManager
     )
     {
         var playerJid = Game.Player.JID;
+
+        // An item behind an obstacle can never actually be reached - Pickup() itself already
+        // refuses to send the request for exactly this reason. Without checking it here too,
+        // this Condition (shared by RunPlayer's real pickup pass and HasPendingLoot's cheap
+        // existence check) treats a permanently-unreachable item as "pending" forever: Loot
+        // wastes a walk/pickup attempt on it every tick with no backoff, and - since
+        // Botbase.Tick() now holds Target/Attack back for as long as HasPendingLoot says
+        // there's something to grab (see its own comment for why) - a single stuck item left
+        // over from an earlier session (e.g. still sitting in the world across a bot restart)
+        // can permanently deadlock combat: the character just stands there taking hits with no
+        // target ever selected, because the bot believes it still has looting left to do.
+        if (e.IsBehindObstacle)
+            return false;
 
         if (JustPickMyItems && e.OwnerJID != playerJid)
             return false;

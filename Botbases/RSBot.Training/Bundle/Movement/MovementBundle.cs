@@ -26,6 +26,18 @@ internal class MovementBundle : IBundle
     public bool LastEntityWasBehindObstacle { get; set; }
 
     /// <summary>
+    ///     Kernel.TickCount when the current hold-for-loot streak below started, or -1 if not
+    ///     currently holding. Mirrors the same-purpose field in Botbase.cs - see its comment
+    ///     for why this can't be an unconditional wait on PickupManager.HasPendingLoot: this
+    ///     bundle used to just return here for as long as HasPendingLoot said there was
+    ///     anything pending at all, with no time bound of its own, so a single item it
+    ///     couldn't actually get around to (or a genuinely-reachable one Loot just hadn't had a
+    ///     free tick for yet) left the character standing still forever, never wandering off to
+    ///     find the next mob once nothing nearby was actively attacking it.
+    /// </summary>
+    private int _holdForLootStartTick = -1;
+
+    /// <summary>
     ///     Invokes this instance.
     /// </summary>
     public void Invoke()
@@ -41,6 +53,29 @@ internal class MovementBundle : IBundle
             Container.Bot.SetAreaPosition(Game.Player.Position);
 
         if (Game.SelectedEntity != null && !LastEntityWasBehindObstacle)
+            return;
+
+        // Don't wander off looking for the next fight while there's still loot from the last
+        // kill sitting nearby - Botbase.Tick() holds Target/Attack back for the same reason
+        // (see its own comment for why LootBundle can't always be trusted to get a clean turn
+        // on its own), but that's pointless if this bundle just walks the character away from
+        // the drop in the meantime anyway. Time-bounded the same way Botbase.Tick() bounds its
+        // own hold, and for the same reason: this must never be able to leave the character
+        // standing still indefinitely just because HasPendingLoot keeps reporting something.
+        const int maxHoldForLootMs = 5000;
+
+        var wantsToHoldForLoot = PickupManager.HasPendingLoot(
+            Game.Player.Position,
+            Container.Bot.Area.Position,
+            Container.Bot.Area.Radius
+        );
+
+        if (!wantsToHoldForLoot)
+            _holdForLootStartTick = -1;
+        else if (_holdForLootStartTick < 0)
+            _holdForLootStartTick = Kernel.TickCount;
+
+        if (wantsToHoldForLoot && Kernel.TickCount - _holdForLootStartTick < maxHoldForLootMs)
             return;
 
         var playerUnderAttack = SpawnManager.Any<SpawnedMonster>(m =>
@@ -147,5 +182,6 @@ internal class MovementBundle : IBundle
     public void Stop()
     {
         LastEntityWasBehindObstacle = false;
+        _holdForLootStartTick = -1;
     }
 }

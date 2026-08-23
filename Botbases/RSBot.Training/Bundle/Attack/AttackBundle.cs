@@ -74,7 +74,14 @@ internal class AttackBundle : IBundle
         // whether an *already engaged* target has drifted out to DisengageDistance (35m);
         // see that constant's doc comment for why it's deliberately wider than the
         // selection distance instead of reusing it.
-        if (Game.SelectedEntity.DistanceToPlayer > DisengageDistance)
+        // A mob that's actively attacking the player is never disengaged for being far away -
+        // it's still hitting the player regardless of what the distance figure says (a ranged
+        // attacker is expected to be well past melee range; a knockback or lag spike can also
+        // put a genuinely-engaged melee mob briefly outside DisengageDistance). Without this,
+        // exactly that kind of attacker got dropped and blacklisted here on the very next tick
+        // after TargetBundle selected it, over and over - from the player's side that reads as
+        // "keeps saying no target" while still visibly being hit by something.
+        if (!Game.SelectedEntity.AttackingPlayer && Game.SelectedEntity.DistanceToPlayer > DisengageDistance)
         {
             Log.Debug($"Deselecting entity because it's {Game.SelectedEntity.DistanceToPlayer:0.0}m away - too far to engage!");
 

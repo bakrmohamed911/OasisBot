@@ -758,7 +758,16 @@ public class Player : SpawnedBionic
                 // potion
                 if (record.Param1 > 0 || record.Param3 > 0)
                 {
-                    if (Race == ObjectCountry.Chinese)
+                    // Chinese-race characters normally get a shorter potion delay (a real
+                    // racial bonus), but on this server that doesn't hold: even though this
+                    // account's Race reads as Chinese, potion uses were only ever actually
+                    // accepted roughly 15-20s apart in practice (confirmed across a full
+                    // session's logs - dozens of attempts every ~1050ms, nearly all rejected,
+                    // with the rare success spaced exactly like the non-Chinese branch below).
+                    // Rather than a parsing bug, this looks like the server itself not applying
+                    // the Chinese racial bonus - so use the same duration as every other race
+                    // here regardless of what Race reports.
+                    if (Race == ObjectCountry.Chinese && Game.ClientType != GameClientType.Vietnam274)
                         duration = 1050;
                     else
                         duration = 15050;

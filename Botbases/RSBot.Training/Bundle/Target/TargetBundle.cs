@@ -130,7 +130,10 @@ internal class TargetBundle : IBundle
             return;
         }
 
-        if (!Container.Bot.Area.IsInSight(monster))
+        // Same bypass as the filter inside GetNearestEnemy() itself (see its comment) - an
+        // attacking monster it already chose to hand back here can't then be thrown away by
+        // this redundant outer check just because the fight has drifted outside the area.
+        if (!monster.AttackingPlayer && !Container.Bot.Area.IsInSight(monster))
             return;
 
         if (monster.TrySelect())
@@ -187,18 +190,45 @@ internal class TargetBundle : IBundle
         )
             return null;
 
+        // OrderBy().OrderBy().OrderByDescending() does NOT chain like ThenBy - each call
+        // re-sorts from scratch, so only the LAST one (distance) actually decided the result;
+        // rarity/level only broke ties at identical distances, which next-to-never happens.
+        // That's the opposite of "weaker first": it was picking whichever attacker happened
+        // to be farthest away, rarity and level be damned - easily the giant itself if it was
+        // standing back throwing ranged attacks while the general/champion closed in.
         return entities
             .OrderBy(e => (byte)e.Rarity)
-            .OrderBy(e => e.Record.Level)
-            .OrderByDescending(e => e.Position.DistanceToPlayer())
+            .ThenBy(e => e.Record.Level)
+            .ThenByDescending(e => e.Position.DistanceToPlayer())
             .FirstOrDefault();
     }
 
     private bool IsEmergencySituation()
     {
-        return SpawnManager.Any<SpawnedMonster>(e =>
-            e.AttackingPlayer && e.State.LifeState == LifeState.Alive && Bundles.Avoidance.AvoidMonster(e.Rarity)
-        );
+        // A dangerous (avoid-listed) mob attacking is always worth reacting to.
+        if (
+            SpawnManager.Any<SpawnedMonster>(e =>
+                e.AttackingPlayer && e.State.LifeState == LifeState.Alive && Bundles.Avoidance.AvoidMonster(e.Rarity)
+            )
+        )
+            return true;
+
+        // Being hit by more than one mob at once, of different rarities, is worth reacting to
+        // on its own - without this, "attack weaker first" silently did nothing unless the
+        // Avoidance list *also* happened to name one of the exact rarities currently attacking
+        // (e.g. Giant), which is an easy-to-miss second setting for what the checkbox alone
+        // sounds like it should already do: kill the general/champion adds before they pile up
+        // while the giant is being tanked, instead of only ever focusing the giant.
+        if (
+            !SpawnManager.TryGetEntities<SpawnedMonster>(
+                e => e.AttackingPlayer && e.State.LifeState == LifeState.Alive,
+                out var attackers
+            )
+        )
+            return false;
+
+        var attackersList = attackers.ToList();
+        return attackersList.Count > 1 && attackersList.Select(e => e.Rarity).Distinct().Count() > 1;
     }
 
     /// <summary>
@@ -231,8 +261,16 @@ internal class TargetBundle : IBundle
                     // next, actually-engageable candidate.
                     (m.AttackingPlayer || m.DistanceToPlayer <= Attack.AttackBundle.EngageDistance)
                     && //Is attacking player or within engage distance of the player
-                    Container.Bot.Area.IsInSight(m)
-                    && //Is in training area
+                    // A mob already attacking the player has to stay selectable regardless of
+                    // the training area's bounds - the area filter exists to stop the bot
+                    // wandering off to fights it doesn't need, not to make it defenseless
+                    // against something already hitting it. Without this bypass (matching the
+                    // two checks above it), a pull that drags the fight outside the configured
+                    // Area radius left every attacker filtered out here, so GetNearestEnemy()
+                    // came back null and the bot sat there getting hit by 3 mobs while
+                    // reporting "no target" the whole time.
+                    (m.AttackingPlayer || Container.Bot.Area.IsInSight(m))
+                    && //Is in training area, or already attacking us regardless of area bounds
                     !m.Record.IsPandora
                     && //Isn't pandora box
                     !(m.Record.IsDimensionPillar && ignorePillar)
