@@ -3,7 +3,7 @@ using System.Windows.Forms;
 using RSBot.Core;
 using SDUI.Controls;
 
-namespace RSBot.General.Views;
+namespace RSBot.Extras.Views;
 
 public partial class SoundNotificationWindow : UIWindowBase
 {

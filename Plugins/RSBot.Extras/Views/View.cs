@@ -1,4 +1,4 @@
-﻿namespace RSBot.General.Views;
+namespace RSBot.Extras.Views;
 
 internal class View
 {
@@ -16,13 +16,5 @@ internal class View
     /// <value>
     ///     The instance.
     /// </value>
-    public static PendingWindow PendingWindow { get; } = new();
-
-    /// <summary>
-    ///     Gets or sets the instance.
-    /// </summary>
-    /// <value>
-    ///     The instance.
-    /// </value>
-    public static AccountsWindow AccountsWindow { get; } = new();
+    public static SoundNotificationWindow SoundNotificationWindow { get; } = new();
 }

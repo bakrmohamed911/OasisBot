@@ -32,6 +32,8 @@ public partial class AccountsWindow : UIWindowBase
         txtServername.Text = string.Empty;
         btnSave.Enabled = false;
         btnAdd.Visible = true;
+        buttonRemove.Visible = false;
+        btnDuplicate.Visible = false;
     }
 
     /// <summary>
@@ -105,7 +107,38 @@ public partial class AccountsWindow : UIWindowBase
             comboBoxChannel.SelectedIndex = selectedAccount.Channel - 1;
             btnSave.Enabled = true;
             btnAdd.Visible = false;
+            buttonRemove.Visible = true;
+            btnDuplicate.Visible = true;
         }
+    }
+
+    /// <summary>
+    ///     Handles the Click event of the btnDuplicate control: carries over the selected account's
+    ///     password, secondary password, server name and channel into a fresh "Add" entry, so the
+    ///     user only has to type the new username instead of re-entering everything.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+    private void btnDuplicate_Click(object sender, EventArgs e)
+    {
+        var selectedAccount = listAccounts.SelectedItem as Account;
+        if (selectedAccount == null)
+            return;
+
+        var password = selectedAccount.Password;
+        var secondaryPassword = selectedAccount.SecondaryPassword;
+        var servername = selectedAccount.Servername;
+        var channel = selectedAccount.Channel;
+
+        // Deselecting first runs ClearTextboxes() (via listAccounts_SelectedIndexChanged), which
+        // resets the form back into "Add" mode before we fill in the carried-over values below.
+        listAccounts.SelectedIndex = -1;
+
+        txtPassword.Text = password;
+        textBoxSecondaryPassword.Text = secondaryPassword;
+        txtServername.Text = servername;
+        comboBoxChannel.SelectedIndex = channel - 1;
+        txtUsername.Focus();
     }
 
     /// <summary>

@@ -1,6 +1,6 @@
 ﻿using System.Reflection.PortableExecutable;
 
-namespace RSBot.General.Views
+namespace RSBot.Extras.Views
 {
     partial class SoundNotificationWindow
     {

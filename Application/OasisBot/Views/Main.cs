@@ -44,6 +44,15 @@ public partial class Main : UIWindow
     public Main()
     {
         InitializeComponent();
+
+        // Lock the window to a fixed size: no drag-resize, no maximize/full-screen.
+        // Set in code (rather than the designer) so it isn't skewed by AutoScaleMode.Dpi
+        // rescaling the designer's declared ClientSize to the current display's DPI.
+        MaximizeBox = false;
+        ClientSize = new Size(1280, 720);
+        MinimumSize = Size;
+        MaximumSize = Size;
+
         CheckForIllegalCrossThreadCalls = false;
         SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
         RegisterEvents();

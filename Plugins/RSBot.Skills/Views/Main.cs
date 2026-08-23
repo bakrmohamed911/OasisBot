@@ -31,8 +31,6 @@ public partial class Main : DoubleBufferedControl
         listSkills.SmallImageList = ListViewExtensions.StaticImageList;
         listActiveBuffs.SmallImageList = ListViewExtensions.StaticImageList;
 
-        BuildMasterySelectionMenu();
-
         _lock = new object();
     }
 
@@ -117,20 +115,8 @@ public partial class Main : DoubleBufferedControl
         foreach (var checkbox in groupBoxAttackingSkills.Controls.OfType<CheckBox>())
             checkbox.Checked = PlayerConfig.Get(key + checkbox.Name, checkbox.Checked);
 
-        foreach (var checkbox in groupBoxAutomatedResurrection.Controls.OfType<CheckBox>())
-            checkbox.Checked = PlayerConfig.Get(key + checkbox.Name, checkbox.Checked);
-
         foreach (var checkbox in groupBoxAdvancedBuff.Controls.OfType<CheckBox>())
             checkbox.Checked = PlayerConfig.Get(key + checkbox.Name, checkbox.Checked);
-
-        foreach (var checkbox in grpMasteryUpdate.Controls.OfType<CheckBox>())
-            checkbox.Checked = PlayerConfig.Get(key + checkbox.Name, checkbox.Checked);
-
-        foreach (var num in grpMasteryUpdate.Controls.OfType<NumUpDown>())
-            num.Value = PlayerConfig.Get(key + num.Name, num.Value);
-
-        foreach (var num in groupBoxAutomatedResurrection.Controls.OfType<NumUpDown>())
-            num.Value = PlayerConfig.Get(key + num.Name, num.Value);
 
         foreach (var checkbox in groupAdvancedSetup.Controls.OfType<CheckBox>())
             checkbox.Checked = PlayerConfig.Get(key + checkbox.Name, checkbox.Checked);
@@ -148,20 +134,8 @@ public partial class Main : DoubleBufferedControl
         foreach (var checkbox in groupBoxAttackingSkills.Controls.OfType<CheckBox>())
             PlayerConfig.Set(key + checkbox.Name, checkbox.Checked);
 
-        foreach (var checkbox in groupBoxAutomatedResurrection.Controls.OfType<CheckBox>())
-            PlayerConfig.Set(key + checkbox.Name, checkbox.Checked);
-
         foreach (var checkbox in groupBoxAdvancedBuff.Controls.OfType<CheckBox>())
             PlayerConfig.Set(key + checkbox.Name, checkbox.Checked);
-
-        foreach (var checkbox in grpMasteryUpdate.Controls.OfType<CheckBox>())
-            PlayerConfig.Set(key + checkbox.Name, checkbox.Checked);
-
-        foreach (var num in grpMasteryUpdate.Controls.OfType<NumUpDown>())
-            PlayerConfig.Set(key + num.Name, num.Value);
-
-        foreach (var num in groupBoxAutomatedResurrection.Controls.OfType<NumUpDown>())
-            PlayerConfig.Set(key + num.Name, num.Value);
 
         foreach (var checkbox in groupAdvancedSetup.Controls.OfType<CheckBox>())
             PlayerConfig.Set(key + checkbox.Name, checkbox.Checked);
@@ -190,104 +164,6 @@ public partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
-    ///     Loads the masteries. Multiple masteries can be selected for auto-leveling via the
-    ///     combo box's right-click menu (<see cref="BuildMasterySelectionMenu" />) - selected ones
-    ///     are marked with a checkmark and summarized in the combo box's tooltip.
-    /// </summary>
-    private void LoadMasteries()
-    {
-        var selectedMasteries = SkillsManager.GetMasteriesToLearn();
-        comboLearnMastery.BeginUpdate();
-        comboLearnMastery.Items.Clear();
-
-        foreach (var mastery in Game.Player.Skills.Masteries)
-            comboLearnMastery.Items.Add(
-                new MasteryComboBoxItem
-                {
-                    Level = mastery.Level,
-                    Record = mastery.Record,
-                    IsSelectedForAutoLevel = selectedMasteries.Contains(mastery.Record.NameCode),
-                }
-            );
-
-        if (comboLearnMastery.Items.Count > 0)
-            comboLearnMastery.SelectedIndex = 0;
-
-        comboLearnMastery.EndUpdate();
-
-        comboLearnMastery.Update();
-
-        UpdateMasterySelectionTooltip();
-    }
-
-    /// <summary>
-    ///     Refreshes the tooltip summarizing which masteries are currently selected for auto-leveling.
-    /// </summary>
-    private void UpdateMasterySelectionTooltip()
-    {
-        var names = comboLearnMastery
-            .Items.Cast<MasteryComboBoxItem>()
-            .Where(item => item.IsSelectedForAutoLevel)
-            .Select(item => item.Record.Name);
-
-        var summary = string.Join(", ", names);
-
-        _masterySelectionToolTip ??= new ToolTip();
-        _masterySelectionToolTip.SetToolTip(
-            comboLearnMastery,
-            string.IsNullOrEmpty(summary)
-                ? "No masteries selected for auto-leveling. Right-click to add one."
-                : "Auto-leveling: " + summary
-        );
-    }
-
-    /// <summary>
-    ///     Builds (once) the right-click menu on <see cref="comboLearnMastery" /> that lets the user
-    ///     add/remove the currently browsed mastery from the auto-leveling selection.
-    /// </summary>
-    private void BuildMasterySelectionMenu()
-    {
-        var menu = new SDUI.Controls.ContextMenuStrip();
-        var addItem = new ToolStripMenuItem("Add to auto-leveling selection");
-        var removeItem = new ToolStripMenuItem("Remove from auto-leveling selection");
-
-        addItem.Click += (_, _) => ToggleSelectedMastery(true);
-        removeItem.Click += (_, _) => ToggleSelectedMastery(false);
-
-        menu.Opening += (_, _) =>
-        {
-            var selected = comboLearnMastery.SelectedItem as MasteryComboBoxItem;
-            addItem.Enabled = selected is { IsSelectedForAutoLevel: false };
-            removeItem.Enabled = selected is { IsSelectedForAutoLevel: true };
-        };
-
-        menu.Items.Add(addItem);
-        menu.Items.Add(removeItem);
-
-        comboLearnMastery.ContextMenuStrip = menu;
-    }
-
-    /// <summary>
-    ///     Adds or removes the mastery currently browsed in <see cref="comboLearnMastery" /> from the
-    ///     auto-leveling selection.
-    /// </summary>
-    private void ToggleSelectedMastery(bool select)
-    {
-        if (comboLearnMastery.SelectedItem is not MasteryComboBoxItem item)
-            return;
-
-        if (select)
-            SkillsManager.AddMasteryToLearn(item.Record.NameCode);
-        else
-            SkillsManager.RemoveMasteryToLearn(item.Record.NameCode);
-
-        item.IsSelectedForAutoLevel = select;
-
-        comboLearnMastery.Invalidate();
-        UpdateMasterySelectionTooltip();
-    }
-
-    /// <summary>
     ///     Loads the available teleport skills into the combo box
     /// </summary>
     private void LoadTeleportSkills()
@@ -313,7 +189,7 @@ public partial class Main : DoubleBufferedControl
             }
         }
 
-        comboLearnMastery.EndUpdate();
+        comboTeleportSkill.EndUpdate();
     }
 
     /// <summary>
@@ -409,37 +285,6 @@ public partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
-    ///     Loads the resurrection skills.
-    /// </summary>
-    private void LoadResurrectionSkills()
-    {
-        lock (_lock)
-        {
-            comboResurrectionSkill.Items.Clear();
-            comboResurrectionSkill.Items.Add("None");
-
-            foreach (
-                var skill in Game.Player.Skills.KnownSkills.Where(s =>
-                    s.Record != null
-                    && ((s.Record.TargetEtc_SelectDeadBody && !s.Record.TargetGroup_Enemy_M) || s.Record.GroupID == 659)
-                )
-            ) //group res
-            {
-                if (skill.IsLowLevel())
-                    continue;
-
-                var index = comboResurrectionSkill.Items.Add(skill);
-                var resurrectionSkillId = PlayerConfig.Get<int>("RSBot.Skills.ResurrectionSkill");
-                if (skill.Id == resurrectionSkillId)
-                    comboResurrectionSkill.SelectedIndex = index;
-            }
-
-            if (comboResurrectionSkill.SelectedIndex <= 0)
-                comboResurrectionSkill.SelectedIndex = 0;
-        }
-    }
-
-    /// <summary>
     ///     Loads the skills.
     /// </summary>
     private void LoadSkills()
@@ -450,11 +295,9 @@ public partial class Main : DoubleBufferedControl
             if (player == null)
                 return;
 
-            LoadResurrectionSkills();
             LoadTeleportSkills();
             LoadImbues();
             LoadBuffs();
-            LoadMasteries();
             LoadAttacks(comboMonsterType.SelectedIndex);
 
             listSkills.BeginUpdate();
@@ -785,23 +628,6 @@ public partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
-    ///     Handles the SelectedIndexChanged event of the comboResurrectionSkill control.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-    private void comboResurrectionSkill_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        if (comboResurrectionSkill.SelectedIndex < 0)
-            return;
-
-        SkillInfo skill = null;
-
-        if (comboResurrectionSkill.SelectedIndex > 0)
-            skill = comboResurrectionSkill.SelectedItem as SkillInfo;
-        SkillsManager.SetResurrectionSkill(skill);
-    }
-
-    /// <summary>
     ///     Handles the CheckedChanged event of the filters control.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
@@ -868,16 +694,6 @@ public partial class Main : DoubleBufferedControl
         }
 
         SaveBuffs();
-    }
-
-    private void comboLearnMastery_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        if (comboLearnMastery.SelectedIndex < 0)
-            return;
-
-        // Just tracks which mastery is being browsed - use the right-click menu to
-        // add/remove it from the auto-leveling selection (see BuildMasterySelectionMenu).
-        _selectedMastery = (MasteryComboBoxItem)comboLearnMastery.SelectedItem;
     }
 
     private void listSkills_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -988,19 +804,6 @@ public partial class Main : DoubleBufferedControl
         _settingsLoaded = true;
     }
 
-    private class MasteryComboBoxItem
-    {
-        public byte Level;
-        public RefSkillMastery Record;
-        public bool IsSelectedForAutoLevel;
-
-        public override string ToString()
-        {
-            var prefix = IsSelectedForAutoLevel ? "✓ " : "";
-            return prefix + Record.Name + $" lv.{Level}";
-        }
-    }
-
     private class TeleportSkillComboBoxItem
     {
         public byte Level;
@@ -1015,9 +818,7 @@ public partial class Main : DoubleBufferedControl
     #region Fields
 
     private readonly object _lock;
-    private MasteryComboBoxItem _selectedMastery;
     private bool _settingsLoaded;
-    private ToolTip _masterySelectionToolTip;
 
     #endregion Fields
 }

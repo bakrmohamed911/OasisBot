@@ -92,19 +92,11 @@
             label16 = new SDUI.Controls.Label();
             checkUsePetHP = new SDUI.Controls.CheckBox();
             checkUseHGP = new SDUI.Controls.CheckBox();
-            groupStatPoints = new SDUI.Controls.GroupBox();
-            buttonRun = new SDUI.Controls.Button();
-            checkIncBotStopped = new SDUI.Controls.CheckBox();
-            numIncStr = new SDUI.Controls.NumUpDown();
-            numIncInt = new SDUI.Controls.NumUpDown();
-            checkIncStr = new SDUI.Controls.CheckBox();
-            checkIncInt = new SDUI.Controls.CheckBox();
             toolTip1 = new System.Windows.Forms.ToolTip(components);
             groupBackTown.SuspendLayout();
             groupBadStatus.SuspendLayout();
             groupHPMP.SuspendLayout();
             groupPet.SuspendLayout();
-            groupStatPoints.SuspendLayout();
             SuspendLayout();
             // 
             // label22
@@ -1221,130 +1213,11 @@
             checkUseHGP.Text = "Use HGP / Saiety potions if hunger *";
             checkUseHGP.UseVisualStyleBackColor = false;
             checkUseHGP.CheckedChanged += settings_CheckedChanged;
-            // 
-            // groupStatPoints
-            // 
-            groupStatPoints.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            groupStatPoints.BackColor = System.Drawing.Color.Transparent;
-            groupStatPoints.Controls.Add(buttonRun);
-            groupStatPoints.Controls.Add(checkIncBotStopped);
-            groupStatPoints.Controls.Add(numIncStr);
-            groupStatPoints.Controls.Add(numIncInt);
-            groupStatPoints.Controls.Add(checkIncStr);
-            groupStatPoints.Controls.Add(checkIncInt);
-            groupStatPoints.Location = new System.Drawing.Point(599, 377);
-            groupStatPoints.Margin = new System.Windows.Forms.Padding(7, 5, 0, 0);
-            groupStatPoints.Name = "groupStatPoints";
-            groupStatPoints.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
-            groupStatPoints.Radius = 10;
-            groupStatPoints.ShadowDepth = 4;
-            groupStatPoints.Size = new System.Drawing.Size(330, 211);
-            groupStatPoints.TabIndex = 18;
-            groupStatPoints.TabStop = false;
-            groupStatPoints.Text = "Stat points";
-            // 
-            // buttonRun
-            // 
-            buttonRun.Color = System.Drawing.Color.Transparent;
-            buttonRun.Location = new System.Drawing.Point(79, 171);
-            buttonRun.Margin = new System.Windows.Forms.Padding(4);
-            buttonRun.Name = "buttonRun";
-            buttonRun.Radius = 6;
-            buttonRun.ShadowDepth = 4F;
-            buttonRun.Size = new System.Drawing.Size(121, 29);
-            buttonRun.TabIndex = 27;
-            buttonRun.Text = "Run";
-            buttonRun.UseVisualStyleBackColor = true;
-            buttonRun.Click += buttonRun_Click;
-            // 
-            // checkIncBotStopped
-            // 
-            checkIncBotStopped.AutoSize = true;
-            checkIncBotStopped.BackColor = System.Drawing.Color.Transparent;
-            checkIncBotStopped.Checked = true;
-            checkIncBotStopped.CheckState = System.Windows.Forms.CheckState.Checked;
-            checkIncBotStopped.Depth = 0;
-            checkIncBotStopped.Location = new System.Drawing.Point(22, 130);
-            checkIncBotStopped.Margin = new System.Windows.Forms.Padding(0);
-            checkIncBotStopped.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkIncBotStopped.Name = "checkIncBotStopped";
-            checkIncBotStopped.Ripple = true;
-            checkIncBotStopped.Size = new System.Drawing.Size(237, 30);
-            checkIncBotStopped.TabIndex = 24;
-            checkIncBotStopped.Text = "Increase even if bot is stopped";
-            checkIncBotStopped.UseVisualStyleBackColor = false;
-            checkIncBotStopped.CheckedChanged += settings_CheckedChanged;
-            // 
-            // numIncStr
-            // 
-            numIncStr.BackColor = System.Drawing.Color.Transparent;
-            numIncStr.Font = new System.Drawing.Font("Segoe UI", 9.25F);
-            numIncStr.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            numIncStr.Location = new System.Drawing.Point(166, 95);
-            numIncStr.Margin = new System.Windows.Forms.Padding(4);
-            numIncStr.Maximum = new decimal(new int[] { 3, 0, 0, 0 });
-            numIncStr.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
-            numIncStr.MinimumSize = new System.Drawing.Size(100, 31);
-            numIncStr.Name = "numIncStr";
-            numIncStr.Size = new System.Drawing.Size(100, 31);
-            numIncStr.TabIndex = 22;
-            numIncStr.Value = new decimal(new int[] { 0, 0, 0, 0 });
-            numIncStr.ValueChanged += numIncStr_ValueChanged;
-            // 
-            // numIncInt
-            // 
-            numIncInt.BackColor = System.Drawing.Color.Transparent;
-            numIncInt.Font = new System.Drawing.Font("Segoe UI", 9.25F);
-            numIncInt.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            numIncInt.Location = new System.Drawing.Point(166, 56);
-            numIncInt.Margin = new System.Windows.Forms.Padding(4);
-            numIncInt.Maximum = new decimal(new int[] { 3, 0, 0, 0 });
-            numIncInt.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
-            numIncInt.MinimumSize = new System.Drawing.Size(100, 31);
-            numIncInt.Name = "numIncInt";
-            numIncInt.Size = new System.Drawing.Size(100, 31);
-            numIncInt.TabIndex = 21;
-            numIncInt.Value = new decimal(new int[] { 0, 0, 0, 0 });
-            numIncInt.ValueChanged += numIncInt_ValueChanged;
-            // 
-            // checkIncStr
-            // 
-            checkIncStr.AutoSize = true;
-            checkIncStr.BackColor = System.Drawing.Color.Transparent;
-            checkIncStr.Depth = 0;
-            checkIncStr.Location = new System.Drawing.Point(22, 92);
-            checkIncStr.Margin = new System.Windows.Forms.Padding(0);
-            checkIncStr.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkIncStr.Name = "checkIncStr";
-            checkIncStr.Ripple = true;
-            checkIncStr.Size = new System.Drawing.Size(118, 30);
-            checkIncStr.TabIndex = 20;
-            checkIncStr.Text = "Increase STR";
-            checkIncStr.UseVisualStyleBackColor = false;
-            checkIncStr.CheckedChanged += settings_CheckedChanged;
-            // 
-            // checkIncInt
-            // 
-            checkIncInt.AutoSize = true;
-            checkIncInt.BackColor = System.Drawing.Color.Transparent;
-            checkIncInt.Depth = 0;
-            checkIncInt.Location = new System.Drawing.Point(22, 54);
-            checkIncInt.Margin = new System.Windows.Forms.Padding(0);
-            checkIncInt.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkIncInt.Name = "checkIncInt";
-            checkIncInt.Ripple = true;
-            checkIncInt.Size = new System.Drawing.Size(116, 30);
-            checkIncInt.TabIndex = 19;
-            checkIncInt.Text = "Increase INT";
-            checkIncInt.UseVisualStyleBackColor = false;
-            checkIncInt.CheckedChanged += settings_CheckedChanged;
-            // 
             // Main
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             Controls.Add(groupBackTown);
-            Controls.Add(groupStatPoints);
             Controls.Add(label22);
             Controls.Add(groupHPMP);
             Controls.Add(groupBadStatus);
@@ -1362,8 +1235,6 @@
             groupHPMP.PerformLayout();
             groupPet.ResumeLayout(false);
             groupPet.PerformLayout();
-            groupStatPoints.ResumeLayout(false);
-            groupStatPoints.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -1428,13 +1299,6 @@
         private SDUI.Controls.CheckBox checkDead;
         private SDUI.Controls.CheckBox checkInventory;
         private SDUI.Controls.CheckBox checkNoArrows;
-        private SDUI.Controls.GroupBox groupStatPoints;
-        private SDUI.Controls.NumUpDown numIncStr;
-        private SDUI.Controls.NumUpDown numIncInt;
-        private SDUI.Controls.CheckBox checkIncStr;
-        private SDUI.Controls.CheckBox checkIncInt;
-        private SDUI.Controls.CheckBox checkIncBotStopped;
-        private SDUI.Controls.Button buttonRun;
         private SDUI.Controls.CheckBox checkStopBotOnReturnToTown;
         private SDUI.Controls.Label label17;
         private SDUI.Controls.NumUpDown numShardFatigueMinToDC;

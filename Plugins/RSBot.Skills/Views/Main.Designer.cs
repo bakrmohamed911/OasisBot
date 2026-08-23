@@ -51,26 +51,10 @@
             tabControl1 = new SDUI.Controls.TabControl();
             tabPage1 = new System.Windows.Forms.TabPage();
             tabPage2 = new System.Windows.Forms.TabPage();
-            groupBoxAutomatedResurrection = new SDUI.Controls.GroupBox();
-            lblResRadius = new SDUI.Controls.Label();
-            numResRadius = new SDUI.Controls.NumUpDown();
-            lblResDelaySec = new SDUI.Controls.Label();
-            lblResDelay = new SDUI.Controls.Label();
-            numResDelay = new SDUI.Controls.NumUpDown();
-            comboResurrectionSkill = new SDUI.Controls.ComboBox();
-            checkAcceptResurrection = new SDUI.Controls.CheckBox();
-            label3 = new SDUI.Controls.Label();
-            checkResurrectParty = new SDUI.Controls.CheckBox();
             groupBoxAdvancedBuff = new SDUI.Controls.GroupBox();
             checkCastBuffsBetweenAttacks = new SDUI.Controls.CheckBox();
             checkCastBuffsDuringWalkBack = new SDUI.Controls.CheckBox();
             checkCastBuffsInTowns = new SDUI.Controls.CheckBox();
-            grpMasteryUpdate = new SDUI.Controls.GroupBox();
-            checkLearnMasteryBotStopped = new SDUI.Controls.CheckBox();
-            label4 = new SDUI.Controls.Label();
-            numMasteryGap = new SDUI.Controls.NumUpDown();
-            comboLearnMastery = new SDUI.Controls.ComboBox();
-            checkLearnMastery = new SDUI.Controls.CheckBox();
             groupAdvancedSetup = new SDUI.Controls.GroupBox();
             comboTeleportSkill = new SDUI.Controls.ComboBox();
             checkUseTeleportSkill = new SDUI.Controls.CheckBox();
@@ -102,9 +86,7 @@
             tabControl1.SuspendLayout();
             tabPage1.SuspendLayout();
             tabPage2.SuspendLayout();
-            groupBoxAutomatedResurrection.SuspendLayout();
             groupBoxAdvancedBuff.SuspendLayout();
-            grpMasteryUpdate.SuspendLayout();
             groupAdvancedSetup.SuspendLayout();
             tabControl2.SuspendLayout();
             tabPage3.SuspendLayout();
@@ -423,9 +405,7 @@
             // tabPage2
             // 
             tabPage2.BackColor = System.Drawing.Color.White;
-            tabPage2.Controls.Add(groupBoxAutomatedResurrection);
             tabPage2.Controls.Add(groupBoxAdvancedBuff);
-            tabPage2.Controls.Add(grpMasteryUpdate);
             tabPage2.Controls.Add(groupAdvancedSetup);
             tabPage2.Location = new System.Drawing.Point(4, 28);
             tabPage2.Margin = new System.Windows.Forms.Padding(0);
@@ -433,184 +413,6 @@
             tabPage2.Size = new System.Drawing.Size(482, 552);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Advanced setup";
-            // 
-            // groupBoxAutomatedResurrection
-            // 
-            groupBoxAutomatedResurrection.BackColor = System.Drawing.Color.Transparent;
-            groupBoxAutomatedResurrection.Controls.Add(lblResRadius);
-            groupBoxAutomatedResurrection.Controls.Add(numResRadius);
-            groupBoxAutomatedResurrection.Controls.Add(lblResDelaySec);
-            groupBoxAutomatedResurrection.Controls.Add(lblResDelay);
-            groupBoxAutomatedResurrection.Controls.Add(numResDelay);
-            groupBoxAutomatedResurrection.Controls.Add(comboResurrectionSkill);
-            groupBoxAutomatedResurrection.Controls.Add(checkAcceptResurrection);
-            groupBoxAutomatedResurrection.Controls.Add(label3);
-            groupBoxAutomatedResurrection.Controls.Add(checkResurrectParty);
-            groupBoxAutomatedResurrection.Location = new System.Drawing.Point(7, 5);
-            groupBoxAutomatedResurrection.Margin = new System.Windows.Forms.Padding(7, 5, 0, 0);
-            groupBoxAutomatedResurrection.Name = "groupBoxAutomatedResurrection";
-            groupBoxAutomatedResurrection.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
-            groupBoxAutomatedResurrection.Radius = 10;
-            groupBoxAutomatedResurrection.ShadowDepth = 4;
-            groupBoxAutomatedResurrection.Size = new System.Drawing.Size(465, 193);
-            groupBoxAutomatedResurrection.TabIndex = 11;
-            groupBoxAutomatedResurrection.TabStop = false;
-            groupBoxAutomatedResurrection.Text = "Automated resurrection";
-            // 
-            // lblResRadius
-            // 
-            lblResRadius.ApplyGradient = false;
-            lblResRadius.AutoSize = true;
-            lblResRadius.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            lblResRadius.Gradient = new System.Drawing.Color[]
-    {
-    System.Drawing.Color.Gray,
-    System.Drawing.Color.Black
-    };
-            lblResRadius.GradientAnimation = false;
-            lblResRadius.Location = new System.Drawing.Point(25, 160);
-            lblResRadius.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblResRadius.Name = "lblResRadius";
-            lblResRadius.Size = new System.Drawing.Size(139, 20);
-            lblResRadius.TabIndex = 14;
-            lblResRadius.Text = "Resurrection radius ";
-            // 
-            // numResRadius
-            // 
-            numResRadius.BackColor = System.Drawing.Color.Transparent;
-            numResRadius.Font = new System.Drawing.Font("Segoe UI", 9.25F);
-            numResRadius.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            numResRadius.Location = new System.Drawing.Point(304, 155);
-            numResRadius.Margin = new System.Windows.Forms.Padding(4);
-            numResRadius.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
-            numResRadius.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            numResRadius.MinimumSize = new System.Drawing.Size(100, 31);
-            numResRadius.Name = "numResRadius";
-            numResRadius.Size = new System.Drawing.Size(100, 31);
-            numResRadius.TabIndex = 13;
-            numResRadius.Value = new decimal(new int[] { 100, 0, 0, 0 });
-            numResRadius.ValueChanged += numSettings_ValueChanged;
-            // 
-            // lblResDelaySec
-            // 
-            lblResDelaySec.ApplyGradient = false;
-            lblResDelaySec.AutoSize = true;
-            lblResDelaySec.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            lblResDelaySec.Gradient = new System.Drawing.Color[]
-    {
-    System.Drawing.Color.Gray,
-    System.Drawing.Color.Black
-    };
-            lblResDelaySec.GradientAnimation = false;
-            lblResDelaySec.Location = new System.Drawing.Point(412, 127);
-            lblResDelaySec.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblResDelaySec.Name = "lblResDelaySec";
-            lblResDelaySec.Size = new System.Drawing.Size(30, 20);
-            lblResDelaySec.TabIndex = 12;
-            lblResDelaySec.Text = "sec";
-            // 
-            // lblResDelay
-            // 
-            lblResDelay.ApplyGradient = false;
-            lblResDelay.AutoSize = true;
-            lblResDelay.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            lblResDelay.Gradient = new System.Drawing.Color[]
-    {
-    System.Drawing.Color.Gray,
-    System.Drawing.Color.Black
-    };
-            lblResDelay.GradientAnimation = false;
-            lblResDelay.Location = new System.Drawing.Point(25, 127);
-            lblResDelay.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            lblResDelay.Name = "lblResDelay";
-            lblResDelay.Size = new System.Drawing.Size(231, 20);
-            lblResDelay.TabIndex = 11;
-            lblResDelay.Text = "Don't resurrect char again within  ";
-            // 
-            // numResDelay
-            // 
-            numResDelay.BackColor = System.Drawing.Color.Transparent;
-            numResDelay.Font = new System.Drawing.Font("Segoe UI", 9.25F);
-            numResDelay.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            numResDelay.Location = new System.Drawing.Point(304, 121);
-            numResDelay.Margin = new System.Windows.Forms.Padding(4);
-            numResDelay.Maximum = new decimal(new int[] { 300, 0, 0, 0 });
-            numResDelay.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            numResDelay.MinimumSize = new System.Drawing.Size(100, 31);
-            numResDelay.Name = "numResDelay";
-            numResDelay.Size = new System.Drawing.Size(100, 31);
-            numResDelay.TabIndex = 10;
-            numResDelay.Value = new decimal(new int[] { 120, 0, 0, 0 });
-            numResDelay.ValueChanged += numSettings_ValueChanged;
-            // 
-            // comboResurrectionSkill
-            // 
-            comboResurrectionSkill.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            comboResurrectionSkill.DropDownHeight = 100;
-            comboResurrectionSkill.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            comboResurrectionSkill.FormattingEnabled = true;
-            comboResurrectionSkill.IntegralHeight = false;
-            comboResurrectionSkill.ItemHeight = 17;
-            comboResurrectionSkill.Location = new System.Drawing.Point(114, 36);
-            comboResurrectionSkill.Margin = new System.Windows.Forms.Padding(4);
-            comboResurrectionSkill.Name = "comboResurrectionSkill";
-            comboResurrectionSkill.Radius = 5;
-            comboResurrectionSkill.ShadowDepth = 4F;
-            comboResurrectionSkill.Size = new System.Drawing.Size(318, 23);
-            comboResurrectionSkill.TabIndex = 8;
-            comboResurrectionSkill.SelectedIndexChanged += comboResurrectionSkill_SelectedIndexChanged;
-            // 
-            // checkAcceptResurrection
-            // 
-            checkAcceptResurrection.AutoSize = true;
-            checkAcceptResurrection.BackColor = System.Drawing.Color.Transparent;
-            checkAcceptResurrection.Checked = true;
-            checkAcceptResurrection.CheckState = System.Windows.Forms.CheckState.Checked;
-            checkAcceptResurrection.Depth = 0;
-            checkAcceptResurrection.Location = new System.Drawing.Point(19, 63);
-            checkAcceptResurrection.Margin = new System.Windows.Forms.Padding(0);
-            checkAcceptResurrection.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkAcceptResurrection.Name = "checkAcceptResurrection";
-            checkAcceptResurrection.Ripple = true;
-            checkAcceptResurrection.Size = new System.Drawing.Size(197, 30);
-            checkAcceptResurrection.TabIndex = 9;
-            checkAcceptResurrection.Text = "Auto accept resurrection";
-            checkAcceptResurrection.UseVisualStyleBackColor = false;
-            checkAcceptResurrection.CheckedChanged += settings_CheckedChanged;
-            // 
-            // label3
-            // 
-            label3.ApplyGradient = false;
-            label3.AutoSize = true;
-            label3.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            label3.Gradient = new System.Drawing.Color[]
-    {
-    System.Drawing.Color.Gray,
-    System.Drawing.Color.Black
-    };
-            label3.GradientAnimation = false;
-            label3.Location = new System.Drawing.Point(38, 40);
-            label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label3.Name = "label3";
-            label3.Size = new System.Drawing.Size(67, 20);
-            label3.TabIndex = 0;
-            label3.Text = "Res. skill:";
-            // 
-            // checkResurrectParty
-            // 
-            checkResurrectParty.AutoSize = true;
-            checkResurrectParty.BackColor = System.Drawing.Color.Transparent;
-            checkResurrectParty.Depth = 0;
-            checkResurrectParty.Location = new System.Drawing.Point(19, 90);
-            checkResurrectParty.Margin = new System.Windows.Forms.Padding(0);
-            checkResurrectParty.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkResurrectParty.Name = "checkResurrectParty";
-            checkResurrectParty.Ripple = true;
-            checkResurrectParty.Size = new System.Drawing.Size(232, 30);
-            checkResurrectParty.TabIndex = 6;
-            checkResurrectParty.Text = "Auto resurrect party members";
-            checkResurrectParty.UseVisualStyleBackColor = false;
-            checkResurrectParty.CheckedChanged += settings_CheckedChanged;
             // 
             // groupBoxAdvancedBuff
             // 
@@ -678,109 +480,6 @@
             checkCastBuffsInTowns.Text = "Cast buffs in towns";
             checkCastBuffsInTowns.UseVisualStyleBackColor = false;
             checkCastBuffsInTowns.CheckedChanged += settings_CheckedChanged;
-            // 
-            // grpMasteryUpdate
-            // 
-            grpMasteryUpdate.BackColor = System.Drawing.Color.Transparent;
-            grpMasteryUpdate.Controls.Add(checkLearnMasteryBotStopped);
-            grpMasteryUpdate.Controls.Add(label4);
-            grpMasteryUpdate.Controls.Add(numMasteryGap);
-            grpMasteryUpdate.Controls.Add(comboLearnMastery);
-            grpMasteryUpdate.Controls.Add(checkLearnMastery);
-            grpMasteryUpdate.Location = new System.Drawing.Point(7, 322);
-            grpMasteryUpdate.Margin = new System.Windows.Forms.Padding(7, 5, 0, 0);
-            grpMasteryUpdate.Name = "grpMasteryUpdate";
-            grpMasteryUpdate.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
-            grpMasteryUpdate.Radius = 10;
-            grpMasteryUpdate.ShadowDepth = 4;
-            grpMasteryUpdate.Size = new System.Drawing.Size(465, 95);
-            grpMasteryUpdate.TabIndex = 13;
-            grpMasteryUpdate.TabStop = false;
-            grpMasteryUpdate.Text = "Mastery update";
-            // 
-            // checkLearnMasteryBotStopped
-            // 
-            checkLearnMasteryBotStopped.AutoSize = true;
-            checkLearnMasteryBotStopped.BackColor = System.Drawing.Color.Transparent;
-            checkLearnMasteryBotStopped.Depth = 0;
-            checkLearnMasteryBotStopped.Location = new System.Drawing.Point(19, 62);
-            checkLearnMasteryBotStopped.Margin = new System.Windows.Forms.Padding(0);
-            checkLearnMasteryBotStopped.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkLearnMasteryBotStopped.Name = "checkLearnMasteryBotStopped";
-            checkLearnMasteryBotStopped.Ripple = true;
-            checkLearnMasteryBotStopped.Size = new System.Drawing.Size(237, 30);
-            checkLearnMasteryBotStopped.TabIndex = 25;
-            checkLearnMasteryBotStopped.Text = "Increase even if bot is stopped";
-            checkLearnMasteryBotStopped.UseVisualStyleBackColor = false;
-            checkLearnMasteryBotStopped.CheckedChanged += settings_CheckedChanged;
-            // 
-            // label4
-            // 
-            label4.ApplyGradient = false;
-            label4.AutoSize = true;
-            label4.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            label4.Gradient = new System.Drawing.Color[]
-    {
-    System.Drawing.Color.Gray,
-    System.Drawing.Color.Black
-    };
-            label4.GradientAnimation = false;
-            label4.Location = new System.Drawing.Point(304, 41);
-            label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label4.Name = "label4";
-            label4.Size = new System.Drawing.Size(36, 20);
-            label4.TabIndex = 3;
-            label4.Text = "Gap";
-            // 
-            // numMasteryGap
-            // 
-            numMasteryGap.BackColor = System.Drawing.Color.Transparent;
-            numMasteryGap.Font = new System.Drawing.Font("Segoe UI", 9.25F);
-            numMasteryGap.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            numMasteryGap.Location = new System.Drawing.Point(346, 36);
-            numMasteryGap.Margin = new System.Windows.Forms.Padding(4);
-            numMasteryGap.Maximum = new decimal(new int[] { 9, 0, 0, 0 });
-            numMasteryGap.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
-            numMasteryGap.MinimumSize = new System.Drawing.Size(100, 31);
-            numMasteryGap.Name = "numMasteryGap";
-            numMasteryGap.Size = new System.Drawing.Size(100, 31);
-            numMasteryGap.TabIndex = 2;
-            numMasteryGap.Value = new decimal(new int[] { 0, 0, 0, 0 });
-            numMasteryGap.ValueChanged += numSettings_ValueChanged;
-            // 
-            // comboLearnMastery
-            // 
-            comboLearnMastery.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            comboLearnMastery.DropDownHeight = 100;
-            comboLearnMastery.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            comboLearnMastery.FormattingEnabled = true;
-            comboLearnMastery.IntegralHeight = false;
-            comboLearnMastery.ItemHeight = 17;
-            comboLearnMastery.Location = new System.Drawing.Point(114, 37);
-            comboLearnMastery.Margin = new System.Windows.Forms.Padding(4);
-            comboLearnMastery.Name = "comboLearnMastery";
-            comboLearnMastery.Radius = 5;
-            comboLearnMastery.ShadowDepth = 4F;
-            comboLearnMastery.Size = new System.Drawing.Size(175, 23);
-            comboLearnMastery.TabIndex = 1;
-            comboLearnMastery.SelectedIndexChanged += comboLearnMastery_SelectedIndexChanged;
-            // 
-            // checkLearnMastery
-            // 
-            checkLearnMastery.AutoSize = true;
-            checkLearnMastery.BackColor = System.Drawing.Color.Transparent;
-            checkLearnMastery.Depth = 0;
-            checkLearnMastery.Location = new System.Drawing.Point(19, 32);
-            checkLearnMastery.Margin = new System.Windows.Forms.Padding(0);
-            checkLearnMastery.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkLearnMastery.Name = "checkLearnMastery";
-            checkLearnMastery.Ripple = true;
-            checkLearnMastery.Size = new System.Drawing.Size(87, 30);
-            checkLearnMastery.TabIndex = 0;
-            checkLearnMastery.Text = "Mastery";
-            checkLearnMastery.UseVisualStyleBackColor = false;
-            checkLearnMastery.CheckedChanged += settings_CheckedChanged;
-            // 
             // groupAdvancedSetup
             // 
             groupAdvancedSetup.BackColor = System.Drawing.Color.Transparent;
@@ -1112,12 +811,8 @@
             tabControl1.ResumeLayout(false);
             tabPage1.ResumeLayout(false);
             tabPage2.ResumeLayout(false);
-            groupBoxAutomatedResurrection.ResumeLayout(false);
-            groupBoxAutomatedResurrection.PerformLayout();
             groupBoxAdvancedBuff.ResumeLayout(false);
             groupBoxAdvancedBuff.PerformLayout();
-            grpMasteryUpdate.ResumeLayout(false);
-            grpMasteryUpdate.PerformLayout();
             groupAdvancedSetup.ResumeLayout(false);
             groupAdvancedSetup.PerformLayout();
             tabControl2.ResumeLayout(false);
@@ -1143,12 +838,7 @@
         private SDUI.Controls.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
-        private SDUI.Controls.ComboBox comboResurrectionSkill;
-        private SDUI.Controls.Label label3;
-        private SDUI.Controls.CheckBox checkResurrectParty;
-        private SDUI.Controls.CheckBox checkAcceptResurrection;
         private SDUI.Controls.CheckBox checkCastBuffsInTowns;
-        private SDUI.Controls.GroupBox groupBoxAutomatedResurrection;
         private SDUI.Controls.GroupBox groupBoxAdvancedBuff;
         private SDUI.Controls.CheckBox checkCastBuffsDuringWalkBack;
         private SDUI.Controls.TabControl tabControl2;
@@ -1178,12 +868,6 @@
         private System.Windows.Forms.ToolStripMenuItem skillContextMenuAddBuffSkill;
         private System.Windows.Forms.ToolStripMenuItem skillContextMenuAddAttackSkill;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private SDUI.Controls.GroupBox grpMasteryUpdate;
-        private SDUI.Controls.Label label4;
-        private SDUI.Controls.NumUpDown numMasteryGap;
-        private SDUI.Controls.ComboBox comboLearnMastery;
-        private SDUI.Controls.CheckBox checkLearnMastery;
-        private SDUI.Controls.CheckBox checkLearnMasteryBotStopped;
         private SDUI.Controls.GroupBox groupAdvancedSetup;
         private SDUI.Controls.CheckBox checkWarlockMode;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
@@ -1194,10 +878,5 @@
         private SDUI.Controls.ComboBox comboTeleportSkill;
         private SDUI.Controls.CheckBox checkUseTeleportSkill;
         private SDUI.Controls.CheckBox checkCastBuffsBetweenAttacks;
-        private SDUI.Controls.Label lblResDelay;
-        private SDUI.Controls.NumUpDown numResDelay;
-        private SDUI.Controls.Label lblResDelaySec;
-        private SDUI.Controls.Label lblResRadius;
-        private SDUI.Controls.NumUpDown numResRadius;
     }
 }

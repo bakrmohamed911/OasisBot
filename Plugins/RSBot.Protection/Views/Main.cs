@@ -29,9 +29,6 @@ public partial class Main : DoubleBufferedControl
 
         EventManager.SubscribeEvent("OnSkillLearned", new Action<SkillInfo>(OnSkillLearned));
         EventManager.SubscribeEvent("OnSkillUpgraded", new Action<SkillInfo, SkillInfo>(OnSkillUpgraded));
-
-        EventManager.SubscribeEvent("OnIncreaseStrength", OnIncreaseStat);
-        EventManager.SubscribeEvent("OnIncreaseIntelligence", OnIncreaseStat);
     }
 
     /// <summary>
@@ -61,12 +58,6 @@ public partial class Main : DoubleBufferedControl
 
         foreach (var num in groupBackTown.Controls.OfType<NumUpDown>())
             num.Value = PlayerConfig.Get(key + num.Name, num.Value);
-
-        foreach (var checkbox in groupStatPoints.Controls.OfType<CheckBox>())
-            checkbox.Checked = PlayerConfig.Get(key + checkbox.Name, checkbox.Checked);
-
-        foreach (var num in groupStatPoints.Controls.OfType<NumUpDown>())
-            num.Value = PlayerConfig.Get(key + num.Name, num.Value);
     }
 
     /// <summary>
@@ -94,12 +85,6 @@ public partial class Main : DoubleBufferedControl
             PlayerConfig.Set(key + checkbox.Name, checkbox.Checked);
 
         foreach (var num in groupBackTown.Controls.OfType<NumUpDown>())
-            PlayerConfig.Set(key + num.Name, num.Value);
-
-        foreach (var checkbox in groupStatPoints.Controls.OfType<CheckBox>())
-            PlayerConfig.Set(key + checkbox.Name, checkbox.Checked);
-
-        foreach (var num in groupStatPoints.Controls.OfType<NumUpDown>())
             PlayerConfig.Set(key + num.Name, num.Value);
 
         SkillInfo skill = null;
@@ -219,77 +204,6 @@ public partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
-    ///     Re-calculates the max points of the Str numeric
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void numIncInt_ValueChanged(object sender, EventArgs e)
-    {
-        numIncStr.Maximum = 3 - numIncInt.Value;
-
-        PlayerConfig.Set("RSBot.Protection.numIncInt", numIncInt.Value);
-    }
-
-    /// <summary>
-    ///     Re-calculates the max points of the Int numeric
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void numIncStr_ValueChanged(object sender, EventArgs e)
-    {
-        numIncInt.Maximum = 3 - numIncStr.Value;
-
-        PlayerConfig.Set("RSBot.Protection.numIncStr", numIncStr.Value);
-    }
-
-    private void OnIncreaseStat()
-    {
-        if (Game.Player.StatPoints < numIncInt.Value + numIncStr.Value)
-        {
-            buttonRun.Text = "Run";
-
-            _statIncreaseRunning = false;
-        }
-    }
-
-    private void buttonRun_Click(object sender, EventArgs e)
-    {
-        if (_statIncreaseRunning)
-        {
-            buttonRun.Text = "Run";
-
-            _statIncreaseRunning = false;
-
-            StatPointsHandler.CancellationRequested = true;
-
-            return;
-        }
-
-        StatPointsHandler.CancellationRequested = false;
-        var stepSize = numIncInt.Value + numIncStr.Value;
-
-        if (stepSize == 0)
-            return;
-        //Only run if at least 3 stat points can be increased
-        if (Game.Player.StatPoints < stepSize)
-            return;
-
-        var availableSteps = Math.Floor(Game.Player.StatPoints / stepSize);
-
-        if (Game.Player.StatPoints == stepSize)
-            availableSteps = 1;
-
-        if (availableSteps == 0)
-            return;
-
-        Task.Run(() => StatPointsHandler.IncreaseStatPoints((int)availableSteps));
-
-        _statIncreaseRunning = true;
-
-        buttonRun.Text = "Cancel";
-    }
-
-    /// <summary>
     ///     Occurs before Main form is displayed.
     /// </summary>
     /// <param name="sender"></param>
@@ -305,7 +219,6 @@ public partial class Main : DoubleBufferedControl
 
     private bool _settingsLoaded;
     private bool _skillSettingsLoaded;
-    private bool _statIncreaseRunning;
 
     #endregion Fields
 }

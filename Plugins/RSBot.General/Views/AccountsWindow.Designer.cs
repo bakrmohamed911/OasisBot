@@ -41,6 +41,7 @@
             txtServername = new SDUI.Controls.TextBox();
             btnSave = new SDUI.Controls.Button();
             btnAdd = new SDUI.Controls.Button();
+            btnDuplicate = new SDUI.Controls.Button();
             linkLabelPwShowHide = new System.Windows.Forms.LinkLabel();
             linkLabelSecondaryPassword = new System.Windows.Forms.LinkLabel();
             label1 = new SDUI.Controls.Label();
@@ -92,6 +93,7 @@
             buttonRemove.TabIndex = 10;
             buttonRemove.Text = "Remove";
             buttonRemove.UseVisualStyleBackColor = true;
+            buttonRemove.Visible = false;
             buttonRemove.Click += buttonRemove_Click;
             // 
             // listAccounts
@@ -216,7 +218,7 @@
             btnSave.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             btnSave.Color = System.Drawing.Color.Transparent;
             btnSave.Enabled = false;
-            btnSave.Location = new System.Drawing.Point(322, 207);
+            btnSave.Location = new System.Drawing.Point(383, 207);
             btnSave.Name = "btnSave";
             btnSave.Radius = 6;
             btnSave.ShadowDepth = 4F;
@@ -240,7 +242,21 @@
             btnAdd.Text = "Add";
             btnAdd.UseVisualStyleBackColor = true;
             btnAdd.Click += btnAdd_Click;
-            // 
+            //
+            // btnDuplicate
+            //
+            btnDuplicate.Color = System.Drawing.Color.Transparent;
+            btnDuplicate.Location = new System.Drawing.Point(280, 207);
+            btnDuplicate.Name = "btnDuplicate";
+            btnDuplicate.Radius = 6;
+            btnDuplicate.ShadowDepth = 4F;
+            btnDuplicate.Size = new System.Drawing.Size(95, 21);
+            btnDuplicate.TabIndex = 12;
+            btnDuplicate.Text = "Duplicate";
+            btnDuplicate.UseVisualStyleBackColor = true;
+            btnDuplicate.Visible = false;
+            btnDuplicate.Click += btnDuplicate_Click;
+            //
             // linkLabelPwShowHide
             // 
             linkLabelPwShowHide.AutoSize = true;
@@ -334,12 +350,13 @@
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             BackColor = System.Drawing.Color.White;
-            ClientSize = new System.Drawing.Size(408, 283);
+            ClientSize = new System.Drawing.Size(470, 283);
             ControlBox = false;
             Controls.Add(listAccounts);
             Controls.Add(linkLabelSecondaryPassword);
             Controls.Add(linkLabelPwShowHide);
             Controls.Add(btnAdd);
+            Controls.Add(btnDuplicate);
             Controls.Add(btnSave);
             Controls.Add(txtServername);
             Controls.Add(label4);
@@ -354,7 +371,7 @@
             Controls.Add(textBoxSecondaryPassword);
             Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            MinimumSize = new System.Drawing.Size(410, 293);
+            MinimumSize = new System.Drawing.Size(472, 293);
             Name = "AccountsWindow";
             ShowIcon = false;
             SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
@@ -381,6 +398,7 @@
         private SDUI.Controls.TextBox txtServername;
         private SDUI.Controls.Button btnSave;
         private SDUI.Controls.Button btnAdd;
+        private SDUI.Controls.Button btnDuplicate;
         private System.Windows.Forms.LinkLabel linkLabelPwShowHide;
         private System.Windows.Forms.LinkLabel linkLabelSecondaryPassword;
         private SDUI.Controls.Label label1;

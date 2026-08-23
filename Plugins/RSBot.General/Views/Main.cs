@@ -10,8 +10,11 @@ using RSBot.Core;
 using RSBot.Core.Client;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
+using RSBot.Core.Objects.Skill;
 using RSBot.General.Components;
 using RSBot.General.Models;
+using RSBot.Protection.Components.Player;
+using RSBot.Skills;
 using SDUI.Controls;
 
 namespace RSBot.General.Views;
@@ -52,6 +55,89 @@ internal partial class Main : DoubleBufferedControl
         EventManager.SubscribeEvent("OnExitClient", OnExitClient);
         EventManager.SubscribeEvent("OnClientProcessStarted", OnClientProcessStarted);
         EventManager.SubscribeEvent("OnClientlessProcessStarted", OnClientlessProcessStarted);
+
+        EventManager.SubscribeEvent("OnLoadCharacter", OnLoadCharacterRefreshSkillSections);
+        EventManager.SubscribeEvent("OnSkillLearned", new Action<SkillInfo>(OnSkillLearned));
+        EventManager.SubscribeEvent("OnSkillUpgraded", new Action<SkillInfo, SkillInfo>(OnSkillChanged));
+        EventManager.SubscribeEvent("OnWithdrawSkill", new Action<SkillInfo, SkillInfo>(OnSkillChanged));
+        EventManager.SubscribeEvent("OnLearnSkillMastery", new Action<MasteryInfo>(OnLearnSkillMastery));
+
+        EventManager.SubscribeEvent("OnIncreaseStrength", OnIncreaseStat);
+        EventManager.SubscribeEvent("OnIncreaseIntelligence", OnIncreaseStat);
+
+        EventManager.SubscribeEvent("OnTogglePendingWindowRequested", OnTogglePendingWindowRequested);
+    }
+
+    /// <summary>
+    ///     Handles a request (fired from the Extras tab's "Toggle Pending Window" button) to
+    ///     show/hide the pending window that is owned & managed by the automated-login flow here.
+    /// </summary>
+    private void OnTogglePendingWindowRequested()
+    {
+        if (this.InvokeRequired)
+        {
+            this.Invoke(new Action(OnTogglePendingWindowRequested));
+            return;
+        }
+        if (!AutoLogin.Pending)
+            return;
+
+        if (View.PendingWindow?.Visible == false)
+            View.PendingWindow.ShowAtTop(View.Instance);
+        else
+            View.PendingWindow.Hide();
+    }
+
+    /// <summary>
+    ///     Refreshes the resurrection skill & mastery combo boxes moved in from the Skills tab.
+    /// </summary>
+    private void RefreshSkillSections()
+    {
+        if (Game.Player == null)
+            return;
+
+        LoadResurrectionSkills();
+        LoadMasteries();
+    }
+
+    private void OnLoadCharacterRefreshSkillSections()
+    {
+        if (this.InvokeRequired)
+        {
+            this.Invoke(new Action(OnLoadCharacterRefreshSkillSections));
+            return;
+        }
+        RefreshSkillSections();
+    }
+
+    private void OnSkillLearned(SkillInfo learnedSkill)
+    {
+        if (this.InvokeRequired)
+        {
+            this.Invoke(new Action<SkillInfo>(OnSkillLearned), learnedSkill);
+            return;
+        }
+        RefreshSkillSections();
+    }
+
+    private void OnSkillChanged(SkillInfo oldSkill, SkillInfo newSkill)
+    {
+        if (this.InvokeRequired)
+        {
+            this.Invoke(new Action<SkillInfo, SkillInfo>(OnSkillChanged), oldSkill, newSkill);
+            return;
+        }
+        RefreshSkillSections();
+    }
+
+    private void OnLearnSkillMastery(MasteryInfo info)
+    {
+        if (this.InvokeRequired)
+        {
+            this.Invoke(new Action<MasteryInfo>(OnLearnSkillMastery), info);
+            return;
+        }
+        RefreshSkillSections();
     }
 
     /// <summary>
@@ -80,8 +166,6 @@ internal partial class Main : DoubleBufferedControl
         checkEnableAutoLogin.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableAutomatedLogin");
         checkStartBot.Checked = GlobalConfig.Get<bool>("RSBot.General.StartBot");
         checkUseReturnScroll.Checked = GlobalConfig.Get<bool>("RSBot.General.UseReturnScroll");
-        checkStayConnected.Checked = GlobalConfig.Get<bool>("RSBot.General.StayConnected");
-        checkBoxBotTrayMinimized.Checked = GlobalConfig.Get<bool>("RSBot.General.TrayWhenMinimize");
         txtStaticCaptcha.Text = GlobalConfig.Get<string>("RSBot.General.StaticCaptcha");
         checkEnableLoginDelay.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableLoginDelay");
         numLoginDelay.Value = GlobalConfig.Get("RSBot.General.LoginDelay", 3);
@@ -91,10 +175,23 @@ internal partial class Main : DoubleBufferedControl
         checkCharAutoSelect.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelect");
         radioAutoSelectFirst.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelectFirst", true);
         radioAutoSelectHigher.Checked = GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelectHigher");
-        checkAutoHidePendingWindow.Checked = GlobalConfig.Get<bool>("RSBot.General.AutoHidePendingWindow");
-        checkEnableQueueLogs.Checked = GlobalConfig.Get<bool>("RSBot.General.PendingEnableQueueLogs");
-        checkEnableQueueNotification.Checked = GlobalConfig.Get<bool>("RSBot.General.EnableQueueNotification");
-        numQueueLeft.Value = GlobalConfig.Get("RSBot.General.QueueLeft", 30);
+
+        checkAcceptResurrection.Checked = PlayerConfig.Get("RSBot.Skills.checkAcceptResurrection", true);
+        checkResurrectParty.Checked = PlayerConfig.Get<bool>("RSBot.Skills.checkResurrectParty");
+        numResDelay.Value = PlayerConfig.Get("RSBot.Skills.numResDelay", 120);
+        numResRadius.Value = PlayerConfig.Get("RSBot.Skills.numResRadius", 100);
+
+        checkLearnMastery.Checked = PlayerConfig.Get<bool>("RSBot.Skills.checkLearnMastery");
+        checkLearnMasteryBotStopped.Checked = PlayerConfig.Get<bool>("RSBot.Skills.checkLearnMasteryBotStopped");
+        numMasteryGap.Value = PlayerConfig.Get("RSBot.Skills.numMasteryGap", 0);
+
+        checkIncInt.Checked = PlayerConfig.Get<bool>("RSBot.Protection.checkIncInt");
+        checkIncStr.Checked = PlayerConfig.Get<bool>("RSBot.Protection.checkIncStr");
+        checkIncBotStopped.Checked = PlayerConfig.Get("RSBot.Protection.checkIncBotStopped", true);
+        numIncInt.Value = PlayerConfig.Get("RSBot.Protection.numIncInt", 0);
+        numIncStr.Value = PlayerConfig.Get("RSBot.Protection.numIncStr", 0);
+        numIncStr.Maximum = 3 - numIncInt.Value;
+        numIncInt.Maximum = 3 - numIncStr.Value;
 
         if (GlobalConfig.Get<bool>("RSBot.General.CharacterAutoSelect"))
         {
@@ -579,24 +676,6 @@ internal partial class Main : DoubleBufferedControl
         await GeneralPlugin.Instance.Manager.StartClientAsync();
     }
 
-    /// <summary>
-    ///     Handles the CheckedChanged event of the checkStayConnected control.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-    private void checkStayConnected_CheckedChanged(object sender, EventArgs e)
-    {
-        GlobalConfig.Set("RSBot.General.StayConnected", checkStayConnected.Checked);
-    }
-
-    /// <summary>
-    ///     Handles the CheckedChanged event of the checkBoxBotTrayMinimized control
-    /// </summary>
-    private void checkBoxBotTrayMinimized_CheckedChanged(object sender, EventArgs e)
-    {
-        GlobalConfig.Set("RSBot.General.TrayWhenMinimize", checkBoxBotTrayMinimized.Checked);
-    }
-
     private void btnClientHideShow_Click(object sender, EventArgs e)
     {
         if (!ClientManager.IsRunning)
@@ -741,69 +820,273 @@ internal partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
-    ///     Handles the CheckedChanged event of the checkDontShowPendingOnStartClient control.
+    ///     Handles the SelectedIndexChanged event of the comboResurrectionSkill control.
     /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void checkDontShowPendingOnStartClient_CheckedChanged(object sender, EventArgs e)
+    private void comboResurrectionSkill_SelectedIndexChanged(object sender, EventArgs e)
     {
-        GlobalConfig.Set("RSBot.General.AutoHidePendingWindow", checkAutoHidePendingWindow.Checked);
-    }
-
-    /// <summary>
-    ///     Handles the CheckedChanged event of the checkEnableQuequeLogs control.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void checkEnableQueueLogs_CheckedChanged(object sender, EventArgs e)
-    {
-        GlobalConfig.Set("RSBot.General.PendingEnableQueueLogs", checkEnableQueueLogs.Checked);
-    }
-
-    /// <summary>
-    ///     Handles the Click event of the btnShowPending control.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void btnShowPending_Click(object sender, EventArgs e)
-    {
-        if (!AutoLogin.Pending)
+        if (comboResurrectionSkill.SelectedIndex < 0)
             return;
 
-        if (View.PendingWindow?.Visible == false)
-            View.PendingWindow.ShowAtTop(View.Instance);
-        else
-            View.PendingWindow.Hide();
+        SkillInfo skill = null;
+        if (comboResurrectionSkill.SelectedIndex > 0)
+            skill = comboResurrectionSkill.SelectedItem as SkillInfo;
+
+        SkillsManager.SetResurrectionSkill(skill);
     }
 
     /// <summary>
-    ///     Handles the CheckedChanged event of the checkEnableQueueNotification control.
+    ///     Handles the CheckedChanged event of the checkAcceptResurrection control.
     /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void checkEnableQueueNotification_CheckedChanged(object sender, EventArgs e)
+    private void checkAcceptResurrection_CheckedChanged(object sender, EventArgs e)
     {
-        GlobalConfig.Set("RSBot.General.EnableQueueNotification", checkEnableQueueNotification.Checked);
+        PlayerConfig.Set("RSBot.Skills.checkAcceptResurrection", checkAcceptResurrection.Checked);
     }
 
     /// <summary>
-    ///     Handles the ValueChanged event of the numQuequeLeft control.
+    ///     Handles the CheckedChanged event of the checkResurrectParty control.
     /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void numQueueLeft_ValueChanged(object sender, EventArgs e)
+    private void checkResurrectParty_CheckedChanged(object sender, EventArgs e)
     {
-        GlobalConfig.Set("RSBot.General.QueueLeft", numQueueLeft.Value);
+        PlayerConfig.Set("RSBot.Skills.checkResurrectParty", checkResurrectParty.Checked);
     }
 
     /// <summary>
-    /// Handes the SoundSetting event for open dialog
+    ///     Handles the ValueChanged event of the numResDelay control.
     /// </summary>
-    private void btnSoundSettingSetup_Click(object sender, EventArgs e)
+    private void numResDelay_ValueChanged(object sender, EventArgs e)
     {
-        if (View.SoundNotificationWindow.ShowDialog() == DialogResult.OK)
+        PlayerConfig.Set("RSBot.Skills.numResDelay", numResDelay.Value);
+    }
+
+    /// <summary>
+    ///     Handles the ValueChanged event of the numResRadius control.
+    /// </summary>
+    private void numResRadius_ValueChanged(object sender, EventArgs e)
+    {
+        PlayerConfig.Set("RSBot.Skills.numResRadius", numResRadius.Value);
+    }
+
+    /// <summary>
+    ///     Handles the CheckedChanged event of the checkLearnMastery control.
+    /// </summary>
+    private void checkLearnMastery_CheckedChanged(object sender, EventArgs e)
+    {
+        PlayerConfig.Set("RSBot.Skills.checkLearnMastery", checkLearnMastery.Checked);
+    }
+
+    /// <summary>
+    ///     Handles the CheckedChanged event of the checkLearnMasteryBotStopped control.
+    /// </summary>
+    private void checkLearnMasteryBotStopped_CheckedChanged(object sender, EventArgs e)
+    {
+        PlayerConfig.Set("RSBot.Skills.checkLearnMasteryBotStopped", checkLearnMasteryBotStopped.Checked);
+    }
+
+    /// <summary>
+    ///     Handles the ValueChanged event of the numMasteryGap control.
+    /// </summary>
+    private void numMasteryGap_ValueChanged(object sender, EventArgs e)
+    {
+        PlayerConfig.Set("RSBot.Skills.numMasteryGap", numMasteryGap.Value);
+    }
+
+    /// <summary>
+    ///     Loads the resurrection skills into the combo box.
+    /// </summary>
+    private void LoadResurrectionSkills()
+    {
+        comboResurrectionSkill.Items.Clear();
+        comboResurrectionSkill.Items.Add("None");
+
+        foreach (
+            var skill in Game.Player.Skills.KnownSkills.Where(s =>
+                s.Record != null
+                && ((s.Record.TargetEtc_SelectDeadBody && !s.Record.TargetGroup_Enemy_M) || s.Record.GroupID == 659)
+            )
+        )
         {
-            // nothing
+            if (skill.IsLowLevel())
+                continue;
+
+            var index = comboResurrectionSkill.Items.Add(skill);
+            var resurrectionSkillId = PlayerConfig.Get<int>("RSBot.Skills.ResurrectionSkill");
+            if (skill.Id == resurrectionSkillId)
+                comboResurrectionSkill.SelectedIndex = index;
+        }
+
+        if (comboResurrectionSkill.SelectedIndex <= 0)
+            comboResurrectionSkill.SelectedIndex = 0;
+    }
+
+    /// <summary>
+    ///     Tag payload attached to each mastery entry in <see cref="_masteryMenu" />.
+    /// </summary>
+    private sealed class MasteryMenuTag
+    {
+        public string NameCode;
+        public string DisplayName;
+    }
+
+    private SDUI.Controls.ContextMenuStrip _masteryMenu;
+
+    /// <summary>
+    ///     Builds the mastery multi-select dropdown menu, listing only masteries the character has
+    ///     actually started learning (Level &gt; 0) so it never shows a wall of "lv. 0" entries, and
+    ///     never reserves empty screen space while no character is loaded.
+    /// </summary>
+    private void LoadMasteries()
+    {
+        var selectedMasteries = SkillsManager.GetMasteriesToLearn();
+
+        _masteryMenu?.Dispose();
+        _masteryMenu = new SDUI.Controls.ContextMenuStrip();
+        _masteryMenu.Closing += (s, e) =>
+        {
+            // Keep the dropdown open after each click so multiple masteries can be toggled in one go.
+            if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
+                e.Cancel = true;
+        };
+
+        var learnableMasteries = Game.Player.Skills.Masteries.Where(m => m.Level > 0).ToList();
+
+        foreach (var mastery in learnableMasteries)
+        {
+            var item = new ToolStripMenuItem($"{mastery.Record.Name} (lv. {mastery.Level})")
+            {
+                CheckOnClick = true,
+                Checked = selectedMasteries.Contains(mastery.Record.NameCode),
+                Tag = new MasteryMenuTag { NameCode = mastery.Record.NameCode, DisplayName = mastery.Record.Name },
+            };
+            item.Click += MasteryMenuItem_Click;
+            _masteryMenu.Items.Add(item);
+        }
+
+        if (_masteryMenu.Items.Count == 0)
+            _masteryMenu.Items.Add(new ToolStripMenuItem("No masteries learned yet") { Enabled = false });
+
+        UpdateMasterySelectButtonText();
+    }
+
+    /// <summary>
+    ///     Refreshes <see cref="btnMasterySelect" />'s text to summarize the currently checked masteries.
+    /// </summary>
+    private void UpdateMasterySelectButtonText()
+    {
+        var checkedNames = _masteryMenu.Items
+            .OfType<ToolStripMenuItem>()
+            .Where(i => i.Checked && i.Tag is MasteryMenuTag)
+            .Select(i => ((MasteryMenuTag)i.Tag).DisplayName)
+            .ToList();
+
+        btnMasterySelect.Text = checkedNames.Count == 0
+            ? "Select masteries...  ▾"
+            : string.Join(", ", checkedNames) + "  ▾";
+    }
+
+    /// <summary>
+    ///     Handles the Click event of the btnMasterySelect control, opening the multi-select dropdown.
+    /// </summary>
+    private void btnMasterySelect_Click(object sender, EventArgs e)
+    {
+        if (_masteryMenu == null || _masteryMenu.Items.Count == 0)
+            return;
+
+        _masteryMenu.Show(btnMasterySelect, new Point(0, btnMasterySelect.Height));
+    }
+
+    /// <summary>
+    ///     Handles the Click event of a per-mastery entry inside <see cref="_masteryMenu" />.
+    /// </summary>
+    private void MasteryMenuItem_Click(object sender, EventArgs e)
+    {
+        if (sender is not ToolStripMenuItem item || item.Tag is not MasteryMenuTag tag)
+            return;
+
+        if (item.Checked)
+            SkillsManager.AddMasteryToLearn(tag.NameCode);
+        else
+            SkillsManager.RemoveMasteryToLearn(tag.NameCode);
+
+        UpdateMasterySelectButtonText();
+    }
+
+    /// <summary>
+    ///     Handles the CheckedChanged event of the stat point settings controls.
+    /// </summary>
+    private void settings_CheckedChanged(object sender, EventArgs e)
+    {
+        PlayerConfig.Set("RSBot.Protection.checkIncInt", checkIncInt.Checked);
+        PlayerConfig.Set("RSBot.Protection.checkIncStr", checkIncStr.Checked);
+        PlayerConfig.Set("RSBot.Protection.checkIncBotStopped", checkIncBotStopped.Checked);
+    }
+
+    /// <summary>
+    ///     Re-calculates the max points of the Str numeric.
+    /// </summary>
+    private void numIncInt_ValueChanged(object sender, EventArgs e)
+    {
+        numIncStr.Maximum = 3 - numIncInt.Value;
+        PlayerConfig.Set("RSBot.Protection.numIncInt", numIncInt.Value);
+    }
+
+    /// <summary>
+    ///     Re-calculates the max points of the Int numeric.
+    /// </summary>
+    private void numIncStr_ValueChanged(object sender, EventArgs e)
+    {
+        numIncInt.Maximum = 3 - numIncStr.Value;
+        PlayerConfig.Set("RSBot.Protection.numIncStr", numIncStr.Value);
+    }
+
+    private void OnIncreaseStat()
+    {
+        if (this.InvokeRequired)
+        {
+            this.Invoke(new Action(OnIncreaseStat));
+            return;
+        }
+        if (Game.Player.StatPoints < numIncInt.Value + numIncStr.Value)
+        {
+            buttonRun.Text = "Run";
+            _statIncreaseRunning = false;
         }
     }
+
+    private void buttonRun_Click(object sender, EventArgs e)
+    {
+        if (_statIncreaseRunning)
+        {
+            buttonRun.Text = "Run";
+            _statIncreaseRunning = false;
+            StatPointsHandler.CancellationRequested = true;
+            return;
+        }
+
+        StatPointsHandler.CancellationRequested = false;
+        var stepSize = numIncInt.Value + numIncStr.Value;
+
+        if (stepSize == 0)
+            return;
+        if (Game.Player.StatPoints < stepSize)
+            return;
+
+        var availableSteps = Math.Floor(Game.Player.StatPoints / stepSize);
+
+        if (Game.Player.StatPoints == stepSize)
+            availableSteps = 1;
+
+        if (availableSteps == 0)
+            return;
+
+        Task.Run(() => StatPointsHandler.IncreaseStatPoints((int)availableSteps));
+
+        _statIncreaseRunning = true;
+        buttonRun.Text = "Cancel";
+    }
+
+    #region Fields (moved-in sections)
+
+    private bool _statIncreaseRunning;
+
+    #endregion Fields (moved-in sections)
 }
