@@ -2,6 +2,7 @@
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Objects.Spawn;
+using RSBot.Training.Components;
 
 namespace RSBot.Training.Bundle.Movement;
 
@@ -29,6 +30,16 @@ internal class MovementBundle : IBundle
     /// </summary>
     public void Invoke()
     {
+        // Keep the Training Area's own center following the player instead of a fixed
+        // point, whenever a training-place patrol is active. Every other bundle (Target,
+        // Attack, Loot) already filters by distance from Container.Bot.Area.Position/
+        // Radius, so this alone makes all of that existing logic work along the whole
+        // patrol route rather than just within one fixed circle - no changes needed there.
+        // Done unconditionally, before any of the early returns below, so it stays current
+        // even while mid-fight (the player barely moves then anyway, so this is cheap).
+        if (TrainingPlaceManager.IsActive)
+            Container.Bot.SetAreaPosition(Game.Player.Position);
+
         if (Game.SelectedEntity != null && !LastEntityWasBehindObstacle)
             return;
 
@@ -40,6 +51,12 @@ internal class MovementBundle : IBundle
 
         if (Game.Player.Movement.Moving)
             return;
+
+        if (TrainingPlaceManager.IsActive)
+        {
+            AdvancePatrol();
+            return;
+        }
 
         if (
             PlayerConfig.Get("RSBot.Party.AlwaysFollowPartyMaster", false)
@@ -89,6 +106,30 @@ internal class MovementBundle : IBundle
         }
 
         Game.Player.MoveTo(destination, false);
+    }
+
+    /// <summary>
+    ///     Walks towards the current training-place waypoint, advancing (and looping back to
+    ///     the start once the route ends) whenever it's reached. Uses MoveTo's non-blocking
+    ///     form (sleep: false) - it only issues the move and returns immediately, so Target/
+    ///     Attack/Loot still get a turn every tick instead of this bundle monopolizing the
+    ///     whole tick for however long the walk takes, the way ScriptManager's own blocking
+    ///     "move" command execution would have.
+    /// </summary>
+    private void AdvancePatrol()
+    {
+        var waypoint = TrainingPlaceManager.CurrentWaypoint;
+        var distance = Game.Player.Position.DistanceTo(waypoint);
+
+        const int arrivalRadius = 5;
+        if (distance <= arrivalRadius)
+        {
+            TrainingPlaceManager.Advance();
+            return;
+        }
+
+        Log.Status($"Walking training route [{TrainingPlaceManager.SelectedMobName}]");
+        Game.Player.MoveTo(waypoint, false);
     }
 
     /// <summary>

@@ -256,9 +256,20 @@ public class PickupManager
         if (JustPickMyItems && e.OwnerJID != playerJid)
             return false;
 
-        // Check if Item is within the training area + tolerance
+        // Check if the item is within the training area + tolerance, OR close enough to
+        // the player to grab regardless of the area shape. The area-center check alone
+        // rejects loot dropped near the *edge* of the training circle (e.g. a kill made
+        // while chasing/engaging a mob right at the area boundary) even though the player
+        // is standing right next to the drop - that loot then never satisfies this check
+        // and never gets picked up at all, not just "eventually". The player-distance
+        // check is the actual intent ("can I reach this"); the center check stays too so
+        // items far from both the player and the area (e.g. dropped by someone else on
+        // the far side of the circle) still get filtered out.
         const int tolerance = 15;
-        if (e.Movement.Source.DistanceTo(centerPosition) > radius + tolerance)
+        const int playerPickupRadius = 30;
+        var withinArea = e.Movement.Source.DistanceTo(centerPosition) <= radius + tolerance;
+        var withinPlayerReach = e.Movement.Source.DistanceTo(Game.Player.Position) <= playerPickupRadius;
+        if (!withinArea && !withinPlayerReach)
             return false;
 
         if (applyPickOnlyChar && e.IsBehindObstacle)

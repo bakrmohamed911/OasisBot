@@ -27,6 +27,21 @@ internal class Botbase
     public Area Area { get; private set; }
 
     /// <summary>
+    ///     Updates just the Area's center position, leaving Radius/etc. untouched. Area is a
+    ///     struct, so `Area.Position = x` from outside this class can't compile (it would
+    ///     only mutate a copy) - this does the read-mutate-write on the actual backing field
+    ///     for callers (e.g. a training-place patrol keeping the center following the player)
+    ///     that need to move the center without going through Reload().
+    /// </summary>
+    /// <param name="position">The new center position.</param>
+    public void SetAreaPosition(Position position)
+    {
+        var area = Area;
+        area.Position = position;
+        Area = area;
+    }
+
+    /// <summary>
     ///     Reloads this instance by re-reading the configuration.
     /// </summary>
     public void Reload()

@@ -322,7 +322,16 @@ internal class CharacterDataEndResponse : IPacketHandler
             }
 
             //GuideFlag
-            if (Game.ClientType >= GameClientType.Thailand)
+            // vSRO 274 uses the older 4-byte GuideFlag, not the 8-byte one every other client
+            // type from Thailand onward uses (Vietnam274 sorts after Thailand in the enum, so
+            // the ">= Thailand" check below wrongly caught it too) - reading it as 8 bytes
+            // consumed 4 bytes that actually belong to the very next field, JID, shifting every
+            // subsequent character.JID read 4 bytes into the wrong place. A hex dump of a
+            // rejected pickup confirmed it: the real JID - matching every item's OwnerJID that
+            // PickupManager was rejecting as "not ours" - sits exactly 4 bytes before the value
+            // this was actually reading, i.e. every one of the player's own kills' loot was
+            // being silently left behind forever because Game.Player.JID never matched.
+            if (Game.ClientType >= GameClientType.Thailand && Game.ClientType != GameClientType.Vietnam274)
                 packet.ReadULong();
             else
                 packet.ReadUInt();

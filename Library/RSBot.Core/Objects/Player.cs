@@ -781,16 +781,27 @@ public class Player : SpawnedBionic
 
             var result = potionItem.Use();
 
+            // Used to only stamp tick on success - so a rejected Use() (server-side cooldown
+            // still active, condition not met, whatever) left elapsed unchanged, and since it
+            // was already >= duration to get this far, EVERY subsequent tick (~100ms) retried
+            // immediately with no backoff at all until the request finally succeeded. Against
+            // this server, successful uses of the same potion were empirically ~15-20s apart
+            // while duration here is 1050ms for a Chinese-race character - i.e. this was
+            // retrying ~15-20x more often than the real cooldown allows, and it stayed that
+            // way for the entire gap: one real use produced roughly a hundred failed ones.
+            // Stamping tick on failure too - even without knowing the *exact* real cooldown -
+            // throttles retries to once per `duration` instead of once per tick, which is what
+            // actually matters: it can't get worse than before, and it stops the flood.
+            tick = Kernel.TickCount;
+
             if (result)
             {
-                tick = Kernel.TickCount;
-
                 Log.Debug($"Potion [{potionItem.Record.GetRealName()}] used");
             }
             else
             {
                 Log.Debug(
-                    $"[ERROR] Potion [{potionItem.Record.GetRealName()}] used Elapsed:{elapsed} Duration:{duration} Condition:{elapsed < duration}"
+                    $"[ERROR] Potion [{potionItem.Record.GetRealName()}] use rejected by server (elapsed={elapsed}, duration={duration})"
                 );
             }
 

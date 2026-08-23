@@ -31,7 +31,22 @@ internal class TargetBundle : IBundle
 
     #region Events
 
-    private void OnTargetBehindObstacle()
+    private void OnTargetBehindObstacle() => DeselectAndBlacklist("behind an obstacle");
+
+    private void OnTargetOutOfRange() => DeselectAndBlacklist("out of engage range");
+
+    /// <summary>
+    ///     Drops the current selection and blacklists it for BLACKLIST_TIMEOUT so
+    ///     GetNearestEnemy() won't immediately hand the exact same mob straight back on
+    ///     the very next tick. Both AttackBundle's own client-side checks (obstacle,
+    ///     out-of-range) and the server-rejected-cast path (ActionSkillCastResponse) route
+    ///     through here via events, rather than any of them nulling Game.SelectedEntity
+    ///     directly - a direct null-out has no way to reach this blacklist, which is
+    ///     exactly what used to cause an immediate deselect-then-reselect flicker (each
+    ///     reselect being a real blocking network round-trip, since TrySelect can only
+    ///     skip that round-trip when the entity is *already* the current selection).
+    /// </summary>
+    private void DeselectAndBlacklist(string reason)
     {
         if (Game.SelectedEntity == null)
             return;
@@ -43,7 +58,7 @@ internal class TargetBundle : IBundle
         Bundles.Movement.LastEntityWasBehindObstacle = true;
 
         if (_blacklist?.TryAdd(selectedEntityUniqueId, Kernel.TickCount) == true)
-            Log.Debug($"Add mob [{selectedEntityUniqueId} to blacklist for {BLACKLIST_TIMEOUT}ms");
+            Log.Debug($"Add mob [{selectedEntityUniqueId}] to blacklist for {BLACKLIST_TIMEOUT}ms ({reason})");
     }
 
     #endregion Events
@@ -53,6 +68,7 @@ internal class TargetBundle : IBundle
     private void SubscribeEvents()
     {
         EventManager.SubscribeEvent("OnTargetBehindObstacle", OnTargetBehindObstacle);
+        EventManager.SubscribeEvent("OnTargetOutOfRange", OnTargetOutOfRange);
     }
 
     /// <summary>
@@ -207,6 +223,14 @@ internal class TargetBundle : IBundle
                     && //Is not blacklisted
                     (m.AttackingPlayer || !Bundles.Avoidance.AvoidMonster(m.Rarity))
                     && //Is attacking player or shouldn't be avoided
+                    // Being "in area" (distance from the area's *center*) doesn't mean it's
+                    // reachable from where the player actually stands right now - without
+                    // this, AttackBundle immediately rejects and blacklists anything past
+                    // EngageDistance, so selecting it here was always wasted work (and a
+                    // wasted TrySelect network round-trip) rather than just skipping to the
+                    // next, actually-engageable candidate.
+                    (m.AttackingPlayer || m.DistanceToPlayer <= Attack.AttackBundle.EngageDistance)
+                    && //Is attacking player or within engage distance of the player
                     Container.Bot.Area.IsInSight(m)
                     && //Is in training area
                     !m.Record.IsPandora
