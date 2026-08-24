@@ -1,13 +1,13 @@
-﻿namespace RSBot.Training.Views
+namespace RSBot.Training.Views
 {
     partial class Main
     {
-        /// <summary> 
+        /// <summary>
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
+        /// <summary>
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
@@ -22,46 +22,29 @@
 
         #region Component Designer generated code
 
-        /// <summary> 
-        /// Required method for Designer support - do not modify 
+        /// <summary>
+        /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Avoid", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Prefer", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup3 = new System.Windows.Forms.ListViewGroup("Berserk", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewGroup listViewGroup4 = new System.Windows.Forms.ListViewGroup("No custom behavior", System.Windows.Forms.HorizontalAlignment.Left);
-            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("General");
-            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem("Champion");
-            System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem("Giant");
-            System.Windows.Forms.ListViewItem listViewItem4 = new System.Windows.Forms.ListViewItem("General (party)");
-            System.Windows.Forms.ListViewItem listViewItem5 = new System.Windows.Forms.ListViewItem("Champion (party)");
-            System.Windows.Forms.ListViewItem listViewItem6 = new System.Windows.Forms.ListViewItem("Giant (party)");
-            System.Windows.Forms.ListViewItem listViewItem7 = new System.Windows.Forms.ListViewItem("Unique");
-            System.Windows.Forms.ListViewItem listViewItem8 = new System.Windows.Forms.ListViewItem("Strong");
-            System.Windows.Forms.ListViewItem listViewItem9 = new System.Windows.Forms.ListViewItem("Elite");
-            System.Windows.Forms.ListViewItem listViewItem10 = new System.Windows.Forms.ListViewItem("Event");
             groupBox2 = new SDUI.Controls.GroupBox();
-            lvAvoidance = new SDUI.Controls.ListView();
-            columnHeader1 = new System.Windows.Forms.ColumnHeader();
-            ctxAvoidance = new SDUI.Controls.ContextMenuStrip();
-            btnAvoid = new System.Windows.Forms.ToolStripMenuItem();
-            btnPrefer = new System.Windows.Forms.ToolStripMenuItem();
-            btnBerserk = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            btnNoCustomBehavior = new System.Windows.Forms.ToolStripMenuItem();
-            groupBoxWalkback = new SDUI.Controls.GroupBox();
-            btnRemove = new SDUI.Controls.Button();
-            linkRecord = new System.Windows.Forms.LinkLabel();
+            avoidanceListPanel = new System.Windows.Forms.Panel();
+            groupBoxTrainingPlace = new SDUI.Controls.GroupBox();
             checkBoxUseReverse = new SDUI.Controls.CheckBox();
             checkUseSpeedDrug = new SDUI.Controls.CheckBox();
             checkCastBuffs = new SDUI.Controls.CheckBox();
             checkUseMount = new SDUI.Controls.CheckBox();
-            btnBrowse = new SDUI.Controls.Button();
-            txtWalkscript = new SDUI.Controls.TextBox();
-            label4 = new SDUI.Controls.Label();
+            lstTrainingPlaces = new System.Windows.Forms.ListBox();
+            btnClearPlace = new SDUI.Controls.Button();
+            txtSearchPlace = new SDUI.Controls.TextBox();
+            labelSearchPlace = new SDUI.Controls.Label();
+            groupBoxCreateScript = new SDUI.Controls.GroupBox();
+            btnUpdateNavLink = new SDUI.Controls.Button();
+            btnImportScript = new SDUI.Controls.Button();
+            btnRecord = new SDUI.Controls.Button();
+            labelCreateScriptHint = new SDUI.Controls.Label();
             checkBerzerkWhenFull = new SDUI.Controls.CheckBox();
             checkBerserkOnMonsterRarity = new SDUI.Controls.CheckBox();
             groupBoxBerserk = new SDUI.Controls.GroupBox();
@@ -92,282 +75,276 @@
             checkBoxDimensionPillar = new SDUI.Controls.CheckBox();
             toolTip1 = new System.Windows.Forms.ToolTip(components);
             groupBox2.SuspendLayout();
-            ctxAvoidance.SuspendLayout();
-            groupBoxWalkback.SuspendLayout();
+            groupBoxTrainingPlace.SuspendLayout();
+            groupBoxCreateScript.SuspendLayout();
             groupBoxBerserk.SuspendLayout();
             groupBoxArea.SuspendLayout();
             groupBoxAdvanced.SuspendLayout();
             SuspendLayout();
-            // 
+            //
             // groupBox2
-            // 
+            //
             groupBox2.BackColor = System.Drawing.Color.Transparent;
-            groupBox2.Controls.Add(lvAvoidance);
+            groupBox2.Controls.Add(avoidanceListPanel);
             groupBox2.Location = new System.Drawing.Point(29, 352);
             groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new System.Windows.Forms.Padding(2, 9, 2, 4);
             groupBox2.Radius = 10;
             groupBox2.ShadowDepth = 4;
-            groupBox2.Size = new System.Drawing.Size(276, 268);
+            groupBox2.Size = new System.Drawing.Size(380, 330);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "Avoidance";
-            // 
-            // lvAvoidance
-            // 
-            lvAvoidance.Alignment = System.Windows.Forms.ListViewAlignment.Default;
-            lvAvoidance.BackColor = System.Drawing.Color.White;
-            lvAvoidance.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            lvAvoidance.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { columnHeader1 });
-            lvAvoidance.ContextMenuStrip = ctxAvoidance;
-            lvAvoidance.Dock = System.Windows.Forms.DockStyle.Fill;
-            lvAvoidance.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            lvAvoidance.FullRowSelect = true;
-            listViewGroup1.Header = "Avoid";
-            listViewGroup1.Name = "grpAvoid";
-            listViewGroup2.Header = "Prefer";
-            listViewGroup2.Name = "grpPrefer";
-            listViewGroup3.Header = "Berserk";
-            listViewGroup3.Name = "grpBerserk";
-            listViewGroup4.Header = "No custom behavior";
-            listViewGroup4.Name = "grpNone";
-            lvAvoidance.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] { listViewGroup1, listViewGroup2, listViewGroup3, listViewGroup4 });
-            lvAvoidance.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            listViewItem1.Group = listViewGroup4;
-            listViewItem2.Group = listViewGroup4;
-            listViewItem3.Group = listViewGroup4;
-            listViewItem4.Group = listViewGroup4;
-            listViewItem5.Group = listViewGroup4;
-            listViewItem6.Group = listViewGroup4;
-            listViewItem7.Group = listViewGroup4;
-            listViewItem8.Group = listViewGroup4;
-            listViewItem9.Group = listViewGroup4;
-            listViewItem10.Group = listViewGroup4;
-            listViewItem10.ToolTipText = "Event Mobs";
-            lvAvoidance.Items.AddRange(new System.Windows.Forms.ListViewItem[] { listViewItem1, listViewItem2, listViewItem3, listViewItem4, listViewItem5, listViewItem6, listViewItem7, listViewItem8, listViewItem9, listViewItem10 });
-            lvAvoidance.Location = new System.Drawing.Point(2, 29);
-            lvAvoidance.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            lvAvoidance.Name = "lvAvoidance";
-            lvAvoidance.Size = new System.Drawing.Size(272, 235);
-            lvAvoidance.TabIndex = 5;
-            lvAvoidance.TileSize = new System.Drawing.Size(168, 16);
-            lvAvoidance.UseCompatibleStateImageBehavior = false;
-            lvAvoidance.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeader1
-            // 
-            columnHeader1.Width = 190;
-            // 
-            // ctxAvoidance
-            // 
-            ctxAvoidance.ImageScalingSize = new System.Drawing.Size(20, 20);
-            ctxAvoidance.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { btnAvoid, btnPrefer, btnBerserk, toolStripSeparator1, btnNoCustomBehavior });
-            ctxAvoidance.Name = "ctxAvoidance";
-            ctxAvoidance.Size = new System.Drawing.Size(213, 106);
-            // 
-            // btnAvoid
-            // 
-            btnAvoid.Name = "btnAvoid";
-            btnAvoid.Size = new System.Drawing.Size(212, 24);
-            btnAvoid.Text = "Avoid";
-            btnAvoid.Click += btnAvoid_Click;
-            // 
-            // btnPrefer
-            // 
-            btnPrefer.Name = "btnPrefer";
-            btnPrefer.Size = new System.Drawing.Size(212, 24);
-            btnPrefer.Text = "Prefer";
-            btnPrefer.Click += btnPrefer_Click;
-            // 
-            // btnBerserk
-            // 
-            btnBerserk.Name = "btnBerserk";
-            btnBerserk.Size = new System.Drawing.Size(212, 24);
-            btnBerserk.Text = "Berserk";
-            btnBerserk.Click += btnBerserk_Click;
-            // 
-            // toolStripSeparator1
-            // 
-            toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new System.Drawing.Size(209, 6);
-            // 
-            // btnNoCustomBehavior
-            // 
-            btnNoCustomBehavior.Name = "btnNoCustomBehavior";
-            btnNoCustomBehavior.Size = new System.Drawing.Size(212, 24);
-            btnNoCustomBehavior.Text = "No custom behavior";
-            btnNoCustomBehavior.Click += btnNoCustomBehavior_Click;
-            // 
-            // groupBoxWalkback
-            // 
-            groupBoxWalkback.BackColor = System.Drawing.Color.Transparent;
-            groupBoxWalkback.Controls.Add(btnRemove);
-            groupBoxWalkback.Controls.Add(linkRecord);
-            groupBoxWalkback.Controls.Add(checkBoxUseReverse);
-            groupBoxWalkback.Controls.Add(checkUseSpeedDrug);
-            groupBoxWalkback.Controls.Add(checkCastBuffs);
-            groupBoxWalkback.Controls.Add(checkUseMount);
-            groupBoxWalkback.Controls.Add(btnBrowse);
-            groupBoxWalkback.Controls.Add(txtWalkscript);
-            groupBoxWalkback.Controls.Add(label4);
-            groupBoxWalkback.Location = new System.Drawing.Point(328, 20);
-            groupBoxWalkback.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            groupBoxWalkback.Name = "groupBoxWalkback";
-            groupBoxWalkback.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
-            groupBoxWalkback.Radius = 10;
-            groupBoxWalkback.ShadowDepth = 4;
-            groupBoxWalkback.Size = new System.Drawing.Size(598, 146);
-            groupBoxWalkback.TabIndex = 2;
-            groupBoxWalkback.TabStop = false;
-            groupBoxWalkback.Text = "Back to training";
-            // 
-            // btnRemove
-            // 
-            btnRemove.Color = System.Drawing.Color.Transparent;
-            btnRemove.Location = new System.Drawing.Point(508, 34);
-            btnRemove.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            btnRemove.Name = "btnRemove";
-            btnRemove.Radius = 6;
-            btnRemove.ShadowDepth = 4F;
-            btnRemove.Size = new System.Drawing.Size(71, 29);
-            btnRemove.TabIndex = 8;
-            btnRemove.Text = "Remove";
-            btnRemove.UseVisualStyleBackColor = true;
-            btnRemove.Visible = false;
-            btnRemove.Click += btnRemove_Click;
-            // 
-            // linkRecord
-            // 
-            linkRecord.AutoSize = true;
-            linkRecord.Location = new System.Drawing.Point(435, 41);
-            linkRecord.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            linkRecord.Name = "linkRecord";
-            linkRecord.Size = new System.Drawing.Size(66, 20);
-            linkRecord.TabIndex = 7;
-            linkRecord.TabStop = true;
-            linkRecord.Text = "[Record]";
-            linkRecord.LinkClicked += linkRecord_LinkClicked;
-            // 
-            // checkBoxUseReverse
-            // 
-            checkBoxUseReverse.AutoSize = true;
-            checkBoxUseReverse.BackColor = System.Drawing.Color.Transparent;
-            checkBoxUseReverse.Depth = 0;
-            checkBoxUseReverse.Location = new System.Drawing.Point(466, 100);
-            checkBoxUseReverse.Margin = new System.Windows.Forms.Padding(0);
-            checkBoxUseReverse.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkBoxUseReverse.Name = "checkBoxUseReverse";
-            checkBoxUseReverse.Ripple = true;
-            checkBoxUseReverse.Size = new System.Drawing.Size(114, 30);
-            checkBoxUseReverse.TabIndex = 7;
-            checkBoxUseReverse.Text = "Use Reverse";
-            checkBoxUseReverse.UseVisualStyleBackColor = false;
-            checkBoxUseReverse.CheckedChanged += settings_CheckedChanged;
-            // 
-            // checkUseSpeedDrug
-            // 
-            checkUseSpeedDrug.AutoSize = true;
-            checkUseSpeedDrug.BackColor = System.Drawing.Color.Transparent;
-            checkUseSpeedDrug.Checked = true;
-            checkUseSpeedDrug.CheckState = System.Windows.Forms.CheckState.Checked;
-            checkUseSpeedDrug.Depth = 0;
-            checkUseSpeedDrug.Location = new System.Drawing.Point(322, 100);
-            checkUseSpeedDrug.Margin = new System.Windows.Forms.Padding(0);
-            checkUseSpeedDrug.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkUseSpeedDrug.Name = "checkUseSpeedDrug";
-            checkUseSpeedDrug.Ripple = true;
-            checkUseSpeedDrug.Size = new System.Drawing.Size(138, 30);
-            checkUseSpeedDrug.TabIndex = 7;
-            checkUseSpeedDrug.Text = "Use speed drug";
-            checkUseSpeedDrug.UseVisualStyleBackColor = false;
-            checkUseSpeedDrug.CheckedChanged += settings_CheckedChanged;
-            // 
-            // checkCastBuffs
-            // 
-            checkCastBuffs.AutoSize = true;
-            checkCastBuffs.BackColor = System.Drawing.Color.Transparent;
-            checkCastBuffs.Checked = true;
-            checkCastBuffs.CheckState = System.Windows.Forms.CheckState.Checked;
-            checkCastBuffs.Depth = 0;
-            checkCastBuffs.Location = new System.Drawing.Point(211, 100);
-            checkCastBuffs.Margin = new System.Windows.Forms.Padding(0);
-            checkCastBuffs.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkCastBuffs.Name = "checkCastBuffs";
-            checkCastBuffs.Ripple = true;
-            checkCastBuffs.Size = new System.Drawing.Size(100, 30);
-            checkCastBuffs.TabIndex = 6;
-            checkCastBuffs.Text = "Cast buffs";
-            checkCastBuffs.UseVisualStyleBackColor = false;
-            checkCastBuffs.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
+            // avoidanceListPanel
+            //
+            // Populated in code (see Main.cs BuildAvoidanceChecklist) with one row per monster
+            // rarity, each carrying 3 mutually-exclusive checkboxes (Avoid/Prefer/Berserk) -
+            // replaces the old ListView + right-click-to-assign context menu.
+            avoidanceListPanel.AutoScroll = true;
+            avoidanceListPanel.BackColor = System.Drawing.Color.Transparent;
+            avoidanceListPanel.Location = new System.Drawing.Point(2, 29);
+            avoidanceListPanel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            avoidanceListPanel.Name = "avoidanceListPanel";
+            avoidanceListPanel.Size = new System.Drawing.Size(376, 297);
+            avoidanceListPanel.TabIndex = 5;
+            //
+            // groupBoxTrainingPlace
+            //
+            groupBoxTrainingPlace.BackColor = System.Drawing.Color.Transparent;
+            groupBoxTrainingPlace.Controls.Add(labelSearchPlace);
+            groupBoxTrainingPlace.Controls.Add(txtSearchPlace);
+            groupBoxTrainingPlace.Controls.Add(btnClearPlace);
+            groupBoxTrainingPlace.Controls.Add(lstTrainingPlaces);
+            groupBoxTrainingPlace.Controls.Add(checkUseMount);
+            groupBoxTrainingPlace.Controls.Add(checkCastBuffs);
+            groupBoxTrainingPlace.Controls.Add(checkUseSpeedDrug);
+            groupBoxTrainingPlace.Controls.Add(checkBoxUseReverse);
+            groupBoxTrainingPlace.Location = new System.Drawing.Point(418, 20);
+            groupBoxTrainingPlace.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBoxTrainingPlace.Name = "groupBoxTrainingPlace";
+            groupBoxTrainingPlace.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
+            groupBoxTrainingPlace.Radius = 10;
+            groupBoxTrainingPlace.ShadowDepth = 4;
+            groupBoxTrainingPlace.Size = new System.Drawing.Size(598, 260);
+            groupBoxTrainingPlace.TabIndex = 2;
+            groupBoxTrainingPlace.TabStop = false;
+            groupBoxTrainingPlace.Text = "Select training place";
+            //
+            // labelSearchPlace
+            //
+            labelSearchPlace.ApplyGradient = false;
+            labelSearchPlace.AutoSize = true;
+            labelSearchPlace.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            labelSearchPlace.Gradient = new System.Drawing.Color[]
+    {
+    System.Drawing.Color.Gray,
+    System.Drawing.Color.Black
+    };
+            labelSearchPlace.GradientAnimation = false;
+            labelSearchPlace.Location = new System.Drawing.Point(26, 38);
+            labelSearchPlace.Name = "labelSearchPlace";
+            labelSearchPlace.Size = new System.Drawing.Size(180, 20);
+            labelSearchPlace.TabIndex = 0;
+            labelSearchPlace.Text = "Search (name or level):";
+            //
+            // txtSearchPlace
+            //
+            txtSearchPlace.Location = new System.Drawing.Point(26, 60);
+            txtSearchPlace.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtSearchPlace.MaxLength = 128;
+            txtSearchPlace.MultiLine = false;
+            txtSearchPlace.Name = "txtSearchPlace";
+            txtSearchPlace.PassFocusShow = false;
+            txtSearchPlace.Radius = 2;
+            txtSearchPlace.Size = new System.Drawing.Size(390, 28);
+            txtSearchPlace.TabIndex = 1;
+            txtSearchPlace.TextAlignment = System.Windows.Forms.HorizontalAlignment.Left;
+            txtSearchPlace.UseSystemPasswordChar = false;
+            txtSearchPlace.TextChanged += txtSearchPlace_TextChanged;
+            //
+            // btnClearPlace
+            //
+            btnClearPlace.Color = System.Drawing.Color.Transparent;
+            btnClearPlace.Location = new System.Drawing.Point(424, 60);
+            btnClearPlace.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnClearPlace.Name = "btnClearPlace";
+            btnClearPlace.Radius = 6;
+            btnClearPlace.ShadowDepth = 4F;
+            btnClearPlace.Size = new System.Drawing.Size(148, 29);
+            btnClearPlace.TabIndex = 2;
+            btnClearPlace.Text = "Clear selection";
+            btnClearPlace.UseVisualStyleBackColor = true;
+            btnClearPlace.Click += btnClearPlace_Click;
+            //
+            // lstTrainingPlaces
+            //
+            lstTrainingPlaces.BackColor = System.Drawing.Color.White;
+            lstTrainingPlaces.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            lstTrainingPlaces.IntegralHeight = false;
+            lstTrainingPlaces.ItemHeight = 20;
+            lstTrainingPlaces.Location = new System.Drawing.Point(26, 96);
+            lstTrainingPlaces.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            lstTrainingPlaces.Name = "lstTrainingPlaces";
+            lstTrainingPlaces.Size = new System.Drawing.Size(546, 86);
+            lstTrainingPlaces.TabIndex = 3;
+            lstTrainingPlaces.SelectedIndexChanged += lstTrainingPlaces_SelectedIndexChanged;
+            //
             // checkUseMount
-            // 
+            //
             checkUseMount.AutoSize = true;
             checkUseMount.BackColor = System.Drawing.Color.Transparent;
             checkUseMount.Checked = true;
             checkUseMount.CheckState = System.Windows.Forms.CheckState.Checked;
             checkUseMount.Depth = 0;
-            checkUseMount.Location = new System.Drawing.Point(22, 100);
+            checkUseMount.Location = new System.Drawing.Point(26, 192);
             checkUseMount.Margin = new System.Windows.Forms.Padding(0);
             checkUseMount.MouseLocation = new System.Drawing.Point(-1, -1);
             checkUseMount.Name = "checkUseMount";
             checkUseMount.Ripple = true;
-            checkUseMount.Size = new System.Drawing.Size(183, 30);
-            checkUseMount.TabIndex = 3;
+            checkUseMount.Size = new System.Drawing.Size(240, 30);
+            checkUseMount.TabIndex = 4;
             checkUseMount.Text = "Use mount if available";
             checkUseMount.UseVisualStyleBackColor = false;
             checkUseMount.CheckedChanged += settings_CheckedChanged;
-            // 
-            // btnBrowse
-            // 
-            btnBrowse.Color = System.Drawing.Color.Transparent;
-            btnBrowse.Location = new System.Drawing.Point(508, 64);
-            btnBrowse.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            btnBrowse.Name = "btnBrowse";
-            btnBrowse.Radius = 6;
-            btnBrowse.ShadowDepth = 4F;
-            btnBrowse.Size = new System.Drawing.Size(71, 29);
-            btnBrowse.TabIndex = 3;
-            btnBrowse.Text = "Browse";
-            btnBrowse.UseVisualStyleBackColor = true;
-            btnBrowse.Click += btnBrowse_Click;
-            // 
-            // txtWalkscript
-            // 
-            txtWalkscript.BackColor = System.Drawing.Color.White;
-            txtWalkscript.Location = new System.Drawing.Point(26, 65);
-            txtWalkscript.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            txtWalkscript.MaxLength = 32767;
-            txtWalkscript.MultiLine = false;
-            txtWalkscript.Name = "txtWalkscript";
-            txtWalkscript.PassFocusShow = false;
-            txtWalkscript.Radius = 2;
-            txtWalkscript.Size = new System.Drawing.Size(474, 25);
-            txtWalkscript.TabIndex = 4;
-            txtWalkscript.TextAlignment = System.Windows.Forms.HorizontalAlignment.Left;
-            txtWalkscript.UseSystemPasswordChar = false;
-            // 
-            // label4
-            // 
-            label4.ApplyGradient = false;
-            label4.AutoSize = true;
-            label4.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            label4.Gradient = new System.Drawing.Color[]
+            //
+            // checkCastBuffs
+            //
+            // Left disabled for now - cast-buffs handling here will be reworked later.
+            checkCastBuffs.AutoSize = true;
+            checkCastBuffs.BackColor = System.Drawing.Color.Transparent;
+            checkCastBuffs.Checked = true;
+            checkCastBuffs.CheckState = System.Windows.Forms.CheckState.Checked;
+            checkCastBuffs.Depth = 0;
+            checkCastBuffs.Enabled = false;
+            checkCastBuffs.Location = new System.Drawing.Point(290, 192);
+            checkCastBuffs.Margin = new System.Windows.Forms.Padding(0);
+            checkCastBuffs.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkCastBuffs.Name = "checkCastBuffs";
+            checkCastBuffs.Ripple = true;
+            checkCastBuffs.Size = new System.Drawing.Size(240, 30);
+            checkCastBuffs.TabIndex = 5;
+            checkCastBuffs.Text = "Cast buffs (coming soon)";
+            checkCastBuffs.UseVisualStyleBackColor = false;
+            checkCastBuffs.CheckedChanged += settings_CheckedChanged;
+            //
+            // checkUseSpeedDrug
+            //
+            checkUseSpeedDrug.AutoSize = true;
+            checkUseSpeedDrug.BackColor = System.Drawing.Color.Transparent;
+            checkUseSpeedDrug.Checked = true;
+            checkUseSpeedDrug.CheckState = System.Windows.Forms.CheckState.Checked;
+            checkUseSpeedDrug.Depth = 0;
+            checkUseSpeedDrug.Location = new System.Drawing.Point(26, 222);
+            checkUseSpeedDrug.Margin = new System.Windows.Forms.Padding(0);
+            checkUseSpeedDrug.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkUseSpeedDrug.Name = "checkUseSpeedDrug";
+            checkUseSpeedDrug.Ripple = true;
+            checkUseSpeedDrug.Size = new System.Drawing.Size(240, 30);
+            checkUseSpeedDrug.TabIndex = 6;
+            checkUseSpeedDrug.Text = "Use speed drug";
+            checkUseSpeedDrug.UseVisualStyleBackColor = false;
+            checkUseSpeedDrug.CheckedChanged += settings_CheckedChanged;
+            //
+            // checkBoxUseReverse
+            //
+            checkBoxUseReverse.AutoSize = true;
+            checkBoxUseReverse.BackColor = System.Drawing.Color.Transparent;
+            checkBoxUseReverse.Depth = 0;
+            checkBoxUseReverse.Location = new System.Drawing.Point(290, 222);
+            checkBoxUseReverse.Margin = new System.Windows.Forms.Padding(0);
+            checkBoxUseReverse.MouseLocation = new System.Drawing.Point(-1, -1);
+            checkBoxUseReverse.Name = "checkBoxUseReverse";
+            checkBoxUseReverse.Ripple = true;
+            checkBoxUseReverse.Size = new System.Drawing.Size(240, 30);
+            checkBoxUseReverse.TabIndex = 7;
+            checkBoxUseReverse.Text = "Use Reverse";
+            checkBoxUseReverse.UseVisualStyleBackColor = false;
+            checkBoxUseReverse.CheckedChanged += settings_CheckedChanged;
+            //
+            // groupBoxCreateScript
+            //
+            groupBoxCreateScript.BackColor = System.Drawing.Color.Transparent;
+            groupBoxCreateScript.Controls.Add(labelCreateScriptHint);
+            groupBoxCreateScript.Controls.Add(btnRecord);
+            groupBoxCreateScript.Controls.Add(btnImportScript);
+            groupBoxCreateScript.Controls.Add(btnUpdateNavLink);
+            groupBoxCreateScript.Location = new System.Drawing.Point(418, 300);
+            groupBoxCreateScript.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBoxCreateScript.Name = "groupBoxCreateScript";
+            groupBoxCreateScript.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
+            groupBoxCreateScript.Radius = 10;
+            groupBoxCreateScript.ShadowDepth = 4;
+            groupBoxCreateScript.Size = new System.Drawing.Size(598, 110);
+            groupBoxCreateScript.TabIndex = 3;
+            groupBoxCreateScript.TabStop = false;
+            groupBoxCreateScript.Text = "Create a walk script";
+            //
+            // labelCreateScriptHint
+            //
+            labelCreateScriptHint.ApplyGradient = false;
+            labelCreateScriptHint.AutoSize = false;
+            labelCreateScriptHint.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
+            labelCreateScriptHint.Gradient = new System.Drawing.Color[]
     {
     System.Drawing.Color.Gray,
     System.Drawing.Color.Black
     };
-            label4.GradientAnimation = false;
-            label4.Location = new System.Drawing.Point(22, 41);
-            label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            label4.Name = "label4";
-            label4.Size = new System.Drawing.Size(80, 20);
-            label4.TabIndex = 3;
-            label4.Text = "Walkscript:";
-            // 
+            labelCreateScriptHint.GradientAnimation = false;
+            labelCreateScriptHint.Location = new System.Drawing.Point(26, 34);
+            labelCreateScriptHint.Name = "labelCreateScriptHint";
+            labelCreateScriptHint.Size = new System.Drawing.Size(546, 36);
+            labelCreateScriptHint.TabIndex = 0;
+            labelCreateScriptHint.Text = "Record a new patrol route, or import an existing .rbs script - either way you\'ll be asked to name it and set its level.";
+            //
+            // btnRecord
+            //
+            btnRecord.Color = System.Drawing.Color.Transparent;
+            btnRecord.Location = new System.Drawing.Point(26, 74);
+            btnRecord.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnRecord.Name = "btnRecord";
+            btnRecord.Radius = 6;
+            btnRecord.ShadowDepth = 4F;
+            btnRecord.Size = new System.Drawing.Size(160, 32);
+            btnRecord.TabIndex = 1;
+            btnRecord.Text = "Record...";
+            btnRecord.UseVisualStyleBackColor = true;
+            btnRecord.Click += btnRecord_Click;
+            //
+            // btnImportScript
+            //
+            btnImportScript.Color = System.Drawing.Color.Transparent;
+            btnImportScript.Location = new System.Drawing.Point(200, 74);
+            btnImportScript.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnImportScript.Name = "btnImportScript";
+            btnImportScript.Radius = 6;
+            btnImportScript.ShadowDepth = 4F;
+            btnImportScript.Size = new System.Drawing.Size(160, 32);
+            btnImportScript.TabIndex = 2;
+            btnImportScript.Text = "Import file...";
+            btnImportScript.UseVisualStyleBackColor = true;
+            btnImportScript.Click += btnImportScript_Click;
+            //
+            // btnUpdateNavLink
+            //
+            // Declared here (rather than added at runtime, as it originally was inside the
+            // removed "Back to training" box) so it goes through the same DPI auto-scale pass as
+            // its siblings - a runtime-added control at a hand-picked pixel position doesn't, and
+            // ends up mispositioned relative to a parent that DID get rescaled.
+            btnUpdateNavLink.Color = System.Drawing.Color.Transparent;
+            btnUpdateNavLink.Location = new System.Drawing.Point(390, 74);
+            btnUpdateNavLink.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnUpdateNavLink.Name = "btnUpdateNavLink";
+            btnUpdateNavLink.Radius = 6;
+            btnUpdateNavLink.ShadowDepth = 4F;
+            btnUpdateNavLink.Size = new System.Drawing.Size(160, 32);
+            btnUpdateNavLink.TabIndex = 3;
+            btnUpdateNavLink.Text = "Update NavLink";
+            btnUpdateNavLink.UseVisualStyleBackColor = true;
+            //
             // checkBerzerkWhenFull
-            // 
+            //
             checkBerzerkWhenFull.AutoSize = true;
             checkBerzerkWhenFull.BackColor = System.Drawing.Color.Transparent;
             checkBerzerkWhenFull.Depth = 0;
@@ -381,9 +358,9 @@
             checkBerzerkWhenFull.Text = "Enter berzerk mode when full";
             checkBerzerkWhenFull.UseVisualStyleBackColor = false;
             checkBerzerkWhenFull.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // checkBerserkOnMonsterRarity
-            // 
+            //
             checkBerserkOnMonsterRarity.AutoSize = true;
             checkBerserkOnMonsterRarity.BackColor = System.Drawing.Color.Transparent;
             checkBerserkOnMonsterRarity.Depth = 0;
@@ -397,9 +374,9 @@
             checkBerserkOnMonsterRarity.Text = "Enter berserk mode when attack specific monster type";
             checkBerserkOnMonsterRarity.UseVisualStyleBackColor = false;
             checkBerserkOnMonsterRarity.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // groupBoxBerserk
-            // 
+            //
             groupBoxBerserk.BackColor = System.Drawing.Color.Transparent;
             groupBoxBerserk.Controls.Add(label7);
             groupBoxBerserk.Controls.Add(numBerzerkMonsterAmount);
@@ -407,7 +384,7 @@
             groupBoxBerserk.Controls.Add(checkBerzerkMonsterAmount);
             groupBoxBerserk.Controls.Add(checkBerzerkWhenFull);
             groupBoxBerserk.Controls.Add(checkBerserkOnMonsterRarity);
-            groupBoxBerserk.Location = new System.Drawing.Point(328, 188);
+            groupBoxBerserk.Location = new System.Drawing.Point(418, 430);
             groupBoxBerserk.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxBerserk.Name = "groupBoxBerserk";
             groupBoxBerserk.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
@@ -417,9 +394,9 @@
             groupBoxBerserk.TabIndex = 5;
             groupBoxBerserk.TabStop = false;
             groupBoxBerserk.Text = "Berserk";
-            // 
+            //
             // label7
-            // 
+            //
             label7.ApplyGradient = false;
             label7.AutoSize = true;
             label7.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
@@ -435,9 +412,9 @@
             label7.Size = new System.Drawing.Size(69, 20);
             label7.TabIndex = 7;
             label7.Text = "monsters";
-            // 
+            //
             // numBerzerkMonsterAmount
-            // 
+            //
             numBerzerkMonsterAmount.BackColor = System.Drawing.Color.Transparent;
             numBerzerkMonsterAmount.Font = new System.Drawing.Font("Segoe UI", 9.25F);
             numBerzerkMonsterAmount.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
@@ -451,9 +428,9 @@
             numBerzerkMonsterAmount.TabIndex = 6;
             numBerzerkMonsterAmount.Value = new decimal(new int[] { 5, 0, 0, 0 });
             numBerzerkMonsterAmount.ValueChanged += numSettings_ValueChanged;
-            // 
+            //
             // checkBerzerkAvoidance
-            // 
+            //
             checkBerzerkAvoidance.AutoSize = true;
             checkBerzerkAvoidance.BackColor = System.Drawing.Color.Transparent;
             checkBerzerkAvoidance.Depth = 0;
@@ -467,9 +444,9 @@
             checkBerzerkAvoidance.Text = "If being attacked by a monster type that should be avoided";
             checkBerzerkAvoidance.UseVisualStyleBackColor = false;
             checkBerzerkAvoidance.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // checkBerzerkMonsterAmount
-            // 
+            //
             checkBerzerkMonsterAmount.AutoSize = true;
             checkBerzerkMonsterAmount.BackColor = System.Drawing.Color.Transparent;
             checkBerzerkMonsterAmount.Depth = 0;
@@ -483,9 +460,9 @@
             checkBerzerkMonsterAmount.Text = "Being attacked by more than";
             checkBerzerkMonsterAmount.UseVisualStyleBackColor = false;
             checkBerzerkMonsterAmount.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // groupBoxArea
-            // 
+            //
             groupBoxArea.BackColor = System.Drawing.Color.Transparent;
             groupBoxArea.Controls.Add(btnApplyArea);
             groupBoxArea.Controls.Add(label8);
@@ -512,9 +489,9 @@
             groupBoxArea.TabIndex = 0;
             groupBoxArea.TabStop = false;
             groupBoxArea.Text = "Area";
-            // 
+            //
             // btnApplyArea
-            // 
+            //
             btnApplyArea.Color = System.Drawing.Color.Transparent;
             btnApplyArea.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 204);
             btnApplyArea.Location = new System.Drawing.Point(56, 174);
@@ -527,9 +504,9 @@
             btnApplyArea.Text = "v";
             btnApplyArea.UseVisualStyleBackColor = true;
             btnApplyArea.Click += btnApplyArea_Click;
-            // 
+            //
             // label8
-            // 
+            //
             label8.ApplyGradient = false;
             label8.AutoSize = true;
             label8.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
@@ -545,9 +522,9 @@
             label8.Size = new System.Drawing.Size(59, 20);
             label8.TabIndex = 9;
             label8.Text = "Region:";
-            // 
+            //
             // txtRegion
-            // 
+            //
             txtRegion.Location = new System.Drawing.Point(95, 105);
             txtRegion.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtRegion.MaxLength = 32767;
@@ -560,9 +537,9 @@
             txtRegion.TextAlignment = System.Windows.Forms.HorizontalAlignment.Left;
             txtRegion.UseSystemPasswordChar = false;
             txtRegion.TextChanged += txtRegion_TextChanged;
-            // 
+            //
             // buttonSelectTrainingArea
-            // 
+            //
             buttonSelectTrainingArea.Color = System.Drawing.Color.Transparent;
             buttonSelectTrainingArea.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 204);
             buttonSelectTrainingArea.Location = new System.Drawing.Point(224, 174);
@@ -575,9 +552,9 @@
             buttonSelectTrainingArea.Text = "...";
             buttonSelectTrainingArea.UseVisualStyleBackColor = true;
             buttonSelectTrainingArea.Click += buttonSelectTrainingArea_Click;
-            // 
+            //
             // label6
-            // 
+            //
             label6.ApplyGradient = false;
             label6.AutoSize = true;
             label6.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
@@ -593,9 +570,9 @@
             label6.Size = new System.Drawing.Size(207, 20);
             label6.TabIndex = 7;
             label6.Text = "If there is no monster nearby...";
-            // 
+            //
             // label5
-            // 
+            //
             label5.ApplyGradient = false;
             label5.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
             label5.Gradient = new System.Drawing.Color[]
@@ -609,9 +586,9 @@
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(250, 2);
             label5.TabIndex = 6;
-            // 
+            //
             // radioWalkAround
-            // 
+            //
             radioWalkAround.AutoSize = true;
             radioWalkAround.Checked = true;
             radioWalkAround.Location = new System.Drawing.Point(44, 280);
@@ -623,9 +600,9 @@
             radioWalkAround.TabStop = true;
             radioWalkAround.Text = "Walk around";
             radioWalkAround.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // radioCenter
-            // 
+            //
             radioCenter.AutoSize = true;
             radioCenter.Location = new System.Drawing.Point(44, 248);
             radioCenter.Margin = new System.Windows.Forms.Padding(0);
@@ -635,9 +612,9 @@
             radioCenter.TabIndex = 4;
             radioCenter.Text = "Go back to center";
             radioCenter.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // btnGetCurrent
-            // 
+            //
             btnGetCurrent.Color = System.Drawing.Color.Transparent;
             btnGetCurrent.Location = new System.Drawing.Point(95, 174);
             btnGetCurrent.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -649,9 +626,9 @@
             btnGetCurrent.Text = "Current";
             btnGetCurrent.UseVisualStyleBackColor = true;
             btnGetCurrent.Click += btnGetCurrent_Click;
-            // 
+            //
             // label3
-            // 
+            //
             label3.ApplyGradient = false;
             label3.AutoSize = true;
             label3.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
@@ -667,9 +644,9 @@
             label3.Size = new System.Drawing.Size(56, 20);
             label3.TabIndex = 1;
             label3.Text = "Radius:";
-            // 
+            //
             // label2
-            // 
+            //
             label2.ApplyGradient = false;
             label2.AutoSize = true;
             label2.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
@@ -686,9 +663,9 @@
             label2.TabIndex = 1;
             label2.Text = "Y:";
             toolTip1.SetToolTip(label2, "The coordinates of the dungeons should be divided by 10");
-            // 
+            //
             // label1
-            // 
+            //
             label1.ApplyGradient = false;
             label1.AutoSize = true;
             label1.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
@@ -705,9 +682,9 @@
             label1.TabIndex = 1;
             label1.Text = "X:";
             toolTip1.SetToolTip(label1, "The coordinates of the dungeons should be divided by 10");
-            // 
+            //
             // txtRadius
-            // 
+            //
             txtRadius.Location = new System.Drawing.Point(95, 141);
             txtRadius.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtRadius.MaxLength = 32767;
@@ -720,9 +697,9 @@
             txtRadius.TextAlignment = System.Windows.Forms.HorizontalAlignment.Left;
             txtRadius.UseSystemPasswordChar = false;
             txtRadius.TextChanged += txtRadius_TextChanged;
-            // 
+            //
             // txtYCoord
-            // 
+            //
             txtYCoord.Location = new System.Drawing.Point(95, 69);
             txtYCoord.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtYCoord.MaxLength = 32767;
@@ -735,9 +712,9 @@
             txtYCoord.TextAlignment = System.Windows.Forms.HorizontalAlignment.Left;
             txtYCoord.UseSystemPasswordChar = false;
             txtYCoord.TextChanged += txtYCoord_TextChanged;
-            // 
+            //
             // txtXCoord
-            // 
+            //
             txtXCoord.Location = new System.Drawing.Point(95, 36);
             txtXCoord.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtXCoord.MaxLength = 32767;
@@ -750,15 +727,15 @@
             txtXCoord.TextAlignment = System.Windows.Forms.HorizontalAlignment.Left;
             txtXCoord.UseSystemPasswordChar = false;
             txtXCoord.TextChanged += txtXCoord_TextChanged;
-            // 
+            //
             // groupBoxAdvanced
-            // 
+            //
             groupBoxAdvanced.BackColor = System.Drawing.Color.Transparent;
             groupBoxAdvanced.Controls.Add(checkBoxDontFollowMobs);
             groupBoxAdvanced.Controls.Add(linkAttackWeakerMobsHelp);
             groupBoxAdvanced.Controls.Add(checkAttackWeakerFirst);
             groupBoxAdvanced.Controls.Add(checkBoxDimensionPillar);
-            groupBoxAdvanced.Location = new System.Drawing.Point(328, 400);
+            groupBoxAdvanced.Location = new System.Drawing.Point(418, 638);
             groupBoxAdvanced.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxAdvanced.Name = "groupBoxAdvanced";
             groupBoxAdvanced.Padding = new System.Windows.Forms.Padding(4, 10, 4, 4);
@@ -768,9 +745,9 @@
             groupBoxAdvanced.TabIndex = 6;
             groupBoxAdvanced.TabStop = false;
             groupBoxAdvanced.Text = "Advanced";
-            // 
+            //
             // checkBoxDontFollowMobs
-            // 
+            //
             checkBoxDontFollowMobs.AutoSize = false;
             checkBoxDontFollowMobs.BackColor = System.Drawing.Color.Transparent;
             checkBoxDontFollowMobs.Depth = 0;
@@ -784,9 +761,9 @@
             checkBoxDontFollowMobs.Text = "Don't follow mobs outside the training area";
             checkBoxDontFollowMobs.UseVisualStyleBackColor = false;
             checkBoxDontFollowMobs.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // linkAttackWeakerMobsHelp
-            // 
+            //
             linkAttackWeakerMobsHelp.AutoSize = true;
             linkAttackWeakerMobsHelp.Location = new System.Drawing.Point(454, 84);
             linkAttackWeakerMobsHelp.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
@@ -798,7 +775,7 @@
             linkAttackWeakerMobsHelp.LinkClicked += linkAttackWeakerMobsHelp_LinkClicked;
             //
             // checkAttackWeakerFirst
-            // 
+            //
             checkAttackWeakerFirst.AutoSize = false;
             checkAttackWeakerFirst.BackColor = System.Drawing.Color.Transparent;
             checkAttackWeakerFirst.Depth = 0;
@@ -812,9 +789,9 @@
             checkAttackWeakerFirst.Text = "If avoided: counter attack weaker mobs first";
             checkAttackWeakerFirst.UseVisualStyleBackColor = false;
             checkAttackWeakerFirst.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // checkBoxDimensionPillar
-            // 
+            //
             checkBoxDimensionPillar.AutoSize = false;
             checkBoxDimensionPillar.BackColor = System.Drawing.Color.Transparent;
             checkBoxDimensionPillar.Depth = 0;
@@ -828,25 +805,27 @@
             checkBoxDimensionPillar.Text = "Ignore Dimension Pillar";
             checkBoxDimensionPillar.UseVisualStyleBackColor = false;
             checkBoxDimensionPillar.CheckedChanged += settings_CheckedChanged;
-            // 
+            //
             // Main
-            // 
+            //
             AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            AutoScroll = true;
             Controls.Add(groupBoxAdvanced);
-            Controls.Add(groupBoxWalkback);
+            Controls.Add(groupBoxCreateScript);
+            Controls.Add(groupBoxTrainingPlace);
             Controls.Add(groupBox2);
             Controls.Add(groupBoxArea);
             Controls.Add(groupBoxBerserk);
             Font = new System.Drawing.Font("Segoe UI", 9F);
             Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             Name = "Main";
-            Size = new System.Drawing.Size(965, 645);
+            Size = new System.Drawing.Size(1059, 820);
             Load += Main_Load;
             groupBox2.ResumeLayout(false);
-            ctxAvoidance.ResumeLayout(false);
-            groupBoxWalkback.ResumeLayout(false);
-            groupBoxWalkback.PerformLayout();
+            groupBoxTrainingPlace.ResumeLayout(false);
+            groupBoxTrainingPlace.PerformLayout();
+            groupBoxCreateScript.ResumeLayout(false);
             groupBoxBerserk.ResumeLayout(false);
             groupBoxBerserk.PerformLayout();
             groupBoxArea.ResumeLayout(false);
@@ -858,28 +837,28 @@
 
         #endregion
         private SDUI.Controls.GroupBox groupBox2;
-        private SDUI.Controls.GroupBox groupBoxWalkback;
-        private SDUI.Controls.Button btnBrowse;
-        private SDUI.Controls.TextBox txtWalkscript;
-        private SDUI.Controls.Label label4;
+        private System.Windows.Forms.Panel avoidanceListPanel;
+        private SDUI.Controls.GroupBox groupBoxTrainingPlace;
+        private SDUI.Controls.Label labelSearchPlace;
+        private SDUI.Controls.TextBox txtSearchPlace;
+        private SDUI.Controls.Button btnClearPlace;
+        private System.Windows.Forms.ListBox lstTrainingPlaces;
         private SDUI.Controls.CheckBox checkUseMount;
         private SDUI.Controls.CheckBox checkUseSpeedDrug;
         private SDUI.Controls.CheckBox checkCastBuffs;
+        private SDUI.Controls.CheckBox checkBoxUseReverse;
+        private SDUI.Controls.GroupBox groupBoxCreateScript;
+        private SDUI.Controls.Label labelCreateScriptHint;
+        private SDUI.Controls.Button btnRecord;
+        private SDUI.Controls.Button btnImportScript;
+        private SDUI.Controls.Button btnUpdateNavLink;
         private SDUI.Controls.CheckBox checkBerzerkWhenFull;
         private SDUI.Controls.CheckBox checkBerserkOnMonsterRarity;
-        private SDUI.Controls.ListView lvAvoidance;
-        private SDUI.Controls.ContextMenuStrip ctxAvoidance;
-        private System.Windows.Forms.ToolStripMenuItem btnAvoid;
-        private System.Windows.Forms.ToolStripMenuItem btnPrefer;
-        private System.Windows.Forms.ToolStripMenuItem btnBerserk;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem btnNoCustomBehavior;
         private SDUI.Controls.GroupBox groupBoxBerserk;
         private SDUI.Controls.NumUpDown numBerzerkMonsterAmount;
         private SDUI.Controls.CheckBox checkBerzerkAvoidance;
         private SDUI.Controls.CheckBox checkBerzerkMonsterAmount;
         private SDUI.Controls.Label label7;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
         private SDUI.Controls.GroupBox groupBoxArea;
         private SDUI.Controls.Label label6;
         private SDUI.Controls.Label label5;
@@ -892,19 +871,16 @@
         private SDUI.Controls.TextBox txtRadius;
         private SDUI.Controls.TextBox txtYCoord;
         private SDUI.Controls.TextBox txtXCoord;
-        private SDUI.Controls.CheckBox checkBoxUseReverse;
         private SDUI.Controls.Button buttonSelectTrainingArea;
         private SDUI.Controls.Radio radioStand;
         private SDUI.Controls.GroupBox groupBoxAdvanced;
         private SDUI.Controls.CheckBox checkBoxDimensionPillar;
         private SDUI.Controls.CheckBox checkAttackWeakerFirst;
         private System.Windows.Forms.LinkLabel linkAttackWeakerMobsHelp;
-        private System.Windows.Forms.LinkLabel linkRecord;
         private SDUI.Controls.Label label8;
         private SDUI.Controls.TextBox txtRegion;
         private SDUI.Controls.Button btnApplyArea;
         private System.Windows.Forms.ToolTip toolTip1;
         private SDUI.Controls.CheckBox checkBoxDontFollowMobs;
-        private SDUI.Controls.Button btnRemove;
     }
 }
