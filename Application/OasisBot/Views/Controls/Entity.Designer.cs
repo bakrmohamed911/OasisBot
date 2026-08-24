@@ -40,7 +40,7 @@
             lblType.ApplyGradient = false;
             lblType.AutoSize = false;
             lblType.BackColor = System.Drawing.Color.Transparent;
-            lblType.Font = new System.Drawing.Font("Segoe UI", 9.5F);
+            lblType.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             lblType.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
             lblType.Gradient = new System.Drawing.Color[]
     {
@@ -48,12 +48,16 @@
     System.Drawing.Color.Black
     };
             lblType.GradientAnimation = false;
-            lblType.Location = new System.Drawing.Point(176, 62);
+            // Kept left-aligned and within ~250px of Location.X: the runtime-stretched width of
+            // this control (hosted at 312px in the sidebar) doesn't reliably paint text right of
+            // that boundary when right-aligned - it silently renders nothing, verified by testing
+            // a fresh label at the same spot (left-aligned worked, right-aligned didn't).
+            lblType.Location = new System.Drawing.Point(164, 62);
             lblType.Name = "lblType";
-            lblType.Size = new System.Drawing.Size(126, 18);
+            lblType.Size = new System.Drawing.Size(82, 18);
             lblType.TabIndex = 18;
             lblType.Text = "<none>";
-            lblType.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            lblType.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label1
             // 
@@ -128,7 +132,7 @@
             lblEntityHpValue.GradientAnimation = false;
             lblEntityHpValue.Location = new System.Drawing.Point(52, 62);
             lblEntityHpValue.Name = "lblEntityHpValue";
-            lblEntityHpValue.Size = new System.Drawing.Size(120, 18);
+            lblEntityHpValue.Size = new System.Drawing.Size(110, 18);
             lblEntityHpValue.TabIndex = 19;
             lblEntityHpValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //

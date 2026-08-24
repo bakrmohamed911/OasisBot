@@ -20,6 +20,7 @@ public class StatisticsPanel : DoubleBufferedControl
     private const int RingSize = 60;
     private const int RowHeight = 17;
     private const int ValueColumnWidth = 140;
+    private const int SectionGap = 6;
 
     private static readonly string[] KillCategories =
     {
@@ -62,6 +63,7 @@ public class StatisticsPanel : DoubleBufferedControl
     private Label lblPlayerName;
     private Label lblLevelRace;
     private readonly Dictionary<string, Label> _valueLabels = new();
+    private string _lastResetPlayerName;
 
     public StatisticsPanel()
     {
@@ -189,6 +191,9 @@ public class StatisticsPanel : DoubleBufferedControl
 
     private int AddSection(int y, string title)
     {
+        // A little breathing room from the previous section's last row before this one starts.
+        y += SectionGap;
+
         var label = CreateCaptionLabel(title);
         label.Font = new Font("Segoe UI Semibold", 8.25F, FontStyle.Bold);
         FitLabelToText(label);
@@ -265,6 +270,20 @@ public class StatisticsPanel : DoubleBufferedControl
 
     private void ResetSession()
     {
+        // "OnLoadCharacter" fires from CharacterDataEndResponse, which resends the *full*
+        // character-data packet (a fresh Game.Player instance) not just at initial login but on
+        // ordinary zone transitions/teleports too — resetting on every one of those wiped out
+        // real session progress mid-session. Only actually reset when the character identity
+        // changed (a genuine new login), not on a same-character data refresh.
+        var currentPlayerName = Game.Ready && Game.Player != null ? Game.Player.Name : null;
+        if (!string.IsNullOrEmpty(currentPlayerName) && currentPlayerName == _lastResetPlayerName)
+        {
+            UpdatePlayerInfo();
+            return;
+        }
+
+        _lastResetPlayerName = currentPlayerName;
+
         Array.Clear(_expSamples, 0, _expSamples.Length);
         Array.Clear(_spSamples, 0, _spSamples.Length);
         Array.Clear(_killSamples, 0, _killSamples.Length);
