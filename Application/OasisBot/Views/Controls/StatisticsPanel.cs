@@ -44,9 +44,11 @@ public class StatisticsPanel : DoubleBufferedControl
 
     private int _expSampleIndex = -1;
     private long _lastExpValue;
+    private bool _expBaselineReady;
 
     private int _spSampleIndex = -1;
     private uint _lastSpValue;
+    private bool _spBaselineReady;
 
     private int _killSampleIndex = -1;
     private int _lastKillCount;
@@ -281,16 +283,14 @@ public class StatisticsPanel : DoubleBufferedControl
             label.Visible = false;
         }
 
-        if (Game.Ready && Game.Player != null)
-        {
-            _lastExpValue = Game.Player.Experience;
-            _lastSpValue = Game.Player.SkillPoints;
-        }
-        else
-        {
-            _lastExpValue = 0;
-            _lastSpValue = 0;
-        }
+        // Don't baseline _lastExpValue/_lastSpValue here: "OnLoadCharacter" can fire before
+        // Game.Player.Experience/SkillPoints are actually populated from the server, so reading
+        // them right now risks baselining against 0 (or a stale value) and crediting the
+        // player's entire lifetime total as "gained this session" on the very next tick.
+        // SampleExperience()/SampleSkillPoints() capture the real baseline safely instead, the
+        // first time they run after this reset.
+        _expBaselineReady = false;
+        _spBaselineReady = false;
 
         UpdatePlayerInfo();
         UpdateValues();
@@ -313,6 +313,17 @@ public class StatisticsPanel : DoubleBufferedControl
     private void SampleExperience()
     {
         var currentValue = Game.Player.Experience;
+
+        // First sample after a reset: just capture the real baseline, no delta yet — the value
+        // read right after "OnLoadCharacter" fires isn't trustworthy (see ResetSession).
+        if (!_expBaselineReady)
+        {
+            _lastExpValue = currentValue;
+            _expBaselineReady = true;
+            PushSample(_expSamples, ref _expSampleIndex, 0);
+            return;
+        }
+
         var delta = currentValue - _lastExpValue;
 
         if (delta < 0)
@@ -337,6 +348,15 @@ public class StatisticsPanel : DoubleBufferedControl
     private void SampleSkillPoints()
     {
         var currentValue = Game.Player.SkillPoints;
+
+        if (!_spBaselineReady)
+        {
+            _lastSpValue = currentValue;
+            _spBaselineReady = true;
+            PushSample(_spSamples, ref _spSampleIndex, 0);
+            return;
+        }
+
         var delta = Math.Max(0, currentValue - _lastSpValue);
 
         _lastSpValue = currentValue;
@@ -477,7 +497,10 @@ public class StatisticsPanel : DoubleBufferedControl
             return;
 
         lblPlayerName.Text = Game.Player.Name;
+        FitLabelToText(lblPlayerName);
+
         lblLevelRace.Text = $"Level {Game.Player.Level}  |  {GetRaceName(Game.Player.Race)}";
+        FitLabelToText(lblLevelRace);
     }
 
     private static string GetRaceName(ObjectCountry race)

@@ -265,9 +265,9 @@ namespace RSBot.Views
             entity1.Dock = DockStyle.Top;
             entity1.Location = new System.Drawing.Point(0, 88);
             entity1.Margin = new Padding(5);
-            entity1.MinimumSize = new System.Drawing.Size(312, 115);
+            entity1.MinimumSize = new System.Drawing.Size(312, 100);
             entity1.Name = "entity1";
-            entity1.Size = new System.Drawing.Size(312, 124);
+            entity1.Size = new System.Drawing.Size(312, 109);
             entity1.TabIndex = 10;
             // 
             // botbase1ToolStripMenuItem1

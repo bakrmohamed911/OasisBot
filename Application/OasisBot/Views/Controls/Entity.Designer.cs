@@ -38,8 +38,9 @@
             // lblType
             // 
             lblType.ApplyGradient = false;
+            lblType.AutoSize = false;
             lblType.BackColor = System.Drawing.Color.Transparent;
-            lblType.Dock = System.Windows.Forms.DockStyle.Bottom;
+            lblType.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             lblType.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
             lblType.Gradient = new System.Drawing.Color[]
     {
@@ -47,12 +48,12 @@
     System.Drawing.Color.Black
     };
             lblType.GradientAnimation = false;
-            lblType.Location = new System.Drawing.Point(0, 64);
+            lblType.Location = new System.Drawing.Point(176, 62);
             lblType.Name = "lblType";
-            lblType.Size = new System.Drawing.Size(250, 19);
+            lblType.Size = new System.Drawing.Size(126, 18);
             lblType.TabIndex = 18;
             lblType.Text = "<none>";
-            lblType.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            lblType.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // label1
             // 
@@ -125,11 +126,11 @@
     System.Drawing.Color.Black
     };
             lblEntityHpValue.GradientAnimation = false;
-            lblEntityHpValue.Location = new System.Drawing.Point(52, 60);
+            lblEntityHpValue.Location = new System.Drawing.Point(52, 62);
             lblEntityHpValue.Name = "lblEntityHpValue";
-            lblEntityHpValue.Size = new System.Drawing.Size(180, 18);
+            lblEntityHpValue.Size = new System.Drawing.Size(120, 18);
             lblEntityHpValue.TabIndex = 19;
-            lblEntityHpValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            lblEntityHpValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
             // Entity
             //
@@ -140,9 +141,9 @@
             Controls.Add(label1);
             Controls.Add(lblEntityName);
             Controls.Add(progressHP);
-            MinimumSize = new System.Drawing.Size(250, 96);
+            MinimumSize = new System.Drawing.Size(250, 81);
             Name = "Entity";
-            Size = new System.Drawing.Size(250, 103);
+            Size = new System.Drawing.Size(250, 88);
             ResumeLayout(false);
             PerformLayout();
         }
