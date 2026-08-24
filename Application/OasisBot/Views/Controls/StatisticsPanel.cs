@@ -5,7 +5,7 @@ using System.Windows.Forms;
 using RSBot.Core;
 using RSBot.Core.Client.ReferenceObjects;
 using RSBot.Core.Event;
-using RSBot.Core.Extensions;
+using RSBot.Core.Objects;
 using RSBot.Core.Objects.Spawn;
 using SDUI.Controls;
 using Label = SDUI.Controls.Label;
@@ -22,16 +22,20 @@ public class StatisticsPanel : DoubleBufferedControl
     private const int ValueColumnWidth = 140;
     private const int SectionGap = 6;
 
+    // Same category set (and order/names) as the Training botbase's Avoidance list
+    // (Botbases\RSBot.Training\Views\Main.cs) - see GetKillCategory for the rarity mapping.
     private static readonly string[] KillCategories =
     {
         "General",
         "Champion",
         "Giant",
-        "Titan",
-        "Elite",
-        "Elite Strong",
+        "General (party)",
+        "Champion (party)",
+        "Giant (party)",
         "Unique",
-        "Other",
+        "Strong",
+        "Elite",
+        "Event",
     };
 
     private readonly Timer _timer = new() { Interval = 1000 };
@@ -459,7 +463,12 @@ public class StatisticsPanel : DoubleBufferedControl
         _killCount++;
         _totalKills++;
 
-        var category = GetKillCategory(monster.Rarity.GetName());
+        var category = GetKillCategory(monster.Rarity);
+        if (category == null)
+            // Not in the Training avoidance category set (Titan, and the Elite/Unique(2) party
+            // variants) - still counted in the totals above, just no breakdown row for it.
+            return;
+
         _rarityCounts.TryGetValue(category, out var count);
         _rarityCounts[category] = ++count;
 
@@ -470,40 +479,29 @@ public class StatisticsPanel : DoubleBufferedControl
         valueLabel.Visible = true;
     }
 
-    private static string GetKillCategory(string rarityName)
+    /// <summary>
+    ///     Maps a killed monster's rarity to one of <see cref="KillCategories" />, mirroring the
+    ///     Training botbase's Avoidance list (Botbases\RSBot.Training\Views\Main.cs) exactly -
+    ///     same 10 categories/names, same collapsing of Unique+Unique2 into "Unique", same
+    ///     "Strong" label for EliteStrong, and the same omissions (Titan and the Elite/Unique
+    ///     party variants aren't in that list either).
+    /// </summary>
+    private static string GetKillCategory(MonsterRarity rarity)
     {
-        switch (rarityName)
+        return rarity switch
         {
-            case "General":
-            case "General (Party)":
-                return "General";
-
-            case "Champion":
-            case "Champion (Party)":
-                return "Champion";
-
-            case "Giant":
-            case "Giant (Party)":
-                return "Giant";
-
-            case "Titan":
-            case "Titan (Party)":
-                return "Titan";
-
-            case "Elite":
-            case "Elite (Party)":
-                return "Elite";
-
-            case "Elite (Strong)":
-                return "Elite Strong";
-
-            case "Unique":
-            case "Unique (Party)":
-                return "Unique";
-
-            default:
-                return "Other";
-        }
+            MonsterRarity.General => "General",
+            MonsterRarity.Champion => "Champion",
+            MonsterRarity.Giant => "Giant",
+            MonsterRarity.GeneralParty => "General (party)",
+            MonsterRarity.ChampionParty => "Champion (party)",
+            MonsterRarity.GiantParty => "Giant (party)",
+            MonsterRarity.Unique or MonsterRarity.Unique2 => "Unique",
+            MonsterRarity.EliteStrong => "Strong",
+            MonsterRarity.Elite => "Elite",
+            MonsterRarity.Event => "Event",
+            _ => null,
+        };
     }
 
     #endregion
