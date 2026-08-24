@@ -20,7 +20,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Botbases\RSBot.Training\RSBot.Training.csproj" />
+    <ProjectReference Include="..\..\Botbases\RSBot.Training\RSBot.Training.csproj">
+      <!-- Training is a Botbase, deployed to Build\Data\Bots by its own project - copying its
+           DLL here too (Build\Data\Plugins, MSBuild's default for a ProjectReference) created a
+           second, independent copy that silently went stale every time only RSBot.Training was
+           rebuilt afterward. Assembly.LoadFrom resolves by simple name and reuses whichever
+           same-named assembly loaded first (see BotbaseManager.GetExtensionsFromAssembly) - so
+           whichever of the two loaded first (order not guaranteed) could "win" and shadow the
+           other for the rest of that run, silently keeping edits to Training from ever taking
+           effect regardless of how many times its own project was rebuilt. -->
+      <Private>False</Private>
+    </ProjectReference>
     <ProjectReference Include="..\..\Library\RSBot.Core\RSBot.Core.csproj" />
     <ProjectReference Include="..\..\SDUI\SDUI\SDUI.csproj" />
     <ProjectReference Include="..\RSBot.General\RSBot.General.csproj" />

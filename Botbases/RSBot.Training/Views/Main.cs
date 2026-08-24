@@ -28,9 +28,11 @@ public partial class Main : DoubleBufferedControl
     private const int DefaultTrainingPlaceRadius = 50;
 
     /// <summary>
-    ///     The fixed set of rows shown in the Avoidance checklist: a display label plus the
-    ///     <see cref="MonsterRarity" /> flag(s) it represents. "Unique" combines Unique + Unique2
-    ///     into one row/flag, matching the original ListView's item tagging.
+    ///     The fixed set of rows shown in the "Mob preferences" checklist: a display label plus
+    ///     the <see cref="MonsterRarity" /> flag(s) it represents. "Unique" combines Unique +
+    ///     Unique2 into one row/flag, matching the original ListView's item tagging. Kept under
+    ///     the "Avoidance" name internally since it backs the same "RSBot.Avoidance.*"
+    ///     PlayerConfig keys AvoidanceBundle reads.
     /// </summary>
     private static readonly (string Label, MonsterRarity Rarity)[] AvoidanceRarities =
     {
@@ -66,7 +68,7 @@ public partial class Main : DoubleBufferedControl
     public Main()
     {
         InitializeComponent();
-        InitializeCustomComponents();
+        txtSearchPlace.Enter += txtSearchPlace_Enter;
         SubscribeEvents();
     }
 
@@ -152,8 +154,10 @@ public partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
-    ///     Called when the script recorder saves a script - prompts for the Name/Level metadata
-    ///     and adds it to the training-place catalog (see <see cref="PromptAndCatalogScript" />).
+    ///     Called when the script recorder saves a script - the recorder's own Save dialog
+    ///     already wrote the file and chose its name, so this only asks for the missing Level
+    ///     (see <see cref="PromptLevelAndCatalogScript" />) rather than prompting to save it a
+    ///     second time.
     /// </summary>
     private void OnSaveScript(int ownerId, string path)
     {
@@ -163,7 +167,7 @@ public partial class Main : DoubleBufferedControl
         if (ownerId != ScriptRecorderOwnerId)
             return;
 
-        PromptAndCatalogScript(path);
+        PromptLevelAndCatalogScript(path);
     }
 
     /// <summary>
@@ -185,12 +189,12 @@ public partial class Main : DoubleBufferedControl
         EventManager.FireEvent("AppendScriptCommand", area.GetScriptLine());
     }
 
-    #region Avoidance checklist
+    #region Mob preferences checklist
 
     /// <summary>
-    ///     Builds the Avoidance checklist: one row per <see cref="AvoidanceRarities" /> entry,
-    ///     each with 3 mutually-exclusive checkboxes (Avoid/Prefer/Berserk) - replaces the old
-    ///     ListView + right-click "assign to group" context menu with direct checkboxes.
+    ///     Builds the "Mob preferences" checklist: one row per <see cref="AvoidanceRarities" />
+    ///     entry, each with 3 mutually-exclusive checkboxes (Avoid/Prefer/Berserk) - replaces the
+    ///     old ListView + right-click "assign to group" context menu with direct checkboxes.
     /// </summary>
     private void BuildAvoidanceChecklist()
     {
@@ -210,6 +214,7 @@ public partial class Main : DoubleBufferedControl
         // "Champion (party)" clipped down to "Champion" read as a duplicate of the plain
         // "Champion" row above it.
         var rows = new List<(SDUI.Controls.Label NameLabel, MonsterRarity Rarity)>();
+        var maxNameWidth = 0;
         var y = 26;
         foreach (var (text, rarity) in AvoidanceRarities)
         {
@@ -227,10 +232,18 @@ public partial class Main : DoubleBufferedControl
             avoidanceListPanel.Controls.Add(nameLabel);
             rows.Add((nameLabel, rarity));
 
+            // nameLabel.Width right after construction is unreliable for this - an AutoSize
+            // label only resolves its true size once it's actually parented/laid out, reporting
+            // the plain WinForms-default 100 until then. That inflated "100" silently flowed
+            // into col1X/col2X/col3X below (and, worse, into CreateColumnHeader's centering,
+            // which read the same kind of not-yet-resolved Width) - measuring the text directly
+            // sidesteps the timing issue entirely.
+            maxNameWidth = Math.Max(maxNameWidth, TextRenderer.MeasureText(text, Font).Width);
+
             y += 26;
         }
 
-        var col1X = nameX + rows.Max(r => r.NameLabel.Width) + nameToChecklistGap;
+        var col1X = nameX + maxNameWidth + nameToChecklistGap;
         var col2X = col1X + col1W + colGap;
         var col3X = col2X + col2W + colGap;
         // A separate, smaller Font (7.5F) for these clipped its last character even with
@@ -242,12 +255,16 @@ public partial class Main : DoubleBufferedControl
         avoidanceListPanel.Controls.Add(CreateColumnHeader("Prefer", headerFont, col2X + col2W / 2));
         avoidanceListPanel.Controls.Add(CreateColumnHeader("Berserk", headerFont, col3X + col3W / 2));
 
-        y = 22;
-        foreach (var (_, rarity) in rows)
+        // Read each row's checkbox Y straight off its already-placed name label rather than
+        // tracking a second running offset in parallel - the two used different starting values
+        // (26 vs 22) and drifted apart, leaving every row's checkboxes a few pixels above its
+        // name label instead of level with it.
+        foreach (var (nameLabel, rarity) in rows)
         {
-            var avoidCheck = CreateRowCheckbox(col1X + (col1W - checkboxSize) / 2, y, checkboxSize, rarity);
-            var preferCheck = CreateRowCheckbox(col2X + (col2W - checkboxSize) / 2, y, checkboxSize, rarity);
-            var berserkCheck = CreateRowCheckbox(col3X + (col3W - checkboxSize) / 2, y, checkboxSize, rarity);
+            var rowY = nameLabel.Top - (checkboxSize - nameLabel.Height) / 2;
+            var avoidCheck = CreateRowCheckbox(col1X + (col1W - checkboxSize) / 2, rowY, checkboxSize, rarity);
+            var preferCheck = CreateRowCheckbox(col2X + (col2W - checkboxSize) / 2, rowY, checkboxSize, rarity);
+            var berserkCheck = CreateRowCheckbox(col3X + (col3W - checkboxSize) / 2, rowY, checkboxSize, rarity);
 
             void OnRowChanged(CheckBox changed)
             {
@@ -274,8 +291,6 @@ public partial class Main : DoubleBufferedControl
             avoidanceListPanel.Controls.Add(berserkCheck);
 
             _avoidanceRows.Add((rarity, avoidCheck, preferCheck, berserkCheck));
-
-            y += 26;
         }
 
         avoidanceListPanel.ResumeLayout(true);
@@ -297,7 +312,14 @@ public partial class Main : DoubleBufferedControl
             ForeColor = System.Drawing.Color.FromArgb(130, 130, 130),
             Text = text,
         };
-        label.Location = new System.Drawing.Point(centerX - label.Width / 2, 2);
+
+        // label.Width is unreliable here - AutoSize only resolves the label's true size once
+        // it's actually parented/laid out, so immediately after construction it still reports
+        // the plain WinForms-default 100 regardless of Font/Text. Centering off that stale 100
+        // instead of the true ~38-45px width left every header several px left of its column's
+        // real center once the label's later auto-resize (which preserves Location) kicked in.
+        var measuredWidth = TextRenderer.MeasureText(text, font).Width;
+        label.Location = new System.Drawing.Point(centerX - measuredWidth / 2, 2);
 
         return label;
     }
@@ -356,23 +378,130 @@ public partial class Main : DoubleBufferedControl
         }
     }
 
-    #endregion Avoidance checklist
+    #endregion Mob preferences checklist
 
     #region Training place selection
 
     /// <summary>
-    ///     Re-populates <see cref="lstTrainingPlaces" /> from the catalog, filtered by whatever's
-    ///     currently typed in <see cref="txtSearchPlace" /> (name substring or exact level match).
+    ///     A borderless popup window that never takes keyboard focus/activation (WS_EX_NOACTIVATE)
+    ///     - used for <see cref="_placeResultsList" /> so showing/updating it while the user types
+    ///     in <see cref="txtSearchPlace" /> never steals focus away from the search box, the same
+    ///     way a native combo box's own suggestion dropdown behaves. A ToolStripDropDown was tried
+    ///     first, but showing it (and re-showing it on every keystroke as matches change) handed
+    ///     focus to its hosted ListBox, which then swallowed every keystroke after the first.
+    /// </summary>
+    private sealed class NonActivatingPopup : Form
+    {
+        public NonActivatingPopup()
+        {
+            FormBorderStyle = FormBorderStyle.None;
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.Manual;
+        }
+
+        protected override bool ShowWithoutActivation => true;
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int WS_EX_NOACTIVATE = 0x08000000;
+                var cp = base.CreateParams;
+                cp.ExStyle |= WS_EX_NOACTIVATE;
+                return cp;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Lazily-created popup listing catalog matches for whatever's typed in
+    ///     <see cref="txtSearchPlace" /> - a real dropdown that only appears while there's
+    ///     something to search/show, replacing the old always-visible (and, when empty, blank
+    ///     black-looking) result list.
+    /// </summary>
+    private NonActivatingPopup _placeDropDown;
+
+    private ListBox _placeResultsList;
+
+    private void EnsurePlaceDropDown()
+    {
+        if (_placeDropDown != null)
+            return;
+
+        _placeResultsList = new ListBox
+        {
+            BorderStyle = BorderStyle.FixedSingle,
+            IntegralHeight = false,
+            ItemHeight = 20,
+            Font = txtSearchPlace.Font,
+            Dock = DockStyle.Fill,
+        };
+        _placeResultsList.Click += (s, e) => CommitPlaceDropDownSelection();
+        _placeResultsList.KeyDown += (s, e) =>
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                CommitPlaceDropDownSelection();
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                _placeDropDown.Hide();
+            }
+        };
+
+        _placeDropDown = new NonActivatingPopup();
+        _placeDropDown.Controls.Add(_placeResultsList);
+    }
+
+    private void CommitPlaceDropDownSelection()
+    {
+        if (_placeResultsList?.SelectedItem is TrainingPlaceEntry entry)
+            ActivateTrainingPlace(entry);
+
+        _placeDropDown?.Hide();
+    }
+
+    /// <summary>
+    ///     Re-filters the catalog by whatever's currently typed in <see cref="txtSearchPlace" />
+    ///     (name substring or exact level match) and shows the matches as a dropdown beneath it -
+    ///     closed entirely when there's nothing to show or the search box isn't focused.
     /// </summary>
     private void RefreshTrainingPlaceList()
     {
-        var results = TrainingPlaceCatalog.Search(txtSearchPlace.Text).OrderBy(en => en.Level).ThenBy(en => en.Name);
+        var matches = TrainingPlaceCatalog
+            .Search(txtSearchPlace.Text)
+            .OrderBy(en => en.Level)
+            .ThenBy(en => en.Name)
+            .ToList();
 
-        lstTrainingPlaces.BeginUpdate();
-        lstTrainingPlaces.Items.Clear();
-        foreach (var entry in results)
-            lstTrainingPlaces.Items.Add(entry);
-        lstTrainingPlaces.EndUpdate();
+        EnsurePlaceDropDown();
+
+        _placeResultsList.BeginUpdate();
+        _placeResultsList.Items.Clear();
+        foreach (var entry in matches)
+            _placeResultsList.Items.Add(entry);
+        _placeResultsList.EndUpdate();
+
+        // txtSearchPlace is a composite control (SDUI.Controls.TextBox) that forwards real
+        // keyboard focus to a private inner native TextBox, so its own Focused is always false
+        // while the user is actually typing - ContainsFocus checks the whole subtree instead.
+        if (matches.Count == 0 || !txtSearchPlace.ContainsFocus)
+        {
+            _placeDropDown.Hide();
+            return;
+        }
+
+        var visibleRows = Math.Min(matches.Count, 6);
+        var height = visibleRows * _placeResultsList.ItemHeight + 4;
+        var screenLocation = txtSearchPlace.PointToScreen(new System.Drawing.Point(0, txtSearchPlace.Height));
+        _placeDropDown.Bounds = new System.Drawing.Rectangle(
+            screenLocation,
+            new System.Drawing.Size(txtSearchPlace.Width, height)
+        );
+
+        if (!_placeDropDown.Visible)
+            _placeDropDown.Show(this);
     }
 
     /// <summary>
@@ -385,12 +514,9 @@ public partial class Main : DoubleBufferedControl
         if (string.IsNullOrEmpty(savedName))
             return;
 
-        for (var i = 0; i < lstTrainingPlaces.Items.Count; i++)
-            if (lstTrainingPlaces.Items[i] is TrainingPlaceEntry entry && entry.Name == savedName)
-            {
-                lstTrainingPlaces.SelectedIndex = i;
-                return;
-            }
+        var entry = TrainingPlaceCatalog.Entries.FirstOrDefault(en => en.Name == savedName);
+        if (entry != null)
+            ActivateTrainingPlace(entry);
     }
 
     private void txtSearchPlace_TextChanged(object sender, EventArgs e)
@@ -398,11 +524,17 @@ public partial class Main : DoubleBufferedControl
         RefreshTrainingPlaceList();
     }
 
-    private void lstTrainingPlaces_SelectedIndexChanged(object sender, EventArgs e)
+    private void txtSearchPlace_Enter(object sender, EventArgs e)
     {
-        if (lstTrainingPlaces.SelectedItem is not TrainingPlaceEntry entry)
-            return;
+        RefreshTrainingPlaceList();
+    }
 
+    /// <summary>
+    ///     Loads and activates a catalogued training place, reflecting it in the search box and
+    ///     the Area section.
+    /// </summary>
+    private void ActivateTrainingPlace(TrainingPlaceEntry entry)
+    {
         if (!TrainingPlaceManager.Load(entry.FilePath, entry.Name))
         {
             MessageBox.Show(
@@ -415,24 +547,56 @@ public partial class Main : DoubleBufferedControl
         }
 
         PlayerConfig.Set("RSBot.Training.SelectedPlaceScript", entry.Name);
+        SetSearchPlaceTextSilently(entry.ToString());
 
-        // Reflect the route's own starting point in the Area section right away, rather than
-        // leaving it showing whatever was there before - MovementBundle's own per-tick sync
-        // will keep moving it to follow the player once the patrol is actually running. A patrol
-        // route has no real "radius" of its own (it follows a fixed waypoint loop, not a
-        // circular wander-area), so default it to a sensible value rather than leaving whatever
-        // unrelated radius happened to be configured before.
-        PlayerConfig.Set("RSBot.Area.Radius", DefaultTrainingPlaceRadius);
+        if (entry.Area != null)
+        {
+            // Use the area captured from this script's own "area ..." line (see
+            // PromptLevelAndCatalogScript/PromptAndCatalogScript) - set exactly the way that
+            // line itself would apply it (see TrainingAreaScriptCommand), rather than guessing
+            // one from the route's first waypoint.
+            var area = entry.Area;
+            PlayerConfig.Set("RSBot.Area.Region", area.Region);
+            PlayerConfig.Set("RSBot.Area.X", area.XOffset);
+            PlayerConfig.Set("RSBot.Area.Y", area.YOffset);
+            PlayerConfig.Set("RSBot.Area.Z", area.ZOffset);
+            PlayerConfig.Set("RSBot.Area.Radius", area.Radius);
+            EventManager.FireEvent("OnSetTrainingArea");
+        }
+        else
+        {
+            // No captured area (imported/converted script, or an older catalog entry saved
+            // before this was tracked) - reflect the route's own starting point instead, rather
+            // than leaving the Area section showing whatever was there before. MovementBundle's
+            // own per-tick sync will keep moving it to follow the player once the patrol is
+            // actually running. A patrol route has no real "radius" of its own (it follows a
+            // fixed waypoint loop, not a circular wander-area), so default it to a sensible
+            // value rather than leaving whatever unrelated radius happened to be configured
+            // before.
+            PlayerConfig.Set("RSBot.Area.Radius", DefaultTrainingPlaceRadius);
 
-        var start = TrainingPlaceManager.CurrentWaypoint;
-        TrainingManager.ApplyTrainingArea(start.X, start.Y, start.Region);
+            var start = TrainingPlaceManager.CurrentWaypoint;
+            TrainingManager.ApplyTrainingArea(start.X, start.Y, start.Region);
+        }
+    }
+
+    /// <summary>
+    ///     Sets <see cref="txtSearchPlace" />'s text without re-triggering the search filter -
+    ///     used when reflecting a selection rather than the user actively searching.
+    /// </summary>
+    private void SetSearchPlaceTextSilently(string text)
+    {
+        txtSearchPlace.TextChanged -= txtSearchPlace_TextChanged;
+        txtSearchPlace.Text = text;
+        txtSearchPlace.TextChanged += txtSearchPlace_TextChanged;
     }
 
     private void btnClearPlace_Click(object sender, EventArgs e)
     {
         TrainingPlaceManager.Deactivate();
         PlayerConfig.Set("RSBot.Training.SelectedPlaceScript", string.Empty);
-        lstTrainingPlaces.ClearSelected();
+        SetSearchPlaceTextSilently(string.Empty);
+        _placeDropDown?.Hide();
     }
 
     #endregion Training place selection
@@ -448,20 +612,119 @@ public partial class Main : DoubleBufferedControl
     {
         var diag = new OpenFileDialog
         {
-            Filter = @"RSBot Bot script (*.rbs)|*.rbs",
+            Filter = @"RSBot Bot script or legacy walk script (*.rbs;*.txt)|*.rbs;*.txt",
             Title = @"Import a training place walk script",
         };
 
         if (diag.ShowDialog() != DialogResult.OK)
             return;
 
-        PromptAndCatalogScript(diag.FileName);
+        var importPath = ConvertIfLegacyScript(diag.FileName);
+        if (importPath != null)
+            PromptAndCatalogScript(importPath);
     }
 
     /// <summary>
-    ///     Shared save flow for both a freshly-recorded script (from <see cref="OnSaveScript" />)
-    ///     and an imported one (from <see cref="btnImportScript_Click" />): prompts for Name/Level,
-    ///     then adds the entry to the training-place catalog and selects it in the search results.
+    ///     Detects and converts a legacy training-place script (go(x,y)/go,x,y/delay(N)/wait/
+    ///     teleport/fly/buff/skill/kill/scriptversion= syntax) into OasisBot's native "move"/
+    ///     "wait" script syntax via <see cref="LegacyScriptConverter" />, so importing doesn't
+    ///     require the file to already be in that format. Returns the path to hand to
+    ///     <see cref="PromptAndCatalogScript" /> - the original path unchanged if it's already
+    ///     native, a new converted file's path if it needed converting, or null if the user
+    ///     should not proceed (unsupported format, or read failure).
+    /// </summary>
+    private string ConvertIfLegacyScript(string filePath)
+    {
+        string[] lines;
+        try
+        {
+            lines = File.ReadAllLines(filePath);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Could not read \"{Path.GetFileName(filePath)}\": {ex.Message}",
+                "Import training place script",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+            return null;
+        }
+
+        if (LegacyScriptConverter.IsUnsupportedHexFormat(lines))
+        {
+            MessageBox.Show(
+                $"\"{Path.GetFileName(filePath)}\" uses an old packed-format move(...) that can't be "
+                    + "automatically converted - there's no known way to decode it safely. "
+                    + "Please provide a plain-text walk script instead.",
+                "Import training place script",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning
+            );
+            return null;
+        }
+
+        if (!LegacyScriptConverter.NeedsConversion(lines))
+            return filePath;
+
+        var converted = LegacyScriptConverter.Convert(lines, Path.GetFileName(filePath), out var unrecognizedCount);
+        var destPath = GetUniqueConvertedScriptPath(filePath);
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(destPath));
+            File.WriteAllLines(destPath, converted);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Could not save the converted script: {ex.Message}",
+                "Import training place script",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error
+            );
+            return null;
+        }
+
+        if (unrecognizedCount > 0)
+            MessageBox.Show(
+                $"\"{Path.GetFileName(filePath)}\" was converted to OasisBot's walk script format, but "
+                    + $"{unrecognizedCount} line(s) (teleport/fly/buff/skill/kill/scriptversion= commands, or "
+                    + "lines that weren't recognized at all) could not be translated automatically and were "
+                    + "commented out instead - the route will still walk correctly, but you may want to "
+                    + "review those lines manually.",
+                "Import training place script",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
+
+        return destPath;
+    }
+
+    /// <summary>
+    ///     Picks a non-colliding destination for a converted script under the same
+    ///     Data/Scripts/TrainingPlaces folder recorded/catalogued scripts live in, named after
+    ///     the original file (with a numeric suffix if that name's already taken).
+    /// </summary>
+    private static string GetUniqueConvertedScriptPath(string sourceFilePath)
+    {
+        var destDir = Path.Combine(Kernel.BasePath, "Data", "Scripts", "TrainingPlaces");
+        var baseName = Path.GetFileNameWithoutExtension(sourceFilePath);
+
+        var destPath = Path.Combine(destDir, baseName + ".rbs");
+        var suffix = 1;
+        while (File.Exists(destPath))
+            destPath = Path.Combine(destDir, $"{baseName} ({suffix++}).rbs");
+
+        return destPath;
+    }
+
+    /// <summary>
+    ///     Save flow for an imported script (from <see cref="btnImportScript_Click" />): prompts
+    ///     for Name/Level - offering to rename makes sense here, since the file's own name may be
+    ///     a cryptic legacy one, or one just handed back from <see cref="ConvertIfLegacyScript" />
+    ///     - then adds the entry to the training-place catalog and selects it in the search
+    ///     results.
     /// </summary>
     private void PromptAndCatalogScript(string filePath)
     {
@@ -476,18 +739,63 @@ public partial class Main : DoubleBufferedControl
             Name = dialog.PlaceName.Text.Trim(),
             Level = (int)dialog.Level.Value,
             FilePath = filePath,
+            Area = TryReadCapturedArea(filePath),
+        };
+
+        TrainingPlaceCatalog.Add(entry);
+        ActivateTrainingPlace(entry);
+    }
+
+    /// <summary>
+    ///     Save flow for a freshly-recorded script (from <see cref="OnSaveScript" />): the
+    ///     recorder's own Save dialog already wrote the file under a name the user chose, so
+    ///     re-prompting for Name here would just be a second, redundant save step (and risk the
+    ///     catalog Name drifting from the actual file name) - only Level is missing, so that's
+    ///     all this asks for, reusing the recorder's file and name as-is.
+    /// </summary>
+    private void PromptLevelAndCatalogScript(string filePath)
+    {
+        var name = Path.GetFileNameWithoutExtension(filePath);
+
+        using var dialog = new SaveTrainingPlaceDialog(name, nameEditable: false);
+        if (dialog.ShowDialog(this) != DialogResult.OK)
+            return;
+
+        var entry = new TrainingPlaceEntry
+        {
+            Name = name,
+            Level = (int)dialog.Level.Value,
+            FilePath = filePath,
+            Area = TryReadCapturedArea(filePath),
         };
 
         TrainingPlaceCatalog.Add(entry);
 
-        // Clear any active filter so the newly-added entry is guaranteed to show up, then select
-        // (and thereby activate) it immediately.
-        txtSearchPlace.Text = string.Empty;
-        RefreshTrainingPlaceList();
+        // Deliberately not calling ActivateTrainingPlace here, unlike the import flow - this
+        // runs synchronously inside the ScriptRecorder's own Save handler (see OnSaveScript,
+        // fired before the recorder closes), and activating changes the Area, which fires
+        // "OnSetTrainingArea" -> "AppendScriptCommand" - the still-open recorder would catch
+        // that and silently append a bogus "area ..." line (reflecting whatever the area was
+        // *before* this recording, not anything just recorded) to its script buffer. The user
+        // can select the new entry from the search dropdown themselves once they're done.
+        SetSearchPlaceTextSilently(entry.ToString());
+    }
 
-        var index = lstTrainingPlaces.Items.IndexOf(entry);
-        if (index >= 0)
-            lstTrainingPlaces.SelectedIndex = index;
+    /// <summary>
+    ///     Reads <paramref name="filePath" /> and looks for a captured "area ..." line (see
+    ///     <see cref="TrainingPlaceCatalog.TryParseAreaLine" />) - null (not an error) if the
+    ///     file has none, or can't be read at all.
+    /// </summary>
+    private static TrainingPlaceArea TryReadCapturedArea(string filePath)
+    {
+        try
+        {
+            return TrainingPlaceCatalog.TryParseAreaLine(File.ReadAllLines(filePath));
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     #endregion Create a walk script
@@ -600,16 +908,6 @@ public partial class Main : DoubleBufferedControl
             EventManager.FireEvent("OnSetTrainingArea");
     }
 
-    private void linkAttackWeakerMobsHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-    {
-        MessageBox.Show(
-            "If the player is under attack by a monster that is set to be avoided the bot will counter attack weaker mobs that are currently attacking the player first before targeting the avoided monster again. The bot will only kill weaker monsters that are attacking the player and won't start to pull new mobs to the battle.",
-            "Attack weaker mobs first",
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Question
-        );
-    }
-
     private void Main_Load(object sender, EventArgs e)
     {
         // Built here rather than the constructor: Main's AutoScaleMode.Dpi rescales every
@@ -623,22 +921,5 @@ public partial class Main : DoubleBufferedControl
         _settingsLoaded = false;
         LoadSettings();
         _settingsLoaded = true;
-    }
-
-    /// <summary>
-    ///    Initializes custom components that are not handled by the designer.
-    /// </summary>
-    private void InitializeCustomComponents()
-    {
-        btnUpdateNavLink.Click += async (s, e) =>
-        {
-            btnUpdateNavLink.Enabled = false;
-            btnUpdateNavLink.Text = "Updating...";
-
-            await Bot.NavigationManager.FetchRemoteLinkageData();
-
-            btnUpdateNavLink.Text = "Update NavLink";
-            btnUpdateNavLink.Enabled = true;
-        };
     }
 }

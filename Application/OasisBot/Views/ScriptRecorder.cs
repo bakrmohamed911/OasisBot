@@ -389,9 +389,16 @@ public partial class ScriptRecorder : UIWindow
 
         if (diag.ShowDialog() == DialogResult.OK)
         {
-            EventManager.FireEvent("OnSaveScript", _ownerId, diag.FileName);
-
+            // Write the file BEFORE firing OnSaveScript, not after - a subscriber's own
+            // handling of "just saved" (e.g. RSBot.Training cataloguing the script and
+            // activating it as the current training area) can itself trigger further
+            // AppendScriptCommand calls, which would land in txtScript.Text and, if the file
+            // write happened afterward, get silently baked into the saved file as a bogus
+            // trailing line - e.g. a stale "area ..." line reflecting whatever the training
+            // area was before this recording, not anything the user just recorded.
             File.WriteAllText(diag.FileName, txtScript.Text);
+
+            EventManager.FireEvent("OnSaveScript", _ownerId, diag.FileName);
         }
     }
 

@@ -33,7 +33,15 @@ namespace RSBot.Training
             if (Game.Player.State.LifeState == LifeState.Dead)
                 return;
 
-            //Begin the loopback if needed
+            // Begin the loopback if needed - this is what runs the current region's town script
+            // (Data/Scripts/Towns/{RegionId}.rbs, if any - store/repair/buy at whichever NPCs
+            // that town's script visits) before falling back to walking back to the Training
+            // Area's center, so it still needs to fire even while a training-place patrol is
+            // active. See LoopBundle.CheckForWalkbackScript for where that fallback itself is
+            // suppressed for patrol mode instead - MovementBundle.AdvancePatrol() already walks
+            // the recorded route independent of distance, so the fallback would otherwise send
+            // the character off toward whatever CalculatePathToTrainingArea() came up with
+            // instead of the route actually recorded.
             if (Container.Bot.Area.Position.DistanceToPlayer() > 80)
                 Bundles.Loop.Start();
 

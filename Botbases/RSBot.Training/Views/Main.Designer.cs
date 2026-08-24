@@ -13,9 +13,11 @@ namespace RSBot.Training.Views
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                components?.Dispose();
+                // Not designer-managed (a floating popup, not a child control) - clean it up here.
+                _placeDropDown?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -34,14 +36,11 @@ namespace RSBot.Training.Views
             groupBoxTrainingPlace = new SDUI.Controls.GroupBox();
             checkBoxUseReverse = new SDUI.Controls.CheckBox();
             checkUseSpeedDrug = new SDUI.Controls.CheckBox();
-            checkCastBuffs = new SDUI.Controls.CheckBox();
             checkUseMount = new SDUI.Controls.CheckBox();
-            lstTrainingPlaces = new System.Windows.Forms.ListBox();
             btnClearPlace = new SDUI.Controls.Button();
             txtSearchPlace = new SDUI.Controls.TextBox();
             labelSearchPlace = new SDUI.Controls.Label();
             groupBoxCreateScript = new SDUI.Controls.GroupBox();
-            btnUpdateNavLink = new SDUI.Controls.Button();
             btnImportScript = new SDUI.Controls.Button();
             btnRecord = new SDUI.Controls.Button();
             labelCreateScriptHint = new SDUI.Controls.Label();
@@ -50,7 +49,6 @@ namespace RSBot.Training.Views
             groupBoxBerserk = new SDUI.Controls.GroupBox();
             label7 = new SDUI.Controls.Label();
             numBerzerkMonsterAmount = new SDUI.Controls.NumUpDown();
-            checkBerzerkAvoidance = new SDUI.Controls.CheckBox();
             checkBerzerkMonsterAmount = new SDUI.Controls.CheckBox();
             groupBoxArea = new SDUI.Controls.GroupBox();
             btnApplyArea = new SDUI.Controls.Button();
@@ -70,7 +68,6 @@ namespace RSBot.Training.Views
             txtXCoord = new SDUI.Controls.TextBox();
             groupBoxAdvanced = new SDUI.Controls.GroupBox();
             checkBoxDontFollowMobs = new SDUI.Controls.CheckBox();
-            linkAttackWeakerMobsHelp = new System.Windows.Forms.LinkLabel();
             checkAttackWeakerFirst = new SDUI.Controls.CheckBox();
             checkBoxDimensionPillar = new SDUI.Controls.CheckBox();
             toolTip1 = new System.Windows.Forms.ToolTip(components);
@@ -95,7 +92,7 @@ namespace RSBot.Training.Views
             groupBox2.Size = new System.Drawing.Size(380, 330);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
-            groupBox2.Text = "Avoidance";
+            groupBox2.Text = "Mob preferences";
             //
             // avoidanceListPanel
             //
@@ -116,18 +113,16 @@ namespace RSBot.Training.Views
             groupBoxTrainingPlace.Controls.Add(labelSearchPlace);
             groupBoxTrainingPlace.Controls.Add(txtSearchPlace);
             groupBoxTrainingPlace.Controls.Add(btnClearPlace);
-            groupBoxTrainingPlace.Controls.Add(lstTrainingPlaces);
             groupBoxTrainingPlace.Controls.Add(checkUseMount);
-            groupBoxTrainingPlace.Controls.Add(checkCastBuffs);
             groupBoxTrainingPlace.Controls.Add(checkUseSpeedDrug);
             groupBoxTrainingPlace.Controls.Add(checkBoxUseReverse);
-            groupBoxTrainingPlace.Location = new System.Drawing.Point(418, 20);
+            groupBoxTrainingPlace.Location = new System.Drawing.Point(429, 20);
             groupBoxTrainingPlace.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxTrainingPlace.Name = "groupBoxTrainingPlace";
             groupBoxTrainingPlace.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
             groupBoxTrainingPlace.Radius = 10;
             groupBoxTrainingPlace.ShadowDepth = 4;
-            groupBoxTrainingPlace.Size = new System.Drawing.Size(598, 260);
+            groupBoxTrainingPlace.Size = new System.Drawing.Size(638, 186);
             groupBoxTrainingPlace.TabIndex = 2;
             groupBoxTrainingPlace.TabStop = false;
             groupBoxTrainingPlace.Text = "Select training place";
@@ -178,19 +173,6 @@ namespace RSBot.Training.Views
             btnClearPlace.UseVisualStyleBackColor = true;
             btnClearPlace.Click += btnClearPlace_Click;
             //
-            // lstTrainingPlaces
-            //
-            lstTrainingPlaces.BackColor = System.Drawing.Color.White;
-            lstTrainingPlaces.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            lstTrainingPlaces.IntegralHeight = false;
-            lstTrainingPlaces.ItemHeight = 20;
-            lstTrainingPlaces.Location = new System.Drawing.Point(26, 96);
-            lstTrainingPlaces.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            lstTrainingPlaces.Name = "lstTrainingPlaces";
-            lstTrainingPlaces.Size = new System.Drawing.Size(546, 86);
-            lstTrainingPlaces.TabIndex = 3;
-            lstTrainingPlaces.SelectedIndexChanged += lstTrainingPlaces_SelectedIndexChanged;
-            //
             // checkUseMount
             //
             checkUseMount.AutoSize = true;
@@ -198,7 +180,7 @@ namespace RSBot.Training.Views
             checkUseMount.Checked = true;
             checkUseMount.CheckState = System.Windows.Forms.CheckState.Checked;
             checkUseMount.Depth = 0;
-            checkUseMount.Location = new System.Drawing.Point(26, 192);
+            checkUseMount.Location = new System.Drawing.Point(26, 104);
             checkUseMount.Margin = new System.Windows.Forms.Padding(0);
             checkUseMount.MouseLocation = new System.Drawing.Point(-1, -1);
             checkUseMount.Name = "checkUseMount";
@@ -209,26 +191,6 @@ namespace RSBot.Training.Views
             checkUseMount.UseVisualStyleBackColor = false;
             checkUseMount.CheckedChanged += settings_CheckedChanged;
             //
-            // checkCastBuffs
-            //
-            // Left disabled for now - cast-buffs handling here will be reworked later.
-            checkCastBuffs.AutoSize = true;
-            checkCastBuffs.BackColor = System.Drawing.Color.Transparent;
-            checkCastBuffs.Checked = true;
-            checkCastBuffs.CheckState = System.Windows.Forms.CheckState.Checked;
-            checkCastBuffs.Depth = 0;
-            checkCastBuffs.Enabled = false;
-            checkCastBuffs.Location = new System.Drawing.Point(290, 192);
-            checkCastBuffs.Margin = new System.Windows.Forms.Padding(0);
-            checkCastBuffs.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkCastBuffs.Name = "checkCastBuffs";
-            checkCastBuffs.Ripple = true;
-            checkCastBuffs.Size = new System.Drawing.Size(240, 30);
-            checkCastBuffs.TabIndex = 5;
-            checkCastBuffs.Text = "Cast buffs (coming soon)";
-            checkCastBuffs.UseVisualStyleBackColor = false;
-            checkCastBuffs.CheckedChanged += settings_CheckedChanged;
-            //
             // checkUseSpeedDrug
             //
             checkUseSpeedDrug.AutoSize = true;
@@ -236,7 +198,7 @@ namespace RSBot.Training.Views
             checkUseSpeedDrug.Checked = true;
             checkUseSpeedDrug.CheckState = System.Windows.Forms.CheckState.Checked;
             checkUseSpeedDrug.Depth = 0;
-            checkUseSpeedDrug.Location = new System.Drawing.Point(26, 222);
+            checkUseSpeedDrug.Location = new System.Drawing.Point(26, 134);
             checkUseSpeedDrug.Margin = new System.Windows.Forms.Padding(0);
             checkUseSpeedDrug.MouseLocation = new System.Drawing.Point(-1, -1);
             checkUseSpeedDrug.Name = "checkUseSpeedDrug";
@@ -252,7 +214,7 @@ namespace RSBot.Training.Views
             checkBoxUseReverse.AutoSize = true;
             checkBoxUseReverse.BackColor = System.Drawing.Color.Transparent;
             checkBoxUseReverse.Depth = 0;
-            checkBoxUseReverse.Location = new System.Drawing.Point(290, 222);
+            checkBoxUseReverse.Location = new System.Drawing.Point(290, 104);
             checkBoxUseReverse.Margin = new System.Windows.Forms.Padding(0);
             checkBoxUseReverse.MouseLocation = new System.Drawing.Point(-1, -1);
             checkBoxUseReverse.Name = "checkBoxUseReverse";
@@ -269,14 +231,13 @@ namespace RSBot.Training.Views
             groupBoxCreateScript.Controls.Add(labelCreateScriptHint);
             groupBoxCreateScript.Controls.Add(btnRecord);
             groupBoxCreateScript.Controls.Add(btnImportScript);
-            groupBoxCreateScript.Controls.Add(btnUpdateNavLink);
-            groupBoxCreateScript.Location = new System.Drawing.Point(418, 300);
+            groupBoxCreateScript.Location = new System.Drawing.Point(429, 226);
             groupBoxCreateScript.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxCreateScript.Name = "groupBoxCreateScript";
             groupBoxCreateScript.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
             groupBoxCreateScript.Radius = 10;
             groupBoxCreateScript.ShadowDepth = 4;
-            groupBoxCreateScript.Size = new System.Drawing.Size(598, 110);
+            groupBoxCreateScript.Size = new System.Drawing.Size(638, 140);
             groupBoxCreateScript.TabIndex = 3;
             groupBoxCreateScript.TabStop = false;
             groupBoxCreateScript.Text = "Create a walk script";
@@ -301,7 +262,7 @@ namespace RSBot.Training.Views
             // btnRecord
             //
             btnRecord.Color = System.Drawing.Color.Transparent;
-            btnRecord.Location = new System.Drawing.Point(26, 74);
+            btnRecord.Location = new System.Drawing.Point(26, 86);
             btnRecord.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             btnRecord.Name = "btnRecord";
             btnRecord.Radius = 6;
@@ -315,7 +276,7 @@ namespace RSBot.Training.Views
             // btnImportScript
             //
             btnImportScript.Color = System.Drawing.Color.Transparent;
-            btnImportScript.Location = new System.Drawing.Point(200, 74);
+            btnImportScript.Location = new System.Drawing.Point(200, 86);
             btnImportScript.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             btnImportScript.Name = "btnImportScript";
             btnImportScript.Radius = 6;
@@ -325,23 +286,6 @@ namespace RSBot.Training.Views
             btnImportScript.Text = "Import file...";
             btnImportScript.UseVisualStyleBackColor = true;
             btnImportScript.Click += btnImportScript_Click;
-            //
-            // btnUpdateNavLink
-            //
-            // Declared here (rather than added at runtime, as it originally was inside the
-            // removed "Back to training" box) so it goes through the same DPI auto-scale pass as
-            // its siblings - a runtime-added control at a hand-picked pixel position doesn't, and
-            // ends up mispositioned relative to a parent that DID get rescaled.
-            btnUpdateNavLink.Color = System.Drawing.Color.Transparent;
-            btnUpdateNavLink.Location = new System.Drawing.Point(390, 74);
-            btnUpdateNavLink.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            btnUpdateNavLink.Name = "btnUpdateNavLink";
-            btnUpdateNavLink.Radius = 6;
-            btnUpdateNavLink.ShadowDepth = 4F;
-            btnUpdateNavLink.Size = new System.Drawing.Size(160, 32);
-            btnUpdateNavLink.TabIndex = 3;
-            btnUpdateNavLink.Text = "Update NavLink";
-            btnUpdateNavLink.UseVisualStyleBackColor = true;
             //
             // checkBerzerkWhenFull
             //
@@ -364,7 +308,7 @@ namespace RSBot.Training.Views
             checkBerserkOnMonsterRarity.AutoSize = true;
             checkBerserkOnMonsterRarity.BackColor = System.Drawing.Color.Transparent;
             checkBerserkOnMonsterRarity.Depth = 0;
-            checkBerserkOnMonsterRarity.Location = new System.Drawing.Point(26, 140);
+            checkBerserkOnMonsterRarity.Location = new System.Drawing.Point(26, 108);
             checkBerserkOnMonsterRarity.Margin = new System.Windows.Forms.Padding(0);
             checkBerserkOnMonsterRarity.MouseLocation = new System.Drawing.Point(-1, -1);
             checkBerserkOnMonsterRarity.Name = "checkBerserkOnMonsterRarity";
@@ -380,17 +324,16 @@ namespace RSBot.Training.Views
             groupBoxBerserk.BackColor = System.Drawing.Color.Transparent;
             groupBoxBerserk.Controls.Add(label7);
             groupBoxBerserk.Controls.Add(numBerzerkMonsterAmount);
-            groupBoxBerserk.Controls.Add(checkBerzerkAvoidance);
             groupBoxBerserk.Controls.Add(checkBerzerkMonsterAmount);
             groupBoxBerserk.Controls.Add(checkBerzerkWhenFull);
             groupBoxBerserk.Controls.Add(checkBerserkOnMonsterRarity);
-            groupBoxBerserk.Location = new System.Drawing.Point(418, 430);
+            groupBoxBerserk.Location = new System.Drawing.Point(429, 386);
             groupBoxBerserk.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxBerserk.Name = "groupBoxBerserk";
             groupBoxBerserk.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
             groupBoxBerserk.Radius = 10;
             groupBoxBerserk.ShadowDepth = 4;
-            groupBoxBerserk.Size = new System.Drawing.Size(598, 188);
+            groupBoxBerserk.Size = new System.Drawing.Size(638, 160);
             groupBoxBerserk.TabIndex = 5;
             groupBoxBerserk.TabStop = false;
             groupBoxBerserk.Text = "Berserk";
@@ -428,22 +371,6 @@ namespace RSBot.Training.Views
             numBerzerkMonsterAmount.TabIndex = 6;
             numBerzerkMonsterAmount.Value = new decimal(new int[] { 5, 0, 0, 0 });
             numBerzerkMonsterAmount.ValueChanged += numSettings_ValueChanged;
-            //
-            // checkBerzerkAvoidance
-            //
-            checkBerzerkAvoidance.AutoSize = true;
-            checkBerzerkAvoidance.BackColor = System.Drawing.Color.Transparent;
-            checkBerzerkAvoidance.Depth = 0;
-            checkBerzerkAvoidance.Location = new System.Drawing.Point(26, 108);
-            checkBerzerkAvoidance.Margin = new System.Windows.Forms.Padding(0);
-            checkBerzerkAvoidance.MouseLocation = new System.Drawing.Point(-1, -1);
-            checkBerzerkAvoidance.Name = "checkBerzerkAvoidance";
-            checkBerzerkAvoidance.Ripple = true;
-            checkBerzerkAvoidance.Size = new System.Drawing.Size(427, 30);
-            checkBerzerkAvoidance.TabIndex = 5;
-            checkBerzerkAvoidance.Text = "If being attacked by a monster type that should be avoided";
-            checkBerzerkAvoidance.UseVisualStyleBackColor = false;
-            checkBerzerkAvoidance.CheckedChanged += settings_CheckedChanged;
             //
             // checkBerzerkMonsterAmount
             //
@@ -485,7 +412,7 @@ namespace RSBot.Training.Views
             groupBoxArea.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
             groupBoxArea.Radius = 10;
             groupBoxArea.ShadowDepth = 4;
-            groupBoxArea.Size = new System.Drawing.Size(276, 312);
+            groupBoxArea.Size = new System.Drawing.Size(380, 312);
             groupBoxArea.TabIndex = 0;
             groupBoxArea.TabStop = false;
             groupBoxArea.Text = "Area";
@@ -494,7 +421,7 @@ namespace RSBot.Training.Views
             //
             btnApplyArea.Color = System.Drawing.Color.Transparent;
             btnApplyArea.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 204);
-            btnApplyArea.Location = new System.Drawing.Point(56, 174);
+            btnApplyArea.Location = new System.Drawing.Point(113, 174);
             btnApplyArea.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             btnApplyArea.Name = "btnApplyArea";
             btnApplyArea.Radius = 6;
@@ -516,7 +443,7 @@ namespace RSBot.Training.Views
     System.Drawing.Color.Black
     };
             label8.GradientAnimation = false;
-            label8.Location = new System.Drawing.Point(34, 109);
+            label8.Location = new System.Drawing.Point(91, 109);
             label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label8.Name = "label8";
             label8.Size = new System.Drawing.Size(59, 20);
@@ -525,7 +452,7 @@ namespace RSBot.Training.Views
             //
             // txtRegion
             //
-            txtRegion.Location = new System.Drawing.Point(95, 105);
+            txtRegion.Location = new System.Drawing.Point(152, 105);
             txtRegion.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtRegion.MaxLength = 32767;
             txtRegion.MultiLine = false;
@@ -542,7 +469,7 @@ namespace RSBot.Training.Views
             //
             buttonSelectTrainingArea.Color = System.Drawing.Color.Transparent;
             buttonSelectTrainingArea.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 204);
-            buttonSelectTrainingArea.Location = new System.Drawing.Point(224, 174);
+            buttonSelectTrainingArea.Location = new System.Drawing.Point(281, 174);
             buttonSelectTrainingArea.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             buttonSelectTrainingArea.Name = "buttonSelectTrainingArea";
             buttonSelectTrainingArea.Radius = 6;
@@ -564,7 +491,7 @@ namespace RSBot.Training.Views
     System.Drawing.Color.Black
     };
             label6.GradientAnimation = false;
-            label6.Location = new System.Drawing.Point(18, 221);
+            label6.Location = new System.Drawing.Point(75, 221);
             label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label6.Name = "label6";
             label6.Size = new System.Drawing.Size(207, 20);
@@ -581,7 +508,7 @@ namespace RSBot.Training.Views
     System.Drawing.Color.Black
     };
             label5.GradientAnimation = false;
-            label5.Location = new System.Drawing.Point(8, 208);
+            label5.Location = new System.Drawing.Point(65, 208);
             label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(250, 2);
@@ -591,7 +518,7 @@ namespace RSBot.Training.Views
             //
             radioWalkAround.AutoSize = true;
             radioWalkAround.Checked = true;
-            radioWalkAround.Location = new System.Drawing.Point(44, 280);
+            radioWalkAround.Location = new System.Drawing.Point(101, 280);
             radioWalkAround.Margin = new System.Windows.Forms.Padding(0);
             radioWalkAround.Name = "radioWalkAround";
             radioWalkAround.Ripple = true;
@@ -604,7 +531,7 @@ namespace RSBot.Training.Views
             // radioCenter
             //
             radioCenter.AutoSize = true;
-            radioCenter.Location = new System.Drawing.Point(44, 248);
+            radioCenter.Location = new System.Drawing.Point(101, 248);
             radioCenter.Margin = new System.Windows.Forms.Padding(0);
             radioCenter.Name = "radioCenter";
             radioCenter.Ripple = true;
@@ -616,7 +543,7 @@ namespace RSBot.Training.Views
             // btnGetCurrent
             //
             btnGetCurrent.Color = System.Drawing.Color.Transparent;
-            btnGetCurrent.Location = new System.Drawing.Point(95, 174);
+            btnGetCurrent.Location = new System.Drawing.Point(152, 174);
             btnGetCurrent.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             btnGetCurrent.Name = "btnGetCurrent";
             btnGetCurrent.Radius = 6;
@@ -638,7 +565,7 @@ namespace RSBot.Training.Views
     System.Drawing.Color.Black
     };
             label3.GradientAnimation = false;
-            label3.Location = new System.Drawing.Point(34, 145);
+            label3.Location = new System.Drawing.Point(91, 145);
             label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new System.Drawing.Size(56, 20);
@@ -656,7 +583,7 @@ namespace RSBot.Training.Views
     System.Drawing.Color.Black
     };
             label2.GradientAnimation = false;
-            label2.Location = new System.Drawing.Point(66, 72);
+            label2.Location = new System.Drawing.Point(123, 72);
             label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label2.Name = "label2";
             label2.Size = new System.Drawing.Size(20, 20);
@@ -675,7 +602,7 @@ namespace RSBot.Training.Views
     System.Drawing.Color.Black
     };
             label1.GradientAnimation = false;
-            label1.Location = new System.Drawing.Point(66, 40);
+            label1.Location = new System.Drawing.Point(123, 40);
             label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(21, 20);
@@ -685,7 +612,7 @@ namespace RSBot.Training.Views
             //
             // txtRadius
             //
-            txtRadius.Location = new System.Drawing.Point(95, 141);
+            txtRadius.Location = new System.Drawing.Point(152, 141);
             txtRadius.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtRadius.MaxLength = 32767;
             txtRadius.MultiLine = false;
@@ -700,7 +627,7 @@ namespace RSBot.Training.Views
             //
             // txtYCoord
             //
-            txtYCoord.Location = new System.Drawing.Point(95, 69);
+            txtYCoord.Location = new System.Drawing.Point(152, 69);
             txtYCoord.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtYCoord.MaxLength = 32767;
             txtYCoord.MultiLine = false;
@@ -715,7 +642,7 @@ namespace RSBot.Training.Views
             //
             // txtXCoord
             //
-            txtXCoord.Location = new System.Drawing.Point(95, 36);
+            txtXCoord.Location = new System.Drawing.Point(152, 36);
             txtXCoord.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             txtXCoord.MaxLength = 32767;
             txtXCoord.MultiLine = false;
@@ -732,16 +659,15 @@ namespace RSBot.Training.Views
             //
             groupBoxAdvanced.BackColor = System.Drawing.Color.Transparent;
             groupBoxAdvanced.Controls.Add(checkBoxDontFollowMobs);
-            groupBoxAdvanced.Controls.Add(linkAttackWeakerMobsHelp);
             groupBoxAdvanced.Controls.Add(checkAttackWeakerFirst);
             groupBoxAdvanced.Controls.Add(checkBoxDimensionPillar);
-            groupBoxAdvanced.Location = new System.Drawing.Point(418, 638);
+            groupBoxAdvanced.Location = new System.Drawing.Point(429, 566);
             groupBoxAdvanced.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxAdvanced.Name = "groupBoxAdvanced";
             groupBoxAdvanced.Padding = new System.Windows.Forms.Padding(4, 10, 4, 4);
             groupBoxAdvanced.Radius = 10;
             groupBoxAdvanced.ShadowDepth = 4;
-            groupBoxAdvanced.Size = new System.Drawing.Size(598, 158);
+            groupBoxAdvanced.Size = new System.Drawing.Size(638, 158);
             groupBoxAdvanced.TabIndex = 6;
             groupBoxAdvanced.TabStop = false;
             groupBoxAdvanced.Text = "Advanced";
@@ -761,18 +687,6 @@ namespace RSBot.Training.Views
             checkBoxDontFollowMobs.Text = "Don't follow mobs outside the training area";
             checkBoxDontFollowMobs.UseVisualStyleBackColor = false;
             checkBoxDontFollowMobs.CheckedChanged += settings_CheckedChanged;
-            //
-            // linkAttackWeakerMobsHelp
-            //
-            linkAttackWeakerMobsHelp.AutoSize = true;
-            linkAttackWeakerMobsHelp.Location = new System.Drawing.Point(454, 84);
-            linkAttackWeakerMobsHelp.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            linkAttackWeakerMobsHelp.Name = "linkAttackWeakerMobsHelp";
-            linkAttackWeakerMobsHelp.Size = new System.Drawing.Size(16, 20);
-            linkAttackWeakerMobsHelp.TabIndex = 7;
-            linkAttackWeakerMobsHelp.TabStop = true;
-            linkAttackWeakerMobsHelp.Text = "?";
-            linkAttackWeakerMobsHelp.LinkClicked += linkAttackWeakerMobsHelp_LinkClicked;
             //
             // checkAttackWeakerFirst
             //
@@ -820,7 +734,7 @@ namespace RSBot.Training.Views
             Font = new System.Drawing.Font("Segoe UI", 9F);
             Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             Name = "Main";
-            Size = new System.Drawing.Size(1059, 820);
+            Size = new System.Drawing.Size(1110, 750);
             Load += Main_Load;
             groupBox2.ResumeLayout(false);
             groupBoxTrainingPlace.ResumeLayout(false);
@@ -842,21 +756,17 @@ namespace RSBot.Training.Views
         private SDUI.Controls.Label labelSearchPlace;
         private SDUI.Controls.TextBox txtSearchPlace;
         private SDUI.Controls.Button btnClearPlace;
-        private System.Windows.Forms.ListBox lstTrainingPlaces;
         private SDUI.Controls.CheckBox checkUseMount;
         private SDUI.Controls.CheckBox checkUseSpeedDrug;
-        private SDUI.Controls.CheckBox checkCastBuffs;
         private SDUI.Controls.CheckBox checkBoxUseReverse;
         private SDUI.Controls.GroupBox groupBoxCreateScript;
         private SDUI.Controls.Label labelCreateScriptHint;
         private SDUI.Controls.Button btnRecord;
         private SDUI.Controls.Button btnImportScript;
-        private SDUI.Controls.Button btnUpdateNavLink;
         private SDUI.Controls.CheckBox checkBerzerkWhenFull;
         private SDUI.Controls.CheckBox checkBerserkOnMonsterRarity;
         private SDUI.Controls.GroupBox groupBoxBerserk;
         private SDUI.Controls.NumUpDown numBerzerkMonsterAmount;
-        private SDUI.Controls.CheckBox checkBerzerkAvoidance;
         private SDUI.Controls.CheckBox checkBerzerkMonsterAmount;
         private SDUI.Controls.Label label7;
         private SDUI.Controls.GroupBox groupBoxArea;
@@ -876,7 +786,6 @@ namespace RSBot.Training.Views
         private SDUI.Controls.GroupBox groupBoxAdvanced;
         private SDUI.Controls.CheckBox checkBoxDimensionPillar;
         private SDUI.Controls.CheckBox checkAttackWeakerFirst;
-        private System.Windows.Forms.LinkLabel linkAttackWeakerMobsHelp;
         private SDUI.Controls.Label label8;
         private SDUI.Controls.TextBox txtRegion;
         private SDUI.Controls.Button btnApplyArea;

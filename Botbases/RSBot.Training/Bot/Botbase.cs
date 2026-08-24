@@ -5,6 +5,7 @@ using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
 using RSBot.Training.Bundle;
+using RSBot.Training.Components;
 
 namespace RSBot.Training.Bot;
 
@@ -98,6 +99,13 @@ internal class Botbase
 
         var noAttack = PlayerConfig.Get("RSBot.Skills.checkBoxNoAttack", false);
 
+        // While a training-place patrol's one-time initial trip (town to the actual grinding
+        // spot) is still underway, don't stop to fight everything encountered along the way -
+        // only once the character has physically reached the route's last waypoint (see
+        // TrainingPlaceManager.HasArrived) does engaging monsters become the point. Berzerk
+        // (defensive, reacting to being attacked) is deliberately left running regardless.
+        var travelingToDestination = TrainingPlaceManager.IsActive && !TrainingPlaceManager.HasArrived;
+
         //Check for protection
         Bundles.Protection.Invoke();
 
@@ -147,14 +155,14 @@ internal class Botbase
         var holdForLoot = wantsToHoldForLoot && Kernel.TickCount - _holdForLootStartTick < maxHoldForLootMs;
 
         //Select next target
-        if (!noAttack && !holdForLoot)
+        if (!noAttack && !holdForLoot && !travelingToDestination)
             Bundles.Target.Invoke();
 
         //Check for berzerk
         Bundles.Berzerk.Invoke();
 
         //Cast skill against enemy
-        if (!noAttack && !holdForLoot)
+        if (!noAttack && !holdForLoot && !travelingToDestination)
             Bundles.Attack.Invoke();
 
         //Move around (maybe)

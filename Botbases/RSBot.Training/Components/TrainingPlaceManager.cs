@@ -44,10 +44,21 @@ public static class TrainingPlaceManager
     public static Position CurrentWaypoint => _waypoints.Count == 0 ? default : _waypoints[CurrentIndex];
 
     /// <summary>
+    ///     Gets a value indicating whether the character has physically reached the route's last
+    ///     waypoint at least once since it was loaded. Sticky - once true, stays true even after
+    ///     looping back to the start, distinguishing the one-time initial travel leg (town to
+    ///     the actual grinding spot, where <see cref="Bot.Botbase.Tick" /> suppresses Target/
+    ///     Attack so the trip there isn't interrupted by every monster along the way) from the
+    ///     ongoing patrol once arrived (where fighting is exactly the point).
+    /// </summary>
+    public static bool HasArrived { get; private set; }
+
+    /// <summary>
     ///     Loads a converted training-place script - one "move XOffset YOffset ZOffset
     ///     XSector YSector" line per waypoint. Lines it doesn't recognize (the commented-out
-    ///     untranslated teleport/fly/buff/skill/kill originals, blank lines, headers) are
-    ///     skipped rather than treated as errors.
+    ///     untranslated teleport/fly/buff/skill/kill originals, "cast"/"wait"/"area"/"store"/
+    ///     "repair"/"buy" lines the recorder or LegacyScriptConverter may have added, blank
+    ///     lines, headers) are skipped rather than treated as errors.
     /// </summary>
     /// <param name="filePath">Path to the converted script file.</param>
     /// <param name="mobName">Display name to report while this route is active.</param>
@@ -91,6 +102,7 @@ public static class TrainingPlaceManager
         _waypoints = waypoints;
         CurrentIndex = 0;
         SelectedMobName = mobName;
+        HasArrived = false;
         IsActive = true;
 
         Log.Notify($"[TrainingPlace] Loaded {waypoints.Count} waypoint(s) for [{mobName}] - patrolling this route.");
@@ -107,6 +119,9 @@ public static class TrainingPlaceManager
         if (_waypoints.Count == 0)
             return;
 
+        if (CurrentIndex == _waypoints.Count - 1)
+            HasArrived = true;
+
         CurrentIndex = (CurrentIndex + 1) % _waypoints.Count;
     }
 
@@ -120,5 +135,6 @@ public static class TrainingPlaceManager
         SelectedMobName = null;
         _waypoints = new List<Position>();
         CurrentIndex = 0;
+        HasArrived = false;
     }
 }

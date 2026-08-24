@@ -11,11 +11,15 @@ namespace RSBot.Training.Views.Dialogs;
 /// </summary>
 public partial class SaveTrainingPlaceDialog : UIWindowBase
 {
-    public SaveTrainingPlaceDialog(string defaultName = "", int defaultLevel = 1)
+    public SaveTrainingPlaceDialog(string defaultName = "", int defaultLevel = 1, bool nameEditable = true)
     {
         InitializeComponent();
 
         PlaceName.Text = defaultName;
+        // Disabled for a just-recorded script - its file (and thus this name) was already
+        // chosen once in the recorder's own Save dialog; letting it be edited here again would
+        // just desync the catalog Name from the actual file name without renaming the file.
+        PlaceName.Enabled = nameEditable;
         Level.Value = Math.Clamp(defaultLevel, (int)Level.Minimum, (int)Level.Maximum);
     }
 

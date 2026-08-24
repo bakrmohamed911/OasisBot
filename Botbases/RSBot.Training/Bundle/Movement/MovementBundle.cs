@@ -52,7 +52,15 @@ internal class MovementBundle : IBundle
         if (TrainingPlaceManager.IsActive)
             Container.Bot.SetAreaPosition(Game.Player.Position);
 
-        if (Game.SelectedEntity != null && !LastEntityWasBehindObstacle)
+        // While a training-place patrol's one-time initial trip to the actual grinding spot is
+        // still underway (see TrainingPlaceManager.HasArrived, and Bot.Botbase.Tick which
+        // suppresses Target/Attack for the same reason), don't let being attacked or having a
+        // selected entity pause movement either - nothing is going to fight back to resolve
+        // either condition during this phase, so pausing here left the character stuck in
+        // place for as long as whatever attacked it kept attacking, with no way out.
+        var travelingToDestination = TrainingPlaceManager.IsActive && !TrainingPlaceManager.HasArrived;
+
+        if (Game.SelectedEntity != null && !LastEntityWasBehindObstacle && !travelingToDestination)
             return;
 
         // Don't wander off looking for the next fight while there's still loot from the last
@@ -81,7 +89,7 @@ internal class MovementBundle : IBundle
         var playerUnderAttack = SpawnManager.Any<SpawnedMonster>(m =>
             m.AttackingPlayer && Container.Bot.Area.IsInSight(m)
         );
-        if (playerUnderAttack && !LastEntityWasBehindObstacle)
+        if (playerUnderAttack && !LastEntityWasBehindObstacle && !travelingToDestination)
             return;
 
         if (Game.Player.Movement.Moving)

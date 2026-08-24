@@ -4,6 +4,7 @@ using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Objects;
 using RSBot.Training.Bot;
+using RSBot.Training.Components;
 
 namespace RSBot.Training.Bundle.Loop;
 
@@ -161,6 +162,17 @@ internal class LoopBundle : IBundle
     public void CheckForWalkbackScript(bool startFromTown = false)
     {
         if (ScriptManager.Running || !Kernel.Bot.Running)
+            return;
+
+        // This mechanism (a configured walkback script, or else NavigationManager's dynamic
+        // navmesh path) exists to get back to the center of a fixed circular Training Area -
+        // meaningless while a training-place patrol route is active instead, where
+        // MovementBundle.AdvancePatrol() already walks the recorded route on its own,
+        // independent of distance. Letting the dynamic-path fallback run here anyway sent the
+        // character off toward whatever CalculatePathToTrainingArea() came up with instead of
+        // the route actually recorded - CheckForTownScript() (buy/repair/store at the current
+        // region's town script, if any) still runs before this either way.
+        if (TrainingPlaceManager.IsActive)
             return;
 
         if (Config.WalkScript == null || !File.Exists(Config.WalkScript))

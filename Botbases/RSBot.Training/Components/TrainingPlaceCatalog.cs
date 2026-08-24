@@ -17,7 +17,30 @@ public class TrainingPlaceEntry
     public int Level { get; set; }
     public string FilePath { get; set; }
 
+    /// <summary>
+    ///     The training area captured from this script's own "area ..." command line, if it has
+    ///     one (see <see cref="TrainingPlaceCatalog.TryParseAreaLine" />) - null for scripts that
+    ///     don't (imported/converted ones, or older catalog entries saved before this was
+    ///     tracked), in which case activating falls back to the route's first waypoint.
+    /// </summary>
+    public TrainingPlaceArea Area { get; set; }
+
     public override string ToString() => $"{Name} (Lv {Level})";
+}
+
+/// <summary>
+///     The same Region/XOffset/YOffset/ZOffset/Radius values a
+///     "area Region XOffset YOffset ZOffset Radius" script line applies (see
+///     RSBot.Training.Components.TrainingAreaScriptCommand) - captured here so activating a
+///     catalogued place can restore them directly instead of guessing from the route itself.
+/// </summary>
+public class TrainingPlaceArea
+{
+    public ushort Region { get; set; }
+    public float XOffset { get; set; }
+    public float YOffset { get; set; }
+    public float ZOffset { get; set; }
+    public int Radius { get; set; }
 }
 
 /// <summary>
@@ -73,6 +96,49 @@ public static class TrainingPlaceCatalog
         _entries ??= Load();
         _entries.Remove(entry);
         Save();
+    }
+
+    /// <summary>
+    ///     Scans script lines for a trailing "area Region XOffset YOffset ZOffset Radius"
+    ///     command - the exact same format/argument order
+    ///     RSBot.Training.Components.TrainingAreaScriptCommand parses when that line runs as
+    ///     part of the script - and returns it, or null if the script has none. A recorded
+    ///     script picks one up automatically whenever the Area section is set while recording;
+    ///     if there's more than one (set more than once during the same recording), the LAST one
+    ///     wins, matching what actually took effect by the time recording stopped.
+    /// </summary>
+    public static TrainingPlaceArea TryParseAreaLine(IEnumerable<string> lines)
+    {
+        TrainingPlaceArea result = null;
+
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            if (!line.StartsWith("area ", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var parts = line.Split(' ');
+            if (
+                parts.Length < 6
+                || !ushort.TryParse(parts[1], out var region)
+                || !float.TryParse(parts[2], out var xOffset)
+                || !float.TryParse(parts[3], out var yOffset)
+                || !float.TryParse(parts[4], out var zOffset)
+                || !int.TryParse(parts[5], out var radius)
+            )
+                continue;
+
+            result = new TrainingPlaceArea
+            {
+                Region = region,
+                XOffset = xOffset,
+                YOffset = yOffset,
+                ZOffset = zOffset,
+                Radius = radius,
+            };
+        }
+
+        return result;
     }
 
     private static List<TrainingPlaceEntry> Load()
