@@ -40,7 +40,9 @@ public partial class Entity : DoubleBufferedControl
     /// </summary>
     private void OnSelectEntity(SpawnedBionic entity)
     {
-        lblType.Text = string.Empty;
+        rankBadge.Rarity = null;
+        toolTipRank.SetToolTip(rankBadge, string.Empty);
+
         if (entity is SpawnedPlayer player)
             lblEntityName.Text = player.Name;
         else
@@ -52,7 +54,8 @@ public partial class Entity : DoubleBufferedControl
             progressHP.Maximum = monster.MaxHealth;
             lblEntityHpValue.Text = $"{monster.Health:N0} / {monster.MaxHealth:N0}";
 
-            lblType.Text = monster.Rarity.GetName();
+            rankBadge.Rarity = monster.Rarity;
+            toolTipRank.SetToolTip(rankBadge, monster.Rarity.GetName());
         }
         else
         {
@@ -61,7 +64,7 @@ public partial class Entity : DoubleBufferedControl
             lblEntityHpValue.Text = string.Empty;
 
             if (Game.Player.State.DialogState is { IsInDialog: true })
-                lblType.Text = "<in conversation>";
+                toolTipRank.SetToolTip(rankBadge, "<in conversation>");
         }
     }
 
@@ -122,6 +125,7 @@ public partial class Entity : DoubleBufferedControl
         progressHP.Value = 0;
         progressHP.Maximum = 100;
         lblEntityHpValue.Text = string.Empty;
-        lblType.Text = "";
+        rankBadge.Rarity = null;
+        toolTipRank.SetToolTip(rankBadge, string.Empty);
     }
 }

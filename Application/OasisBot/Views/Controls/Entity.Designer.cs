@@ -6,6 +6,7 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private System.Windows.Forms.ToolTip toolTipRank;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -28,37 +29,27 @@
         /// </summary>
         private void InitializeComponent()
         {
-            lblType = new SDUI.Controls.Label();
+            components = new System.ComponentModel.Container();
+            toolTipRank = new System.Windows.Forms.ToolTip(components);
+            rankBadge = new RankBadge();
             label1 = new SDUI.Controls.Label();
             lblEntityName = new SDUI.Controls.Label();
             progressHP = new SDUI.Controls.ProgressBar();
             lblEntityHpValue = new SDUI.Controls.Label();
             SuspendLayout();
-            // 
-            // lblType
-            // 
-            lblType.ApplyGradient = false;
-            lblType.AutoSize = false;
-            lblType.BackColor = System.Drawing.Color.Transparent;
-            lblType.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            lblType.ForeColor = System.Drawing.Color.FromArgb(0, 0, 0);
-            lblType.Gradient = new System.Drawing.Color[]
-    {
-    System.Drawing.Color.Gray,
-    System.Drawing.Color.Black
-    };
-            lblType.GradientAnimation = false;
-            // Kept left-aligned and within ~250px of Location.X: the runtime-stretched width of
-            // this control (hosted at 312px in the sidebar) doesn't reliably paint text right of
-            // that boundary when right-aligned - it silently renders nothing, verified by testing
-            // a fresh label at the same spot (left-aligned worked, right-aligned didn't).
-            lblType.Location = new System.Drawing.Point(164, 62);
-            lblType.Name = "lblType";
-            lblType.Size = new System.Drawing.Size(82, 18);
-            lblType.TabIndex = 18;
-            lblType.Text = "<none>";
-            lblType.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
+            //
+            // rankBadge
+            //
+            // A small drawn shape+color badge standing in for a "logo" per rank, in place of the
+            // "General"/"Champion" text this used to show - kept left of x~250 for the same
+            // right-alignment-past-that-boundary reason lblEntityHpValue's comment used to
+            // document (this replaces that text label, so there's no right-aligned text left to
+            // worry about, but the position is kept safely within that boundary regardless).
+            rankBadge.Location = new System.Drawing.Point(168, 61);
+            rankBadge.Name = "rankBadge";
+            rankBadge.Size = new System.Drawing.Size(18, 18);
+            rankBadge.TabIndex = 18;
+            //
             // label1
             // 
             label1.ApplyGradient = false;
@@ -140,7 +131,7 @@
             //
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            Controls.Add(lblType);
+            Controls.Add(rankBadge);
             Controls.Add(lblEntityHpValue);
             Controls.Add(label1);
             Controls.Add(lblEntityName);
@@ -157,7 +148,7 @@
         private SDUI.Controls.Label label1;
         private SDUI.Controls.Label lblEntityName;
         private SDUI.Controls.ProgressBar progressHP;
-        private SDUI.Controls.Label lblType;
+        private RankBadge rankBadge;
         private SDUI.Controls.Label lblEntityHpValue;
     }
 }
