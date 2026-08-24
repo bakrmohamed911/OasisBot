@@ -90,9 +90,6 @@
             linkAttackWeakerMobsHelp = new System.Windows.Forms.LinkLabel();
             checkAttackWeakerFirst = new SDUI.Controls.CheckBox();
             checkBoxDimensionPillar = new SDUI.Controls.CheckBox();
-            groupBoxTrainingPlace = new SDUI.Controls.GroupBox();
-            labelTrainingPlace = new SDUI.Controls.Label();
-            comboTrainingPlace = new SDUI.Controls.ComboBox();
             toolTip1 = new System.Windows.Forms.ToolTip(components);
             groupBox2.SuspendLayout();
             ctxAvoidance.SuspendLayout();
@@ -100,14 +97,13 @@
             groupBoxBerserk.SuspendLayout();
             groupBoxArea.SuspendLayout();
             groupBoxAdvanced.SuspendLayout();
-            groupBoxTrainingPlace.SuspendLayout();
             SuspendLayout();
             // 
             // groupBox2
             // 
             groupBox2.BackColor = System.Drawing.Color.Transparent;
             groupBox2.Controls.Add(lvAvoidance);
-            groupBox2.Location = new System.Drawing.Point(29, 341);
+            groupBox2.Location = new System.Drawing.Point(29, 352);
             groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new System.Windows.Forms.Padding(2, 9, 2, 4);
@@ -411,7 +407,7 @@
             groupBoxBerserk.Controls.Add(checkBerzerkMonsterAmount);
             groupBoxBerserk.Controls.Add(checkBerzerkWhenFull);
             groupBoxBerserk.Controls.Add(checkBerserkOnMonsterRarity);
-            groupBoxBerserk.Location = new System.Drawing.Point(328, 180);
+            groupBoxBerserk.Location = new System.Drawing.Point(328, 188);
             groupBoxBerserk.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxBerserk.Name = "groupBoxBerserk";
             groupBoxBerserk.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
@@ -762,28 +758,28 @@
             groupBoxAdvanced.Controls.Add(linkAttackWeakerMobsHelp);
             groupBoxAdvanced.Controls.Add(checkAttackWeakerFirst);
             groupBoxAdvanced.Controls.Add(checkBoxDimensionPillar);
-            groupBoxAdvanced.Location = new System.Drawing.Point(328, 375);
+            groupBoxAdvanced.Location = new System.Drawing.Point(328, 400);
             groupBoxAdvanced.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxAdvanced.Name = "groupBoxAdvanced";
             groupBoxAdvanced.Padding = new System.Windows.Forms.Padding(4, 10, 4, 4);
             groupBoxAdvanced.Radius = 10;
             groupBoxAdvanced.ShadowDepth = 4;
-            groupBoxAdvanced.Size = new System.Drawing.Size(598, 132);
+            groupBoxAdvanced.Size = new System.Drawing.Size(598, 158);
             groupBoxAdvanced.TabIndex = 6;
             groupBoxAdvanced.TabStop = false;
             groupBoxAdvanced.Text = "Advanced";
             // 
             // checkBoxDontFollowMobs
             // 
-            checkBoxDontFollowMobs.AutoSize = true;
+            checkBoxDontFollowMobs.AutoSize = false;
             checkBoxDontFollowMobs.BackColor = System.Drawing.Color.Transparent;
             checkBoxDontFollowMobs.Depth = 0;
-            checkBoxDontFollowMobs.Location = new System.Drawing.Point(26, 94);
+            checkBoxDontFollowMobs.Location = new System.Drawing.Point(26, 116);
             checkBoxDontFollowMobs.Margin = new System.Windows.Forms.Padding(0);
             checkBoxDontFollowMobs.MouseLocation = new System.Drawing.Point(-1, -1);
             checkBoxDontFollowMobs.Name = "checkBoxDontFollowMobs";
             checkBoxDontFollowMobs.Ripple = true;
-            checkBoxDontFollowMobs.Size = new System.Drawing.Size(324, 30);
+            checkBoxDontFollowMobs.Size = new System.Drawing.Size(420, 30);
             checkBoxDontFollowMobs.TabIndex = 8;
             checkBoxDontFollowMobs.Text = "Don't follow mobs outside the training area";
             checkBoxDontFollowMobs.UseVisualStyleBackColor = false;
@@ -792,7 +788,7 @@
             // linkAttackWeakerMobsHelp
             // 
             linkAttackWeakerMobsHelp.AutoSize = true;
-            linkAttackWeakerMobsHelp.Location = new System.Drawing.Point(358, 72);
+            linkAttackWeakerMobsHelp.Location = new System.Drawing.Point(454, 84);
             linkAttackWeakerMobsHelp.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             linkAttackWeakerMobsHelp.Name = "linkAttackWeakerMobsHelp";
             linkAttackWeakerMobsHelp.Size = new System.Drawing.Size(16, 20);
@@ -801,62 +797,17 @@
             linkAttackWeakerMobsHelp.Text = "?";
             linkAttackWeakerMobsHelp.LinkClicked += linkAttackWeakerMobsHelp_LinkClicked;
             //
-            // groupBoxTrainingPlace
-            //
-            groupBoxTrainingPlace.BackColor = System.Drawing.Color.Transparent;
-            groupBoxTrainingPlace.Controls.Add(labelTrainingPlace);
-            groupBoxTrainingPlace.Controls.Add(comboTrainingPlace);
-            groupBoxTrainingPlace.Location = new System.Drawing.Point(328, 507);
-            groupBoxTrainingPlace.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            groupBoxTrainingPlace.Name = "groupBoxTrainingPlace";
-            groupBoxTrainingPlace.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
-            groupBoxTrainingPlace.Radius = 10;
-            groupBoxTrainingPlace.ShadowDepth = 4;
-            groupBoxTrainingPlace.Size = new System.Drawing.Size(598, 95);
-            groupBoxTrainingPlace.TabIndex = 9;
-            groupBoxTrainingPlace.TabStop = false;
-            groupBoxTrainingPlace.Text = "Training Place (patrol route by mob)";
-            //
-            // labelTrainingPlace
-            //
-            labelTrainingPlace.AutoSize = true;
-            labelTrainingPlace.Location = new System.Drawing.Point(26, 38);
-            labelTrainingPlace.Name = "labelTrainingPlace";
-            labelTrainingPlace.Size = new System.Drawing.Size(64, 20);
-            labelTrainingPlace.TabIndex = 0;
-            labelTrainingPlace.Text = "Mob:";
-            //
-            // comboTrainingPlace
-            //
-            comboTrainingPlace.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
-            comboTrainingPlace.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-            comboTrainingPlace.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
-            comboTrainingPlace.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            comboTrainingPlace.DropDownHeight = 200;
-            comboTrainingPlace.FormattingEnabled = true;
-            comboTrainingPlace.IntegralHeight = false;
-            comboTrainingPlace.ItemHeight = 18;
-            comboTrainingPlace.Location = new System.Drawing.Point(96, 34);
-            comboTrainingPlace.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            comboTrainingPlace.Name = "comboTrainingPlace";
-            comboTrainingPlace.Radius = 5;
-            comboTrainingPlace.ShadowDepth = 4F;
-            comboTrainingPlace.Size = new System.Drawing.Size(470, 28);
-            comboTrainingPlace.TabIndex = 1;
-            comboTrainingPlace.SelectedIndexChanged += comboTrainingPlace_SelectedIndexChanged;
-            comboTrainingPlace.Leave += comboTrainingPlace_Leave;
-            //
             // checkAttackWeakerFirst
             // 
-            checkAttackWeakerFirst.AutoSize = true;
+            checkAttackWeakerFirst.AutoSize = false;
             checkAttackWeakerFirst.BackColor = System.Drawing.Color.Transparent;
             checkAttackWeakerFirst.Depth = 0;
-            checkAttackWeakerFirst.Location = new System.Drawing.Point(26, 64);
+            checkAttackWeakerFirst.Location = new System.Drawing.Point(26, 76);
             checkAttackWeakerFirst.Margin = new System.Windows.Forms.Padding(0);
             checkAttackWeakerFirst.MouseLocation = new System.Drawing.Point(-1, -1);
             checkAttackWeakerFirst.Name = "checkAttackWeakerFirst";
             checkAttackWeakerFirst.Ripple = true;
-            checkAttackWeakerFirst.Size = new System.Drawing.Size(324, 30);
+            checkAttackWeakerFirst.Size = new System.Drawing.Size(420, 30);
             checkAttackWeakerFirst.TabIndex = 1;
             checkAttackWeakerFirst.Text = "If avoided: counter attack weaker mobs first";
             checkAttackWeakerFirst.UseVisualStyleBackColor = false;
@@ -864,15 +815,15 @@
             // 
             // checkBoxDimensionPillar
             // 
-            checkBoxDimensionPillar.AutoSize = true;
+            checkBoxDimensionPillar.AutoSize = false;
             checkBoxDimensionPillar.BackColor = System.Drawing.Color.Transparent;
             checkBoxDimensionPillar.Depth = 0;
-            checkBoxDimensionPillar.Location = new System.Drawing.Point(26, 34);
+            checkBoxDimensionPillar.Location = new System.Drawing.Point(26, 36);
             checkBoxDimensionPillar.Margin = new System.Windows.Forms.Padding(0);
             checkBoxDimensionPillar.MouseLocation = new System.Drawing.Point(-1, -1);
             checkBoxDimensionPillar.Name = "checkBoxDimensionPillar";
             checkBoxDimensionPillar.Ripple = true;
-            checkBoxDimensionPillar.Size = new System.Drawing.Size(190, 30);
+            checkBoxDimensionPillar.Size = new System.Drawing.Size(300, 30);
             checkBoxDimensionPillar.TabIndex = 0;
             checkBoxDimensionPillar.Text = "Ignore Dimension Pillar";
             checkBoxDimensionPillar.UseVisualStyleBackColor = false;
@@ -887,11 +838,10 @@
             Controls.Add(groupBox2);
             Controls.Add(groupBoxArea);
             Controls.Add(groupBoxBerserk);
-            Controls.Add(groupBoxTrainingPlace);
             Font = new System.Drawing.Font("Segoe UI", 9F);
             Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             Name = "Main";
-            Size = new System.Drawing.Size(965, 614);
+            Size = new System.Drawing.Size(965, 645);
             Load += Main_Load;
             groupBox2.ResumeLayout(false);
             ctxAvoidance.ResumeLayout(false);
@@ -903,8 +853,6 @@
             groupBoxArea.PerformLayout();
             groupBoxAdvanced.ResumeLayout(false);
             groupBoxAdvanced.PerformLayout();
-            groupBoxTrainingPlace.ResumeLayout(false);
-            groupBoxTrainingPlace.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -958,8 +906,5 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private SDUI.Controls.CheckBox checkBoxDontFollowMobs;
         private SDUI.Controls.Button btnRemove;
-        private SDUI.Controls.GroupBox groupBoxTrainingPlace;
-        private SDUI.Controls.Label labelTrainingPlace;
-        private SDUI.Controls.ComboBox comboTrainingPlace;
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using RSBot.Core;
@@ -23,12 +22,6 @@ public partial class Main : DoubleBufferedControl
     #region Fields
 
     private bool _settingsLoaded;
-
-    /// <summary>
-    ///     Maps each entry shown in comboTrainingPlace (a folder/filename display path) to
-    ///     the converted script file's full path on disk.
-    /// </summary>
-    private readonly Dictionary<string, string> _trainingPlaceScripts = new();
 
     #endregion Fields
 
@@ -86,92 +79,6 @@ public partial class Main : DoubleBufferedControl
         radioWalkAround.Checked = PlayerConfig.Get(key + radioWalkAround.Name, true);
 
         LoadAvoidance();
-        LoadTrainingPlaces();
-    }
-
-    /// <summary>
-    ///     Populates comboTrainingPlace from the converted training-place scripts under
-    ///     Data/Scripts/TrainingPlaces (one subfolder per original source folder, e.g.
-    ///     "1-30lv", "Europe", ...), and restores + re-activates whichever one was
-    ///     previously selected, if any.
-    /// </summary>
-    private void LoadTrainingPlaces()
-    {
-        comboTrainingPlace.Items.Clear();
-        _trainingPlaceScripts.Clear();
-
-        comboTrainingPlace.Items.Add("None");
-
-        var root = Path.Combine(Kernel.BasePath, "Data", "Scripts", "TrainingPlaces");
-        if (Directory.Exists(root))
-        {
-            foreach (var file in Directory.GetFiles(root, "*.txt", SearchOption.AllDirectories).OrderBy(f => f))
-            {
-                // Folder/filename (no extension) - kept as-is rather than a "cleaned" mob
-                // name, since many of the source scripts share the same mob across several
-                // slightly different routes (e.g. "14_Tiger", "14_Tiger_1", "14_Tiger_2") -
-                // collapsing those to one label would make them impossible to tell apart.
-                var display = Path.ChangeExtension(Path.GetRelativePath(root, file), null).Replace('\\', '/');
-
-                _trainingPlaceScripts[display] = file;
-                comboTrainingPlace.Items.Add(display);
-            }
-        }
-
-        var saved = PlayerConfig.Get("RSBot.Training.SelectedPlaceScript", string.Empty);
-        var index = string.IsNullOrEmpty(saved) ? 0 : comboTrainingPlace.Items.IndexOf(saved);
-
-        // Setting SelectedIndex fires comboTrainingPlace_SelectedIndexChanged synchronously,
-        // which is exactly what's wanted here - it re-activates the previously selected
-        // patrol (or explicitly deactivates, for "None") rather than just cosmetically
-        // showing the saved choice without actually resuming it.
-        comboTrainingPlace.SelectedIndex = index >= 0 ? index : 0;
-    }
-
-    /// <summary>
-    ///     Handles the Leave event of the comboTrainingPlace control - it's an editable
-    ///     (DropDownStyle=DropDown) combo now for type-to-search, so typing a full match and
-    ///     clicking away without explicitly picking it from the suggestion dropdown leaves
-    ///     SelectedIndex at -1 (AutoComplete only fills in the text, it doesn't select the
-    ///     item unless you click/arrow-select it). Resolve the typed text to a matching item
-    ///     here so that case still activates the route.
-    /// </summary>
-    private void comboTrainingPlace_Leave(object sender, EventArgs e)
-    {
-        var index = comboTrainingPlace.FindStringExact(comboTrainingPlace.Text);
-        if (index >= 0 && index != comboTrainingPlace.SelectedIndex)
-            comboTrainingPlace.SelectedIndex = index;
-    }
-
-    /// <summary>
-    ///     Handles the SelectedIndexChanged event of the comboTrainingPlace control.
-    /// </summary>
-    private void comboTrainingPlace_SelectedIndexChanged(object sender, EventArgs e)
-    {
-        var selected = comboTrainingPlace.SelectedItem as string;
-
-        if (string.IsNullOrEmpty(selected) || selected == "None")
-        {
-            TrainingPlaceManager.Deactivate();
-            PlayerConfig.Set("RSBot.Training.SelectedPlaceScript", string.Empty);
-            return;
-        }
-
-        if (!_trainingPlaceScripts.TryGetValue(selected, out var path))
-            return;
-
-        if (!TrainingPlaceManager.Load(path, selected))
-            return;
-
-        PlayerConfig.Set("RSBot.Training.SelectedPlaceScript", selected);
-
-        // Reflect the route's own starting point in the Area section (X/Y/Region fields +
-        // Kernel.Bot.Botbase.Area itself) right away, rather than leaving it showing
-        // whatever was there before - MovementBundle's own per-tick sync will keep moving
-        // it to follow the player once the patrol is actually running, but this gives an
-        // immediate, sensible value instead of a stale/unrelated one in the meantime.
-        var start = TrainingPlaceManager.CurrentWaypoint;
-        TrainingManager.ApplyTrainingArea(start.X, start.Y, start.Region);
     }
 
     /// <summary>
