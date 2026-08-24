@@ -1,6 +1,8 @@
-﻿using RSBot.Core;
+﻿using System;
+using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
+using RSBot.Core.Objects.Spawn;
 
 namespace RSBot.Statistics.Stats.Calculators.Static;
 
@@ -41,11 +43,12 @@ internal class Kills : IStatisticCalculator
     /// <inheritdoc />
     public void Initialize()
     {
-        EventManager.SubscribeEvent("OnKillEnemy", OnKillEnemy);
+        EventManager.SubscribeEvent("OnKillEnemy", new Action<SpawnedBionic>(OnKillEnemy));
     }
 
-    private void OnKillEnemy()
+    private void OnKillEnemy(SpawnedBionic entity)
     {
-        _lastTickValue++;
+        if (entity is SpawnedMonster)
+            _lastTickValue++;
     }
 }

@@ -13,6 +13,7 @@ using RSBot.Core.Components;
 using RSBot.Core.Event;
 using RSBot.Core.Plugins;
 using RSBot.Views.Dialog;
+using RSBot.Views.Controls;
 using SDUI;
 using SDUI.Controls;
 using SDUI.Helpers;
@@ -33,6 +34,7 @@ public partial class Main : UIWindow
     private readonly Dictionary<string, UIWindow> _pluginWindows = new(8);
     private bool _isWindowLoaded;
     private SDUI.Controls.Button btnStartSetArea;
+    private StatisticsPanel statisticsPanel;
 
     #endregion Members
 
@@ -65,6 +67,23 @@ public partial class Main : UIWindow
 
         Shown += Main_Shown;
         InitializeCustomButtons();
+        InitializeSidebarStatistics();
+    }
+
+    /// <summary>
+    ///     Adds the session statistics panel below the selected-entity control.
+    /// </summary>
+    private void InitializeSidebarStatistics()
+    {
+        statisticsPanel = new StatisticsPanel
+        {
+            Dock = DockStyle.Top,
+            Name = "statisticsPanel",
+        };
+
+        pSidebar.Controls.Add(statisticsPanel);
+        // Lowest z-index => docked last, i.e. directly beneath entity1 and above the custom sidebar area.
+        pSidebar.Controls.SetChildIndex(statisticsPanel, 0);
     }
 
     #endregion Constructor

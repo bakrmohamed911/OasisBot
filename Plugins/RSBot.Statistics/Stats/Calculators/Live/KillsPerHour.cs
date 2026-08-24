@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using RSBot.Core;
 using RSBot.Core.Components;
 using RSBot.Core.Event;
+using RSBot.Core.Objects.Spawn;
 
 namespace RSBot.Statistics.Stats.Calculators.Live;
 
@@ -73,11 +75,12 @@ internal class KillsPerHour : IStatisticCalculator
     {
         _values = new int[60];
 
-        EventManager.SubscribeEvent("OnKillEnemy", OnKillEnemy);
+        EventManager.SubscribeEvent("OnKillEnemy", new Action<SpawnedBionic>(OnKillEnemy));
     }
 
-    private void OnKillEnemy()
+    private void OnKillEnemy(SpawnedBionic entity)
     {
-        _killCount++;
+        if (entity is SpawnedMonster)
+            _killCount++;
     }
 }

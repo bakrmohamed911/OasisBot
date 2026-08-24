@@ -9,7 +9,7 @@ namespace RSBot.Statistics
     {
         public string InternalName => "RSBot.Statistics";
         public string DisplayName => "Statistics";
-        public bool DisplayAsTab => true;
+        public bool DisplayAsTab => false;
         public int Index => 97;
         public bool RequireIngame => true;
         public Control View => Views.View.Instance;

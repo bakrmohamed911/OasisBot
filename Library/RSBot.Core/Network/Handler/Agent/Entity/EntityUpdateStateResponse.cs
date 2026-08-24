@@ -46,7 +46,7 @@ internal class EntityUpdateStateResponse : IPacketHandler
                     Game.Player.GetAttackers().Any(e => e.UniqueId == uniqueId)
                     && entity.State.LifeState == LifeState.Dead
                 )
-                    EventManager.FireEvent("OnKillEnemy");
+                    EventManager.FireEvent("OnKillEnemy", entity);
 
                 if (uniqueId == Game.SelectedEntity?.UniqueId && entity.State.LifeState == LifeState.Dead)
                 {
