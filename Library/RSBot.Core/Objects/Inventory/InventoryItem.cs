@@ -168,12 +168,31 @@ public class InventoryItem
             packet.WriteUShort(Record.Tid);
 
         var asyncCallback = new AwaitCallback(
-            response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
+            response =>
+            {
+                var result = response.ReadByte();
+                if (result == 0x01)
+                    return AwaitCallbackResult.Success;
+
+                // The result byte on failure was previously read and discarded - if a rejection
+                // is item-specific (e.g. this server refusing an event/bundle-type item that a
+                // regular potion's TID classification matched but doesn't actually behave like)
+                // rather than a generic "no", that reason code is the only way to tell the two
+                // apart instead of guessing blind.
+                Log.Debug($"[ERROR] Item use rejected - server result byte: 0x{result:X2}");
+                return AwaitCallbackResult.Fail;
+            },
             0xB04C
         );
 
         PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
-        asyncCallback.AwaitResponse(500);
+        // Was 500ms - too tight against this server's actual response latency for this opcode
+        // (confirmed via logs: real "Callback timeout" events - the response never arriving at
+        // all - were a small minority of failures; most already got a real, prompt server
+        // response that the predicate correctly read as a rejection). Matches AwaitCallback's own
+        // TIMEOUT_DEFAULT (5000ms), used everywhere else in this codebase (e.g. Player.MoveTo),
+        // rather than this one-off shorter value with no stated reason for being different.
+        asyncCallback.AwaitResponse();
 
         return asyncCallback.IsCompleted;
     }
@@ -198,12 +217,28 @@ public class InventoryItem
             packet.WriteInt(mapId);
 
         var asyncCallback = new AwaitCallback(
-            response => response.ReadByte() == 0x01 ? AwaitCallbackResult.Success : AwaitCallbackResult.Fail,
+            response =>
+            {
+                var result = response.ReadByte();
+                if (result == 0x01)
+                    return AwaitCallbackResult.Success;
+
+                // See Use()'s own version of this same callback for why the rejection byte is
+                // worth logging rather than discarding.
+                Log.Debug($"[ERROR] Item use rejected - server result byte: 0x{result:X2}");
+                return AwaitCallbackResult.Fail;
+            },
             0xB04C
         );
 
         PacketManager.SendPacket(packet, PacketDestination.Server, asyncCallback);
-        asyncCallback.AwaitResponse(500);
+        // Was 500ms - too tight against this server's actual response latency for this opcode
+        // (confirmed via logs: real "Callback timeout" events - the response never arriving at
+        // all - were a small minority of failures; most already got a real, prompt server
+        // response that the predicate correctly read as a rejection). Matches AwaitCallback's own
+        // TIMEOUT_DEFAULT (5000ms), used everywhere else in this codebase (e.g. Player.MoveTo),
+        // rather than this one-off shorter value with no stated reason for being different.
+        asyncCallback.AwaitResponse();
 
         return asyncCallback.IsCompleted;
     }

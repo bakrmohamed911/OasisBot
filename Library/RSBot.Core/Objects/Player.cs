@@ -1092,9 +1092,23 @@ public class Player : SpawnedBionic
         var packet = new Packet(0x70A7);
         packet.WriteByte(0x1); //Enter HWAN
 
-        var callback = new AwaitCallback(null, 0xB0A7);
+        // Was a null predicate (any received 0xB0A7 counts as success, without looking at what it
+        // actually says) plus the same too-tight 500ms timeout already found and fixed for
+        // InventoryItem.Use()/UseTo() - identical class of bug, and this call site had no
+        // diagnostic visibility at all, so there was no way to tell a real server rejection apart
+        // from "it just worked" - CanEnterBerzerk naturally goes false once BodyState actually
+        // becomes Hwan, so a genuine success is self-limiting either way, but a silent failure
+        // here previously looked identical to the requirements simply not being met yet.
+        var callback = new AwaitCallback(
+            response =>
+            {
+                Log.Debug($"[Berzerk] Enter berzerk mode response byte: 0x{response.ReadByte():X2}");
+                return AwaitCallbackResult.Success;
+            },
+            0xB0A7
+        );
         PacketManager.SendPacket(packet, PacketDestination.Server, callback);
-        callback.AwaitResponse(500);
+        callback.AwaitResponse();
     }
 
     /// <summary>
