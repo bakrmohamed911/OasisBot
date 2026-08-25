@@ -70,7 +70,18 @@ public partial class QuestSidebarElement : DoubleBufferedControl
 
         pQuests.BeginInvoke(() =>
         {
-            pQuests.Controls.RemoveByKey(questId.ToString());
+            // Controls.RemoveByKey() only detaches the QuestItem from this container - it does
+            // NOT destroy its native window handle (nor its children's, including its own
+            // ToolTip component). RefreshQuests() calls this automatically whenever a tracked
+            // quest completes/is abandoned, with no user action involved, so over a session of
+            // repeated (e.g. daily/repeatable) quest tracking this leaked several HWNDs per
+            // completion - contributing to exhausting the process's Windows USER-object quota.
+            var questItem = pQuests.Controls[questId.ToString()];
+            if (questItem == null)
+                return;
+
+            pQuests.Controls.Remove(questItem);
+            questItem.Dispose();
         });
 
         TrackedQuests.Remove(questId);

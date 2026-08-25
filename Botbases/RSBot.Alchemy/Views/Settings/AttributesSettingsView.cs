@@ -128,6 +128,20 @@ public partial class AttributesSettingsView : DoubleBufferedControl
             BeginInvoke(() =>
             {
                 Hide();
+
+                // Controls.Clear() only detaches the outgoing AttributeInfoPanel controls from
+                // this container - it does NOT destroy their native window handles (nor their
+                // children's, including each panel's own ToolTip component). This runs on every
+                // single automated alchemy action (wired to Globals.View.ItemChanged, fired
+                // unconditionally from OnAlchemy regardless of which engine is active), so over
+                // a long unattended session that leaked several HWNDs per action - enough to
+                // eventually exhaust the process's Windows USER-object quota and start throwing
+                // "Error creating window handle" everywhere, including in unrelated UI (Log/Chat).
+                // Snapshot to an array first - Dispose() removes the control from Controls as a
+                // side effect, which would otherwise invalidate a foreach over Controls directly.
+                foreach (Control control in Controls.Cast<Control>().ToArray())
+                    control.Dispose();
+
                 Controls.Clear();
                 Controls.AddRange(_attributePanels.ToArray());
                 Show();

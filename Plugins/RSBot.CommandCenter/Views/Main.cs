@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 using RSBot.CommandCenter.Components;
 using RSBot.CommandCenter.Views.Controls;
@@ -24,6 +25,14 @@ public partial class Main : DoubleBufferedControl
         checkEnable.Checked = PlayerConfig.Get("RSBot.CommandCenter.Enabled", true);
 
         panelActions.Hide();
+
+        // Controls.Clear() only detaches the outgoing EmoticonActionElement controls - it does
+        // NOT destroy their native window handles. Snapshot to an array first since disposing a
+        // control removes it from its parent's Controls as a side effect, which would otherwise
+        // invalidate a foreach over Controls directly.
+        foreach (Control control in panelActions.Controls.Cast<Control>().ToArray())
+            control.Dispose();
+
         panelActions.Controls.Clear();
 
         lblChatCommandDescriptions.BackColor = ColorScheme.BackColor;
