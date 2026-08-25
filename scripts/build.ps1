@@ -23,6 +23,12 @@ if ($Clean) {
 
     New-Item -ItemType Directory ".\temp" -ErrorAction SilentlyContinue > $null
     Move-Item ".\Build\User" ".\temp" -ErrorAction SilentlyContinue > $null
+    # Recorded/imported training-place routes (Data\Scripts\TrainingPlaces\*.rbs + catalog.json)
+    # only ever exist as runtime-written data under the gitignored Build\ tree - unlike
+    # Data\Scripts\Towns, which is seeded from the source-controlled Dependencies\ folder on every
+    # build, there's no copy of these anywhere else. Preserve them the same way Build\User already
+    # is, or a clean build silently throws away every route ever recorded/imported.
+    Move-Item ".\Build\Data\Scripts\TrainingPlaces" ".\temp" -ErrorAction SilentlyContinue > $null
     Remove-Item -Recurse -Force ".\Build" -ErrorAction SilentlyContinue > $null
 
     # Wiping just the Build output isn't a real clean build - each project's own bin/obj
@@ -101,6 +107,12 @@ else {
 
 if ($Clean) {
     Move-Item ".\temp\User" ".\Build\User" -ErrorAction SilentlyContinue > $null
+    # Data\Scripts\Towns already exists by now (CopyDependencies, an AfterTargets="Build" MSBuild
+    # target, seeded it from source-controlled Dependencies\Scripts\Towns during the build above),
+    # so Data\Scripts\ itself is already there - but create it defensively anyway in case that
+    # target didn't run for some reason, so this restore doesn't silently no-op.
+    New-Item -ItemType Directory ".\Build\Data\Scripts" -ErrorAction SilentlyContinue > $null
+    Move-Item ".\temp\TrainingPlaces" ".\Build\Data\Scripts\TrainingPlaces" -ErrorAction SilentlyContinue > $null
     Remove-Item -Recurse -Force ".\temp" -ErrorAction SilentlyContinue > $null
 }
 
