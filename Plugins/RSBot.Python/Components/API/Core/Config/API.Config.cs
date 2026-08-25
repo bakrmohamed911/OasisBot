@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using Python.Runtime;
 using RSBot.Core;
+using RSBot.Core.Components;
 using RSBot.Python.Components.API.Interface;
 using RSBot.Python.Views;
 
@@ -33,11 +34,14 @@ namespace RSBot.Python.Components.API.Core.Entity
 
         private string GetConfigPath()
         {
+            // Was hardcoded to profile "Default" regardless of which profile is actually
+            // selected - silently pointed Python scripts at the wrong (or a nonexistent)
+            // character file for anyone using a different profile.
             if (Game.Player == null)
             {
-                return Path.Combine(projectDir, "User", "Default");
+                return Path.Combine(projectDir, "User", ProfileManager.SelectedProfile);
             }
-            return Path.Combine(projectDir, "User", "Default", $"{Game.Player.Name}.rs");
+            return Path.Combine(projectDir, "User", ProfileManager.SelectedProfile, $"{Game.Player.Name}.rs");
         }
 
         private string GetLogDir()
