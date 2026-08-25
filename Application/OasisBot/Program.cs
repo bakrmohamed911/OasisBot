@@ -1,8 +1,11 @@
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -21,6 +24,37 @@ internal static class Program
 {
     [DllImport("kernel32.dll")]
     private static extern bool FreeConsole();
+
+    /// <summary>
+    ///     Redirects assembly resolution to Build/lib/ - the release build's post-build step
+    ///     (OasisBot.csproj's MoveDependenciesToLib target) moves every managed dependency DLL
+    ///     there to keep Build/'s root down to just OasisBot.exe/Client.Library.dll/Data/User,
+    ///     rather than ~20 loose DLLs. A runtimeconfig.template.json with additionalProbingPaths
+    ///     was tried first (the documented, no-code way to do this) but didn't actually get
+    ///     merged into the generated runtimeconfig.json in this project's build setup.
+    ///     <para>
+    ///         Uses <see cref="AssemblyLoadContext.Resolving" />, not the legacy
+    ///         <see cref="AppDomain.AssemblyResolve" /> compat-shim event - confirmed by testing
+    ///         that the latter does NOT get consulted for the low-level binder resolution the JIT
+    ///         needs just to compile Main() itself (Main references CommandLine.Parser directly,
+    ///         so the whole app failed to start with a FileNotFoundException before Main's body
+    ///         ever ran, even with an AppDomain.AssemblyResolve handler already registered).
+    ///         AssemblyLoadContext.Resolving hooks the actual CoreCLR binder and does intercept
+    ///         this. Still registered as a module initializer (not from inside Main()) purely for
+    ///         belt-and-suspenders - it needs to exist before anything in this assembly runs, and
+    ///         a module initializer is the only construct that's actually guaranteed to.
+    ///     </para>
+    /// </summary>
+    [ModuleInitializer]
+    internal static void RegisterLibProbingPath()
+    {
+        AssemblyLoadContext.Default.Resolving += (context, name) =>
+        {
+            var libPath = Path.Combine(AppContext.BaseDirectory, "lib", name.Name + ".dll");
+
+            return File.Exists(libPath) ? context.LoadFromAssemblyPath(libPath) : null;
+        };
+    }
 
     public static string AssemblyTitle = Assembly
         .GetExecutingAssembly()

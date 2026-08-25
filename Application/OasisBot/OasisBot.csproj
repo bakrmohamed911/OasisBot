@@ -46,6 +46,53 @@
     </ItemGroup>
     <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="..\..\Build\Data\%(RecursiveDir)" />
   </Target>
+  <Target Name="RemoveUnusedRuntimeAssets" AfterTargets="Build">
+    <!-- PlatformTarget above already hard-pins this whole app to x86, so only the win-x86
+         SkiaSharp native asset is ever actually used - the other 3 RID variants (win-x64,
+         win-arm64, osx) MSBuild still copies into Build/runtimes/ regardless (RID-specific asset
+         trimming during a plain `dotnet build`/`msbuild` pass - what both the local dev build and
+         the real CI release pipeline actually use - only fully applies at `dotnet publish` time,
+         confirmed by testing: setting <RuntimeIdentifier> here did not trim them, and separately
+         caused `dotnet build` to emit a whole second, fully-duplicated Build/win-x86/ output
+         alongside Build/ itself, so it was removed again). Deleting the unused 3 explicitly
+         instead. -->
+    <ItemGroup>
+      <UnusedRuntimeDirs Include="..\..\Build\runtimes\osx;..\..\Build\runtimes\win-arm64;..\..\Build\runtimes\win-x64" />
+    </ItemGroup>
+    <RemoveDir Directories="@(UnusedRuntimeDirs)" Condition="Exists('%(UnusedRuntimeDirs.Identity)')" />
+  </Target>
+  <Target Name="MoveDependenciesToLib" AfterTargets="Build">
+    <!-- Keeps Build/'s root down to just OasisBot.{exe,dll,pdb,deps.json,runtimeconfig.json},
+         Client.Library.dll (native, injected by a hardcoded path in ClientManager.cs - can't
+         move), CommandLine.dll (see below), Data/, and User/. Every other managed dependency
+         DLL/PDB the build copies to the output root goes into lib/ instead -
+         Program.RegisterLibProbingPath() (a module initializer, so it's guaranteed to run before
+         anything else in the app needs one of these) redirects assembly resolution there. A
+         runtimeconfig.template.json + additionalProbingPaths was tried first as the documented,
+         no-code way to do this, but didn't actually get merged into the generated
+         runtimeconfig.json in this project's build setup. Botbase/Plugin projects build straight
+         into Data/Bots and Data/Plugins with their own private dependency copies, so this doesn't
+         touch or affect them. -->
+    <ItemGroup>
+      <!-- CommandLine.dll stays put: Program.Main() calls straight into CommandLine.Parser/
+           ParserResult<T> in its own method body (not from inside a lambda or a call to another
+           method), and the CLR must resolve every assembly Main()'s own JIT compilation touches
+           through normal same-directory probing before it can even start running - confirmed by
+           testing that this fails with a FileNotFoundException before Main's first line executes,
+           regardless of any AssemblyLoadContext.Resolving/AppDomain.AssemblyResolve hook (both
+           were tried; neither runs early enough to intercept it). Everything else Program.cs
+           touches during startup is inside a lambda or a call to another method, both of which
+           are JIT-compiled lazily on first actual invocation - by which point
+           Program.RegisterLibProbingPath()'s module-initializer-registered resolver is already
+           active and handles them fine. -->
+      <DependencyDllsToMove
+        Include="..\..\Build\*.dll;..\..\Build\*.pdb"
+        Exclude="..\..\Build\OasisBot.dll;..\..\Build\OasisBot.pdb;..\..\Build\Client.Library.dll;..\..\Build\CommandLine.dll"
+      />
+    </ItemGroup>
+    <MakeDir Directories="..\..\Build\lib" Condition="'@(DependencyDllsToMove)' != ''" />
+    <Move SourceFiles="@(DependencyDllsToMove)" DestinationFolder="..\..\Build\lib" Condition="'@(DependencyDllsToMove)' != ''" />
+  </Target>
   <Target
     Name="DownloadNavigationLinkage"
     AfterTargets="Build"

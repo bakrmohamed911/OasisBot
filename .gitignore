@@ -34,6 +34,11 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Release/build archives - these are CI release-pipeline output (.github/workflows/release.yml
+# produces OasisBot-Portable-<version>.zip and an installer .exe), not source - one got committed
+# by accident before (OasisBot-Release.zip, removed) and shouldn't happen again.
+*.zip
+
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot
