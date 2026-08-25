@@ -281,9 +281,19 @@ internal class TargetBundle : IBundle
         )
             return default;
 
+        // Chained OrderBy/OrderByDescending calls (not ThenBy) re-sort from scratch each time,
+        // but since each is a *stable* sort, chaining them last-to-first still works as a
+        // multi-key sort AS LONG AS every earlier key can only matter as a tiebreaker for the
+        // one after it - see GetFromCurrentAttackers() above for the case where that breaks
+        // (a float distance key essentially never ties, so nothing before it in the chain ever
+        // mattered). Here the final key (AttackingPlayer, a bool) ties constantly, so the
+        // PreferMonster tier below it does get a real chance to matter - but it has to sort
+        // Descending too: an ascending OrderBy on a bool puts false before true, which pushed
+        // *non*-preferred monsters ahead of preferred ones among equally-AttackingPlayer
+        // candidates - the opposite of what "prefer this monster" is supposed to do.
         return entities
             .OrderBy(m => m.Movement.Source.DistanceTo(Container.Bot.Area.Position))
-            .OrderBy(m => Bundles.Avoidance.PreferMonster(m.Rarity))
+            .OrderByDescending(m => Bundles.Avoidance.PreferMonster(m.Rarity))
             .OrderByDescending(m => m.AttackingPlayer)
             .FirstOrDefault();
     }

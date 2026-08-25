@@ -15,11 +15,37 @@ internal class BerzerkBundle : IBundle
     public BerzerkConfig Config { get; set; }
 
     /// <summary>
+    ///     Kernel.TickCount the diagnostic below last logged - see its own comment.
+    /// </summary>
+    private int _lastDiagnosticTick = -100_000;
+
+    /// <summary>
     ///     Invokes this instance.
     /// </summary>
     /// <exception cref="System.NotImplementedException"></exception>
     public void Invoke()
     {
+        // TEMPORARY diagnostic - remove once "berserk doesn't trigger for any marked rarity" is
+        // root-caused. CanEnterBerzerk requires BerzerkPoints == 5 (a full gauge) - if that gate
+        // is what's actually blocking things (rather than the rarity-list check further below),
+        // every one of the config's own trigger conditions would look equally "not working"
+        // regardless of which rarities are marked, matching the reported symptom. Throttled to
+        // once/3s to avoid adding meaningfully to log volume.
+        if (
+            Config.WhenTargetSpecificRartiyMonster
+            && Game.SelectedEntity is SpawnedMonster selectedForDiag
+            && Kernel.TickCount - _lastDiagnosticTick >= 3000
+        )
+        {
+            _lastDiagnosticTick = Kernel.TickCount;
+            Log.Debug(
+                $"[Berzerk] CanEnterBerzerk={Game.Player.CanEnterBerzerk} "
+                    + $"BerzerkPoints={Game.Player.BerzerkPoints}/5 BodyState={Game.Player.State.BodyState} "
+                    + $"HasActiveVehicle={Game.Player.HasActiveVehicle} SelectedRarity={selectedForDiag.Rarity} "
+                    + $"InBerserkList={Bundles.Avoidance.UseBerserkOnMonster(selectedForDiag.Rarity)}"
+            );
+        }
+
         if (!Game.Player.CanEnterBerzerk || Game.Player.HasActiveVehicle)
             return;
 

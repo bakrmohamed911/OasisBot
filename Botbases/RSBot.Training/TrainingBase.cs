@@ -17,10 +17,36 @@ namespace RSBot.Training
         public Area Area => Container.Bot.Area;
 
         /// <summary>
+        ///     Kernel.TickCount when <see cref="Tick" /> last logged its gate diagnostic - see
+        ///     that log line's own comment for why this exists.
+        /// </summary>
+        private int _lastGateDiagTick = -100_000;
+
+        /// <summary>
         ///     Ticks this instance. It's the botbase main-loop
         /// </summary>
         public void Tick()
         {
+            // TEMPORARY diagnostic - remove once the "reconnect mid-route leaves the character
+            // standing still" report is root-caused. Throttled to once per 3s (not every tick)
+            // to avoid adding meaningfully to log volume. Reports every early-return gate this
+            // method has, in order, so whichever one is stuck true is visible directly instead
+            // of guessed at.
+            if (Kernel.TickCount - _lastGateDiagTick >= 3000)
+            {
+                _lastGateDiagTick = Kernel.TickCount;
+                Log.Debug(
+                    $"[Training] Tick gate: Running={Kernel.Bot.Running} "
+                        + $"Exchanging={Game.Player.Exchanging} Untouchable={Game.Player.Untouchable} "
+                        + $"LifeState={Game.Player.State.LifeState} "
+                        + $"AreaDistance={Container.Bot.Area.Position.DistanceToPlayer():0} "
+                        + $"LoopRunning={Bundles.Loop.Running} ScrollState={Game.Player.State.ScrollState} "
+                        + $"PatrolActive={TrainingPlaceManager.IsActive} "
+                        + $"PatrolIndex={TrainingPlaceManager.CurrentIndex} "
+                        + $"HasArrived={TrainingPlaceManager.HasArrived}"
+                );
+            }
+
             if (!Kernel.Bot.Running)
                 return;
 

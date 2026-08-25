@@ -42,7 +42,15 @@ public partial class Main : DoubleBufferedControl
         ("General (party)", MonsterRarity.GeneralParty),
         ("Champion (party)", MonsterRarity.ChampionParty),
         ("Giant (party)", MonsterRarity.GiantParty),
-        ("Unique", MonsterRarity.Unique | MonsterRarity.Unique2),
+        // Was a single "Unique" row storing MonsterRarity.Unique | MonsterRarity.Unique2 - but
+        // MonsterRarity isn't a [Flags] enum (see its own definition: values like 3, 5, 6, 7
+        // aren't distinct bits), so that bitwise-OR produced 11, a value with no corresponding
+        // real rarity. The row's checkbox state round-tripped fine on its own (Enum.Parse accepts
+        // numeric strings), but could never match a live monster's actual Rarity - Avoid/Prefer/
+        // Berserk were all silently non-functional for this row. Split into the two real, single
+        // values instead, matching every other row in this list.
+        ("Unique", MonsterRarity.Unique),
+        ("Unique (2nd)", MonsterRarity.Unique2),
         ("Strong", MonsterRarity.EliteStrong),
         ("Elite", MonsterRarity.Elite),
         ("Event", MonsterRarity.Event),
