@@ -22,6 +22,20 @@ public partial class Main : DoubleBufferedControl
     private const int ScriptRecorderOwnerId = 2000;
 
     /// <summary>
+    ///     Backing list for comboTrainingAreaZone - the unfiltered set loaded once from
+    ///     <see cref="TrainingAreaCatalog" />; txtAreaSearch's TextChanged handler re-populates the
+    ///     ComboBox's own Items from this on every keystroke rather than re-querying the catalog.
+    /// </summary>
+    private List<TrainingAreaCatalog.NamedZone> _allZones = new();
+
+    /// <summary>
+    ///     Backing list for comboMonsterInZone, re-set every time comboTrainingAreaZone's
+    ///     selection changes - same reasoning as <see cref="_allZones" />.
+    /// </summary>
+    private IReadOnlyList<MonsterObservationLog.ObservedMonster> _allMonstersInSelectedZone =
+        Array.Empty<MonsterObservationLog.ObservedMonster>();
+
+    /// <summary>
     ///     Radius shown/applied for the Area section when a training place (patrol route) is
     ///     selected - a patrol route has no inherent radius of its own, so this is just a
     ///     sensible display default rather than a value read from the route itself.
@@ -825,11 +839,44 @@ public partial class Main : DoubleBufferedControl
         if (zones.Count == 0)
             return;
 
-        comboTrainingAreaZone.Items.Clear();
+        _allZones = zones;
         comboMonsterInZone.Items.Clear();
+        _allMonstersInSelectedZone = Array.Empty<MonsterObservationLog.ObservedMonster>();
+        RepopulateAreaCombo(string.Empty);
+    }
 
-        foreach (var zone in zones)
+    /// <summary>
+    ///     Re-lists comboTrainingAreaZone from <see cref="_allZones" />, narrowed to names
+    ///     containing <paramref name="filter" /> - the search box (txtAreaSearch) drives this via
+    ///     its TextChanged handler. Filtering happens entirely in code against the ComboBox's own
+    ///     Items rather than via WinForms' built-in AutoComplete - SDUI's ComboBox is a fully
+    ///     custom-painted control (see its own OnPaint) that was only ever built for closed
+    ///     DropDownList mode, and native AutoComplete needs an editable DropDown-style combo with
+    ///     a real native edit window underneath, which this control doesn't have - confirmed live:
+    ///     enabling it threw "Interface not registered" out of the native AutoComplete COM
+    ///     machinery (StringSource) the moment items were added, and produced visibly corrupted
+    ///     double-rendered text before that.
+    /// </summary>
+    private void RepopulateAreaCombo(string filter)
+    {
+        comboTrainingAreaZone.Items.Clear();
+
+        IEnumerable<TrainingAreaCatalog.NamedZone> matches = _allZones;
+        if (!string.IsNullOrWhiteSpace(filter))
+            matches = matches.Where(z => z.Name.Contains(filter, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var zone in matches)
             comboTrainingAreaZone.Items.Add(zone);
+    }
+
+    /// <summary>
+    ///     Handles the TextChanged event of the txtAreaSearch control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+    private void txtAreaSearch_TextChanged(object sender, EventArgs e)
+    {
+        RepopulateAreaCombo(txtAreaSearch.Text);
     }
 
     /// <summary>
@@ -843,29 +890,57 @@ public partial class Main : DoubleBufferedControl
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
     private void comboTrainingAreaZone_SelectedIndexChanged(object sender, EventArgs e)
     {
-        comboMonsterInZone.Items.Clear();
+        txtMonsterSearch.Text = string.Empty;
+        _allMonstersInSelectedZone = Array.Empty<MonsterObservationLog.ObservedMonster>();
 
         if (comboTrainingAreaZone.SelectedItem is not TrainingAreaCatalog.NamedZone zone)
         {
+            comboMonsterInZone.Items.Clear();
             btnStartAreaMonsterTraining.Enabled = false;
             return;
         }
 
-        var monsters = MonsterObservationLog.GetMonstersInRegion(zone.Position.Region);
-        if (monsters.Count == 0)
+        _allMonstersInSelectedZone = MonsterObservationLog.GetMonstersInRegion(zone.Position.Region);
+        RepopulateMonsterCombo(string.Empty);
+
+        btnStartAreaMonsterTraining.Enabled = true;
+    }
+
+    /// <summary>
+    ///     Re-lists comboMonsterInZone from <see cref="_allMonstersInSelectedZone" />, narrowed to
+    ///     names containing <paramref name="filter" /> - see <see cref="RepopulateAreaCombo" />'s
+    ///     own remarks for why this filters in code instead of via native AutoComplete.
+    /// </summary>
+    private void RepopulateMonsterCombo(string filter)
+    {
+        comboMonsterInZone.Items.Clear();
+
+        if (_allMonstersInSelectedZone.Count == 0)
         {
             comboMonsterInZone.Items.Add("(none observed here yet - train here once to discover them)");
             comboMonsterInZone.SelectedIndex = 0;
             comboMonsterInZone.Enabled = false;
-        }
-        else
-        {
-            comboMonsterInZone.Enabled = true;
-            foreach (var monster in monsters)
-                comboMonsterInZone.Items.Add(monster);
+            return;
         }
 
-        btnStartAreaMonsterTraining.Enabled = true;
+        comboMonsterInZone.Enabled = true;
+
+        IEnumerable<MonsterObservationLog.ObservedMonster> matches = _allMonstersInSelectedZone;
+        if (!string.IsNullOrWhiteSpace(filter))
+            matches = matches.Where(m => m.Name.Contains(filter, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var monster in matches)
+            comboMonsterInZone.Items.Add(monster);
+    }
+
+    /// <summary>
+    ///     Handles the TextChanged event of the txtMonsterSearch control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+    private void txtMonsterSearch_TextChanged(object sender, EventArgs e)
+    {
+        RepopulateMonsterCombo(txtMonsterSearch.Text);
     }
 
     /// <summary>
