@@ -677,9 +677,9 @@ namespace RSBot.Training.Views
             //
             // comboTrainingAreaZone
             //
-            comboTrainingAreaZone.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-            comboTrainingAreaZone.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             comboTrainingAreaZone.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
+            comboTrainingAreaZone.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            comboTrainingAreaZone.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             comboTrainingAreaZone.FormattingEnabled = true;
             comboTrainingAreaZone.Location = new System.Drawing.Point(26, 188);
             comboTrainingAreaZone.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -702,9 +702,9 @@ namespace RSBot.Training.Views
             //
             // comboMonsterInZone
             //
-            comboMonsterInZone.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
-            comboMonsterInZone.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
             comboMonsterInZone.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDown;
+            comboMonsterInZone.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            comboMonsterInZone.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
             comboMonsterInZone.FormattingEnabled = true;
             comboMonsterInZone.Location = new System.Drawing.Point(332, 188);
             comboMonsterInZone.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
