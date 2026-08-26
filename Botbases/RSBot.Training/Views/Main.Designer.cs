@@ -66,6 +66,9 @@ namespace RSBot.Training.Views
             txtRadius = new SDUI.Controls.TextBox();
             txtYCoord = new SDUI.Controls.TextBox();
             txtXCoord = new SDUI.Controls.TextBox();
+            labelRecommendedZone = new SDUI.Controls.Label();
+            comboRecommendedZone = new SDUI.Controls.ComboBox();
+            labelRecommendedZoneHint = new SDUI.Controls.Label();
             groupBoxAdvanced = new SDUI.Controls.GroupBox();
             checkBoxDontFollowMobs = new SDUI.Controls.CheckBox();
             checkAttackWeakerFirst = new SDUI.Controls.CheckBox();
@@ -83,7 +86,7 @@ namespace RSBot.Training.Views
             //
             groupBox2.BackColor = System.Drawing.Color.Transparent;
             groupBox2.Controls.Add(avoidanceListPanel);
-            groupBox2.Location = new System.Drawing.Point(29, 352);
+            groupBox2.Location = new System.Drawing.Point(29, 437);
             groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new System.Windows.Forms.Padding(2, 9, 2, 4);
@@ -406,13 +409,16 @@ namespace RSBot.Training.Views
             groupBoxArea.Controls.Add(txtRadius);
             groupBoxArea.Controls.Add(txtYCoord);
             groupBoxArea.Controls.Add(txtXCoord);
+            groupBoxArea.Controls.Add(labelRecommendedZone);
+            groupBoxArea.Controls.Add(comboRecommendedZone);
+            groupBoxArea.Controls.Add(labelRecommendedZoneHint);
             groupBoxArea.Location = new System.Drawing.Point(29, 20);
             groupBoxArea.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxArea.Name = "groupBoxArea";
             groupBoxArea.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
             groupBoxArea.Radius = 10;
             groupBoxArea.ShadowDepth = 4;
-            groupBoxArea.Size = new System.Drawing.Size(380, 312);
+            groupBoxArea.Size = new System.Drawing.Size(380, 397);
             groupBoxArea.TabIndex = 0;
             groupBoxArea.TabStop = false;
             groupBoxArea.Text = "Area";
@@ -655,6 +661,39 @@ namespace RSBot.Training.Views
             txtXCoord.UseSystemPasswordChar = false;
             txtXCoord.TextChanged += txtXCoord_TextChanged;
             //
+            // labelRecommendedZone
+            //
+            labelRecommendedZone.AutoSize = true;
+            labelRecommendedZone.Location = new System.Drawing.Point(26, 284);
+            labelRecommendedZone.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            labelRecommendedZone.Name = "labelRecommendedZone";
+            labelRecommendedZone.Size = new System.Drawing.Size(120, 15);
+            labelRecommendedZone.TabIndex = 40;
+            labelRecommendedZone.Text = "Recommended zone:";
+            //
+            // comboRecommendedZone
+            //
+            comboRecommendedZone.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            comboRecommendedZone.FormattingEnabled = true;
+            comboRecommendedZone.Location = new System.Drawing.Point(26, 304);
+            comboRecommendedZone.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            comboRecommendedZone.Name = "comboRecommendedZone";
+            comboRecommendedZone.Radius = 5;
+            comboRecommendedZone.ShadowDepth = 4F;
+            comboRecommendedZone.Size = new System.Drawing.Size(328, 34);
+            comboRecommendedZone.TabIndex = 41;
+            comboRecommendedZone.SelectedIndexChanged += comboRecommendedZone_SelectedIndexChanged;
+            //
+            // labelRecommendedZoneHint
+            //
+            labelRecommendedZoneHint.AutoSize = false;
+            labelRecommendedZoneHint.Location = new System.Drawing.Point(26, 344);
+            labelRecommendedZoneHint.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            labelRecommendedZoneHint.Name = "labelRecommendedZoneHint";
+            labelRecommendedZoneHint.Size = new System.Drawing.Size(328, 44);
+            labelRecommendedZoneHint.TabIndex = 42;
+            labelRecommendedZoneHint.Text = "";
+            //
             // groupBoxAdvanced
             //
             groupBoxAdvanced.BackColor = System.Drawing.Color.Transparent;
@@ -781,6 +820,9 @@ namespace RSBot.Training.Views
         private SDUI.Controls.TextBox txtRadius;
         private SDUI.Controls.TextBox txtYCoord;
         private SDUI.Controls.TextBox txtXCoord;
+        private SDUI.Controls.Label labelRecommendedZone;
+        private SDUI.Controls.ComboBox comboRecommendedZone;
+        private SDUI.Controls.Label labelRecommendedZoneHint;
         private SDUI.Controls.Button buttonSelectTrainingArea;
         private SDUI.Controls.Radio radioStand;
         private SDUI.Controls.GroupBox groupBoxAdvanced;

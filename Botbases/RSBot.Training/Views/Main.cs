@@ -78,6 +78,11 @@ public partial class Main : DoubleBufferedControl
         InitializeComponent();
         txtSearchPlace.Enter += txtSearchPlace_Enter;
         SubscribeEvents();
+
+        comboRecommendedZone.Items.Add("(Select a level range...)");
+        foreach (var zone in RecommendedTrainingZones.All)
+            comboRecommendedZone.Items.Add(zone);
+        comboRecommendedZone.SelectedIndex = 0;
     }
 
     /// <summary>
@@ -807,6 +812,25 @@ public partial class Main : DoubleBufferedControl
     }
 
     #endregion Create a walk script
+
+    /// <summary>
+    ///     Handles the SelectedIndexChanged event of the comboRecommendedZone control - purely
+    ///     informational (see <see cref="RecommendedTrainingZones" />'s own remarks for why this
+    ///     doesn't set the Area's coordinates directly): shows where to travel and a reminder to
+    ///     use the existing "Current" button once actually standing there.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+    private void comboRecommendedZone_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (comboRecommendedZone.SelectedItem is not RecommendedTrainingZones.RecommendedZone zone)
+        {
+            labelRecommendedZoneHint.Text = "";
+            return;
+        }
+
+        labelRecommendedZoneHint.Text = $"{zone.Hint} Travel there, then click \"Current\" above to set it.";
+    }
 
     /// <summary>
     ///     Handles the Click event of the btnGetCurrent control.
