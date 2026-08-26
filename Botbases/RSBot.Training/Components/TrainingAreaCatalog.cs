@@ -52,6 +52,23 @@ public static class TrainingAreaCatalog
         public Position Position { get; set; }
         public short Radius { get; set; }
 
-        public override string ToString() => Name;
+        /// <summary>
+        ///     Includes an observed level range when one's available (see
+        ///     <see cref="MonsterObservationLog" /> - there's no static level data for a zone as a
+        ///     whole, only for the individual monsters actually seen spawning in its region, so
+        ///     this is derived the same live-learned way rather than a second, separate lookup).
+        ///     Falls back to just the name for a region nothing's been observed in yet.
+        /// </summary>
+        public override string ToString()
+        {
+            var monsters = MonsterObservationLog.GetMonstersInRegion(Position.Region);
+            if (monsters.Count == 0)
+                return Name;
+
+            var minLevel = monsters.Min(m => m.Level);
+            var maxLevel = monsters.Max(m => m.Level);
+
+            return minLevel == maxLevel ? $"{Name}  (Lv {minLevel})" : $"{Name}  (Lv {minLevel}-{maxLevel})";
+        }
     }
 }

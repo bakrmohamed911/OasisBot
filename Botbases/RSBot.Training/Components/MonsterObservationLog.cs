@@ -92,6 +92,11 @@ public static class MonsterObservationLog
                 _dirty = true;
             }
 
+            // Notify (not Debug) so this is visible by default - the whole point is to let the
+            // user confirm live, in the log, that discovery is actually happening while they
+            // train, rather than silently trusting a file on disk.
+            Log.Notify($"[TrainingZones] Discovered Lv.{record.Level} {record.GetRealName()} in region {region}");
+
             Save();
         }
         catch (Exception e)

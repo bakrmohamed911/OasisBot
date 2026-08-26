@@ -68,10 +68,10 @@ namespace RSBot.Training.Views
             txtXCoord = new SDUI.Controls.TextBox();
             labelAreaZone = new SDUI.Controls.Label();
             txtAreaSearch = new SDUI.Controls.TextBox();
-            comboTrainingAreaZone = new SDUI.Controls.ComboBox();
+            listAreaResults = new System.Windows.Forms.ListBox();
             labelMonsterZone = new SDUI.Controls.Label();
             txtMonsterSearch = new SDUI.Controls.TextBox();
-            comboMonsterInZone = new SDUI.Controls.ComboBox();
+            listMonsterResults = new System.Windows.Forms.ListBox();
             btnStartAreaMonsterTraining = new SDUI.Controls.Button();
             groupBoxAdvanced = new SDUI.Controls.GroupBox();
             checkBoxDontFollowMobs = new SDUI.Controls.CheckBox();
@@ -125,10 +125,10 @@ namespace RSBot.Training.Views
             groupBoxTrainingPlace.Controls.Add(checkBoxUseReverse);
             groupBoxTrainingPlace.Controls.Add(labelAreaZone);
             groupBoxTrainingPlace.Controls.Add(txtAreaSearch);
-            groupBoxTrainingPlace.Controls.Add(comboTrainingAreaZone);
+            groupBoxTrainingPlace.Controls.Add(listAreaResults);
             groupBoxTrainingPlace.Controls.Add(labelMonsterZone);
             groupBoxTrainingPlace.Controls.Add(txtMonsterSearch);
-            groupBoxTrainingPlace.Controls.Add(comboMonsterInZone);
+            groupBoxTrainingPlace.Controls.Add(listMonsterResults);
             groupBoxTrainingPlace.Controls.Add(btnStartAreaMonsterTraining);
             groupBoxTrainingPlace.Location = new System.Drawing.Point(429, 20);
             groupBoxTrainingPlace.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -136,7 +136,7 @@ namespace RSBot.Training.Views
             groupBoxTrainingPlace.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
             groupBoxTrainingPlace.Radius = 10;
             groupBoxTrainingPlace.ShadowDepth = 4;
-            groupBoxTrainingPlace.Size = new System.Drawing.Size(638, 314);
+            groupBoxTrainingPlace.Size = new System.Drawing.Size(638, 350);
             groupBoxTrainingPlace.TabIndex = 2;
             groupBoxTrainingPlace.TabStop = false;
             groupBoxTrainingPlace.Text = "Select training place";
@@ -245,7 +245,7 @@ namespace RSBot.Training.Views
             groupBoxCreateScript.Controls.Add(labelCreateScriptHint);
             groupBoxCreateScript.Controls.Add(btnRecord);
             groupBoxCreateScript.Controls.Add(btnImportScript);
-            groupBoxCreateScript.Location = new System.Drawing.Point(429, 354);
+            groupBoxCreateScript.Location = new System.Drawing.Point(429, 390);
             groupBoxCreateScript.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxCreateScript.Name = "groupBoxCreateScript";
             groupBoxCreateScript.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
@@ -341,7 +341,7 @@ namespace RSBot.Training.Views
             groupBoxBerserk.Controls.Add(checkBerzerkMonsterAmount);
             groupBoxBerserk.Controls.Add(checkBerzerkWhenFull);
             groupBoxBerserk.Controls.Add(checkBerserkOnMonsterRarity);
-            groupBoxBerserk.Location = new System.Drawing.Point(429, 514);
+            groupBoxBerserk.Location = new System.Drawing.Point(429, 550);
             groupBoxBerserk.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxBerserk.Name = "groupBoxBerserk";
             groupBoxBerserk.Padding = new System.Windows.Forms.Padding(4, 12, 4, 4);
@@ -694,17 +694,16 @@ namespace RSBot.Training.Views
             txtAreaSearch.UseSystemPasswordChar = false;
             txtAreaSearch.TextChanged += txtAreaSearch_TextChanged;
             //
-            // comboTrainingAreaZone
+            // listAreaResults
             //
-            comboTrainingAreaZone.FormattingEnabled = true;
-            comboTrainingAreaZone.Location = new System.Drawing.Point(26, 217);
-            comboTrainingAreaZone.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            comboTrainingAreaZone.Name = "comboTrainingAreaZone";
-            comboTrainingAreaZone.Radius = 5;
-            comboTrainingAreaZone.ShadowDepth = 4F;
-            comboTrainingAreaZone.Size = new System.Drawing.Size(280, 34);
-            comboTrainingAreaZone.TabIndex = 42;
-            comboTrainingAreaZone.SelectedIndexChanged += comboTrainingAreaZone_SelectedIndexChanged;
+            listAreaResults.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            listAreaResults.IntegralHeight = false;
+            listAreaResults.Location = new System.Drawing.Point(26, 217);
+            listAreaResults.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            listAreaResults.Name = "listAreaResults";
+            listAreaResults.Size = new System.Drawing.Size(280, 76);
+            listAreaResults.TabIndex = 42;
+            listAreaResults.SelectedIndexChanged += listAreaResults_SelectedIndexChanged;
             //
             // labelMonsterZone
             //
@@ -731,22 +730,21 @@ namespace RSBot.Training.Views
             txtMonsterSearch.UseSystemPasswordChar = false;
             txtMonsterSearch.TextChanged += txtMonsterSearch_TextChanged;
             //
-            // comboMonsterInZone
+            // listMonsterResults
             //
-            comboMonsterInZone.FormattingEnabled = true;
-            comboMonsterInZone.Location = new System.Drawing.Point(332, 217);
-            comboMonsterInZone.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            comboMonsterInZone.Name = "comboMonsterInZone";
-            comboMonsterInZone.Radius = 5;
-            comboMonsterInZone.ShadowDepth = 4F;
-            comboMonsterInZone.Size = new System.Drawing.Size(280, 34);
-            comboMonsterInZone.TabIndex = 44;
+            listMonsterResults.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            listMonsterResults.IntegralHeight = false;
+            listMonsterResults.Location = new System.Drawing.Point(332, 217);
+            listMonsterResults.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            listMonsterResults.Name = "listMonsterResults";
+            listMonsterResults.Size = new System.Drawing.Size(280, 76);
+            listMonsterResults.TabIndex = 44;
             //
             // btnStartAreaMonsterTraining
             //
             btnStartAreaMonsterTraining.Color = System.Drawing.Color.Transparent;
             btnStartAreaMonsterTraining.Enabled = false;
-            btnStartAreaMonsterTraining.Location = new System.Drawing.Point(26, 259);
+            btnStartAreaMonsterTraining.Location = new System.Drawing.Point(26, 301);
             btnStartAreaMonsterTraining.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             btnStartAreaMonsterTraining.Name = "btnStartAreaMonsterTraining";
             btnStartAreaMonsterTraining.Radius = 6;
@@ -763,7 +761,7 @@ namespace RSBot.Training.Views
             groupBoxAdvanced.Controls.Add(checkBoxDontFollowMobs);
             groupBoxAdvanced.Controls.Add(checkAttackWeakerFirst);
             groupBoxAdvanced.Controls.Add(checkBoxDimensionPillar);
-            groupBoxAdvanced.Location = new System.Drawing.Point(429, 694);
+            groupBoxAdvanced.Location = new System.Drawing.Point(429, 730);
             groupBoxAdvanced.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             groupBoxAdvanced.Name = "groupBoxAdvanced";
             groupBoxAdvanced.Padding = new System.Windows.Forms.Padding(4, 10, 4, 4);
@@ -885,10 +883,10 @@ namespace RSBot.Training.Views
         private SDUI.Controls.TextBox txtXCoord;
         private SDUI.Controls.Label labelAreaZone;
         private SDUI.Controls.TextBox txtAreaSearch;
-        private SDUI.Controls.ComboBox comboTrainingAreaZone;
+        private System.Windows.Forms.ListBox listAreaResults;
         private SDUI.Controls.Label labelMonsterZone;
         private SDUI.Controls.TextBox txtMonsterSearch;
-        private SDUI.Controls.ComboBox comboMonsterInZone;
+        private System.Windows.Forms.ListBox listMonsterResults;
         private SDUI.Controls.Button btnStartAreaMonsterTraining;
         private SDUI.Controls.Button buttonSelectTrainingArea;
         private SDUI.Controls.Radio radioStand;

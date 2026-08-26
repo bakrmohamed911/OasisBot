@@ -94,6 +94,18 @@ public partial class Main : DoubleBufferedControl
         txtSearchPlace.Enter += txtSearchPlace_Enter;
         SubscribeEvents();
 
+        // listAreaResults/listMonsterResults are plain WinForms ListBoxes, not SDUI controls -
+        // SDUI.Controls.ComboBox turned out to be a fully custom-painted control that was only
+        // ever built for closed DropDownList mode (see the removal commit's own message), so an
+        // editable searchable combo isn't something it can safely do at all. A plain ListBox
+        // paired with a normal search TextBox reuses controls already proven reliable everywhere
+        // else in this app, at the cost of manually matching the app's color scheme here since
+        // ListBox doesn't theme itself the way SDUI's own controls do.
+        listAreaResults.BackColor = SDUI.ColorScheme.BackColor;
+        listAreaResults.ForeColor = SDUI.ColorScheme.ForeColor;
+        listMonsterResults.BackColor = SDUI.ColorScheme.BackColor;
+        listMonsterResults.ForeColor = SDUI.ColorScheme.ForeColor;
+
         MonsterObservationLog.Initialize();
         LoadAreaCatalog();
     }
@@ -827,7 +839,7 @@ public partial class Main : DoubleBufferedControl
     #endregion Create a walk script
 
     /// <summary>
-    ///     Populates comboTrainingAreaZone from live reference data (see
+    ///     Populates listAreaResults from live reference data (see
     ///     <see cref="TrainingAreaCatalog" /> - real coordinates parsed from this server's own
     ///     client files, not researched/guessed). Called from the constructor, and again from
     ///     <see cref="OnLoadCharacter" /> in case reference data wasn't ready yet at construction
@@ -840,33 +852,33 @@ public partial class Main : DoubleBufferedControl
             return;
 
         _allZones = zones;
-        comboMonsterInZone.Items.Clear();
+        listMonsterResults.Items.Clear();
         _allMonstersInSelectedZone = Array.Empty<MonsterObservationLog.ObservedMonster>();
-        RepopulateAreaCombo(string.Empty);
+        RepopulateAreaList(string.Empty);
     }
 
     /// <summary>
-    ///     Re-lists comboTrainingAreaZone from <see cref="_allZones" />, narrowed to names
-    ///     containing <paramref name="filter" /> - the search box (txtAreaSearch) drives this via
-    ///     its TextChanged handler. Filtering happens entirely in code against the ComboBox's own
-    ///     Items rather than via WinForms' built-in AutoComplete - SDUI's ComboBox is a fully
-    ///     custom-painted control (see its own OnPaint) that was only ever built for closed
-    ///     DropDownList mode, and native AutoComplete needs an editable DropDown-style combo with
-    ///     a real native edit window underneath, which this control doesn't have - confirmed live:
-    ///     enabling it threw "Interface not registered" out of the native AutoComplete COM
-    ///     machinery (StringSource) the moment items were added, and produced visibly corrupted
-    ///     double-rendered text before that.
+    ///     Re-lists listAreaResults from <see cref="_allZones" />, narrowed to names containing
+    ///     <paramref name="filter" /> - the search box (txtAreaSearch) drives this via its
+    ///     TextChanged handler. A plain ListBox rather than a searchable ComboBox: SDUI's
+    ///     ComboBox is a fully custom-painted control (see its own OnPaint) that was only ever
+    ///     built for closed DropDownList mode, with no real native edit window backing it -
+    ///     confirmed live that both an editable DropDown style and native AutoComplete break it
+    ///     (AutoComplete threw "Interface not registered" out of its own COM machinery the moment
+    ///     items were added, and the editable style alone produced corrupted double-rendered
+    ///     text). A search TextBox paired with a plain ListBox reuses controls already proven
+    ///     reliable everywhere else in this app instead.
     /// </summary>
-    private void RepopulateAreaCombo(string filter)
+    private void RepopulateAreaList(string filter)
     {
-        comboTrainingAreaZone.Items.Clear();
+        listAreaResults.Items.Clear();
 
         IEnumerable<TrainingAreaCatalog.NamedZone> matches = _allZones;
         if (!string.IsNullOrWhiteSpace(filter))
             matches = matches.Where(z => z.Name.Contains(filter, StringComparison.OrdinalIgnoreCase));
 
         foreach (var zone in matches)
-            comboTrainingAreaZone.Items.Add(zone);
+            listAreaResults.Items.Add(zone);
     }
 
     /// <summary>
@@ -876,61 +888,60 @@ public partial class Main : DoubleBufferedControl
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
     private void txtAreaSearch_TextChanged(object sender, EventArgs e)
     {
-        RepopulateAreaCombo(txtAreaSearch.Text);
+        RepopulateAreaList(txtAreaSearch.Text);
     }
 
     /// <summary>
-    ///     Handles the SelectedIndexChanged event of the comboTrainingAreaZone control -
-    ///     re-populates comboMonsterInZone with whatever <see cref="MonsterObservationLog" /> has
-    ///     actually observed spawning in this zone's region so far (empty if this character has
-    ///     never trained there yet - there's no way to know what spawns somewhere without having
+    ///     Handles the SelectedIndexChanged event of the listAreaResults control - re-populates
+    ///     listMonsterResults with whatever <see cref="MonsterObservationLog" /> has actually
+    ///     observed spawning in this zone's region so far (empty if this character has never
+    ///     trained there yet - there's no way to know what spawns somewhere without having
     ///     actually seen it).
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-    private void comboTrainingAreaZone_SelectedIndexChanged(object sender, EventArgs e)
+    private void listAreaResults_SelectedIndexChanged(object sender, EventArgs e)
     {
         txtMonsterSearch.Text = string.Empty;
         _allMonstersInSelectedZone = Array.Empty<MonsterObservationLog.ObservedMonster>();
 
-        if (comboTrainingAreaZone.SelectedItem is not TrainingAreaCatalog.NamedZone zone)
+        if (listAreaResults.SelectedItem is not TrainingAreaCatalog.NamedZone zone)
         {
-            comboMonsterInZone.Items.Clear();
+            listMonsterResults.Items.Clear();
             btnStartAreaMonsterTraining.Enabled = false;
             return;
         }
 
         _allMonstersInSelectedZone = MonsterObservationLog.GetMonstersInRegion(zone.Position.Region);
-        RepopulateMonsterCombo(string.Empty);
+        RepopulateMonsterList(string.Empty);
 
         btnStartAreaMonsterTraining.Enabled = true;
     }
 
     /// <summary>
-    ///     Re-lists comboMonsterInZone from <see cref="_allMonstersInSelectedZone" />, narrowed to
-    ///     names containing <paramref name="filter" /> - see <see cref="RepopulateAreaCombo" />'s
-    ///     own remarks for why this filters in code instead of via native AutoComplete.
+    ///     Re-lists listMonsterResults from <see cref="_allMonstersInSelectedZone" />, narrowed to
+    ///     names containing <paramref name="filter" /> - see <see cref="RepopulateAreaList" />'s
+    ///     own remarks for why this is a plain ListBox instead of a searchable ComboBox.
     /// </summary>
-    private void RepopulateMonsterCombo(string filter)
+    private void RepopulateMonsterList(string filter)
     {
-        comboMonsterInZone.Items.Clear();
+        listMonsterResults.Items.Clear();
 
         if (_allMonstersInSelectedZone.Count == 0)
         {
-            comboMonsterInZone.Items.Add("(none observed here yet - train here once to discover them)");
-            comboMonsterInZone.SelectedIndex = 0;
-            comboMonsterInZone.Enabled = false;
+            listMonsterResults.Items.Add("(none observed here yet - train here once to discover them)");
+            listMonsterResults.Enabled = false;
             return;
         }
 
-        comboMonsterInZone.Enabled = true;
+        listMonsterResults.Enabled = true;
 
         IEnumerable<MonsterObservationLog.ObservedMonster> matches = _allMonstersInSelectedZone;
         if (!string.IsNullOrWhiteSpace(filter))
             matches = matches.Where(m => m.Name.Contains(filter, StringComparison.OrdinalIgnoreCase));
 
         foreach (var monster in matches)
-            comboMonsterInZone.Items.Add(monster);
+            listMonsterResults.Items.Add(monster);
     }
 
     /// <summary>
@@ -940,7 +951,7 @@ public partial class Main : DoubleBufferedControl
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
     private void txtMonsterSearch_TextChanged(object sender, EventArgs e)
     {
-        RepopulateMonsterCombo(txtMonsterSearch.Text);
+        RepopulateMonsterList(txtMonsterSearch.Text);
     }
 
     /// <summary>
@@ -955,7 +966,7 @@ public partial class Main : DoubleBufferedControl
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
     private void btnStartAreaMonsterTraining_Click(object sender, EventArgs e)
     {
-        if (comboTrainingAreaZone.SelectedItem is not TrainingAreaCatalog.NamedZone zone)
+        if (listAreaResults.SelectedItem is not TrainingAreaCatalog.NamedZone zone)
             return;
 
         PlayerConfig.Set("RSBot.Area.Region", zone.Position.Region.Id);
@@ -969,7 +980,7 @@ public partial class Main : DoubleBufferedControl
         EventManager.FireEvent("OnSetTrainingArea");
 
         Bundles.Target.SetMonsterFilter(
-            comboMonsterInZone.SelectedItem is MonsterObservationLog.ObservedMonster monster
+            listMonsterResults.SelectedItem is MonsterObservationLog.ObservedMonster monster
                 ? monster.CodeName
                 : null
         );
@@ -1077,7 +1088,7 @@ public partial class Main : DoubleBufferedControl
 
         // Reference data (TeleportData) is guaranteed loaded by now, unlike at construction
         // time - refresh in case the constructor's own attempt found it empty.
-        if (comboTrainingAreaZone.Items.Count == 0)
+        if (listAreaResults.Items.Count == 0)
             LoadAreaCatalog();
     }
 
