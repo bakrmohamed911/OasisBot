@@ -44,7 +44,15 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<string, string, ChatType>(AppendMessage), message, sender, type);
+            // BeginInvoke, not blocking Invoke: this is dispatched off a fire-and-forget
+            // Task.Run by EventManager.FireEvent for every chat packet, so nothing waits on
+            // synchronous completion - blocking here just ties up a fresh ThreadPool worker
+            // per message until the UI thread gets to it. A burst of chat activity (party/
+            // guild/world spam) could otherwise pile up one permanently-blocked thread per
+            // message with no bound - the same failure mode confirmed live (via a frozen-
+            // process dump) in RSBot.Skills' buff handlers, fixed the same way there.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<string, string, ChatType>(AppendMessage), message, sender, type);
             return;
         }
 

@@ -212,29 +212,41 @@ public class AwaitCallback
         if (milliseconds < TIMEOUT_STEP)
             milliseconds = TIMEOUT_STEP;
 
-        Task.Factory.StartNew(() =>
+        // Poll inline on the calling thread instead of spinning up a second Task and
+        // immediately .Wait()-ing on it. The calling thread is already going to block
+        // synchronously either way - that's the whole point of this method - so routing
+        // the poll loop through Task.Factory.StartNew(...).Wait() bought nothing but cost
+        // a SECOND ThreadPool worker per call (one to sit in .Wait(), one to run the poll)
+        // for the exact same result. Every basic attack/skill/move/loot/shop action on the
+        // training tick calls this at least once, and that tick loop itself now runs on a
+        // dedicated thread (see Bot.RunAsync) rather than a borrowed pool worker - but
+        // plenty of other callers (event handlers dispatched via EventManager.FireEvent's
+        // own Task.Run, "OnTick" subscribers, etc.) still call this from genuine pool
+        // threads, so halving the per-call pool demand here matters. Under sustained
+        // combat load this doubled demand could outpace .NET's throttled pool-growth rate
+        // for long enough that even this method's own timeout - itself needing a free
+        // worker to fire - stopped being a reliable bound, manifesting as the whole app
+        // going silent (near-zero CPU, no new log lines, no exception) rather than
+        // recovering after 2-5 seconds like the timeout value implies.
+        var invoked = false;
+        do
+        {
+            Thread.Sleep(TIMEOUT_STEP);
+            milliseconds -= TIMEOUT_STEP;
+
+            lock (_lock)
             {
-                var invoked = false;
-                do
-                {
-                    Thread.Sleep(TIMEOUT_STEP);
-                    milliseconds -= TIMEOUT_STEP;
+                invoked = _invoked;
+            }
+        } while (!invoked && milliseconds > 0);
 
-                    lock (_lock)
-                    {
-                        invoked = _invoked;
-                    }
-                } while (!invoked && milliseconds > 0);
+        lock (_lock)
+        {
+            _timeout = !_invoked;
 
-                lock (_lock)
-                {
-                    _timeout = !_invoked;
-
-                    if (_timeout)
-                        Log.Debug($"Callback timeout, ResponseOpcode: 0x{ResponseOpcode:X}");
-                }
-            })
-            .Wait();
+            if (_timeout)
+                Log.Debug($"Callback timeout, ResponseOpcode: 0x{ResponseOpcode:X}");
+        }
     }
 
     public async Task AwaitResponseAsync(

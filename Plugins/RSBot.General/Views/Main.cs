@@ -76,7 +76,13 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnTogglePendingWindowRequested));
+            // BeginInvoke, not blocking Invoke - see RSBot.Skills' OnAddBuff for why: nothing
+            // here needs the synchronous completion Invoke() provides, and a burst of
+            // same-named events blocking-Invoking one ThreadPool worker each with no bound
+            // is a confirmed live freeze cause (frozen-process dump), fixed the same way
+            // across every plugin that had this pattern.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnTogglePendingWindowRequested));
             return;
         }
         if (!AutoLogin.Pending)
@@ -104,7 +110,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnLoadCharacterRefreshSkillSections));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnLoadCharacterRefreshSkillSections));
             return;
         }
         RefreshSkillSections();
@@ -114,7 +122,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<SkillInfo>(OnSkillLearned), learnedSkill);
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<SkillInfo>(OnSkillLearned), learnedSkill);
             return;
         }
         RefreshSkillSections();
@@ -124,7 +134,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<SkillInfo, SkillInfo>(OnSkillChanged), oldSkill, newSkill);
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<SkillInfo, SkillInfo>(OnSkillChanged), oldSkill, newSkill);
             return;
         }
         RefreshSkillSections();
@@ -134,7 +146,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<MasteryInfo>(OnLearnSkillMastery), info);
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<MasteryInfo>(OnLearnSkillMastery), info);
             return;
         }
         RefreshSkillSections();
@@ -147,7 +161,10 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnInitialized));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above
+            // (this one only fires once at startup, but there's no reason to block either).
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnInitialized));
             return;
         }
         comboBoxClientType.Items.AddRange(Enum.GetNames(typeof(GameClientType)));
@@ -292,7 +309,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnStartClient));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnStartClient));
             return;
         }
         btnStartClient.Enabled = false;
@@ -311,7 +330,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnExitClient));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnExitClient));
             return;
         }
         btnStartClient.Text = LanguageManager.GetLang("Start") + " Client";
@@ -340,7 +361,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnClientConnected));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnClientConnected));
             return;
         }
         btnStartClientless.Enabled = false;
@@ -350,7 +373,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnSwitchToClientless));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnSwitchToClientless));
             return;
         }
         btnStartClientless.Text = LanguageManager.GetLang("Disconnect");
@@ -365,7 +390,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnAutoLoginAborted));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnAutoLoginAborted));
             return;
         }
         View.PendingWindow?.Hide();
@@ -376,7 +403,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnAutoReloginStarted));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnAutoReloginStarted));
             return;
         }
         btnStartClient.Enabled = false;
@@ -387,7 +416,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnClientDisconnected));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnClientDisconnected));
             return;
         }
 
@@ -403,7 +434,10 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnAutoReloginOngoing));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above
+            // (this one in particular can fire repeatedly during a reconnect-retry loop).
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnAutoReloginOngoing));
             return;
         }
 
@@ -416,7 +450,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnClientProcessStarted));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnClientProcessStarted));
             return;
         }
 
@@ -427,7 +463,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnClientlessProcessStarted));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnClientlessProcessStarted));
             return;
         }
 
@@ -438,7 +476,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnEnterGame));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnEnterGame));
             return;
         }
         if (!Game.Clientless)
@@ -1042,7 +1082,9 @@ internal partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(OnIncreaseStat));
+            // BeginInvoke, not blocking Invoke - see OnTogglePendingWindowRequested above.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(OnIncreaseStat));
             return;
         }
         if (Game.Player.StatPoints < numIncInt.Value + numIncStr.Value)

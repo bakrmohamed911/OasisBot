@@ -45,7 +45,18 @@ public partial class Main : DoubleBufferedControl
             if (!treeQuests.Created)
                 return;
 
-            treeQuests.Invoke(() =>
+            // BeginInvoke, not blocking Invoke - see RSBot.Skills' OnAddBuff for why: nothing
+            // here needs the synchronous completion Invoke() provides, and this fires on
+            // every "OnUpdateQuests" event, so it shouldn't tie up a ThreadPool worker per
+            // update with no bound - the same confirmed-live failure mode fixed the same
+            // way elsewhere. Guarded on IsHandleCreated the same way too, in place of the
+            // InvokeRequired check this never had (Invoke() ran synchronously if already on
+            // the UI thread; BeginInvoke posts instead either way, which is fine here since
+            // nothing downstream waits on this completing before it returns).
+            if (!treeQuests.IsHandleCreated)
+                return;
+
+            treeQuests.BeginInvoke(() =>
             {
                 treeQuests.Nodes.Clear();
                 foreach (var activeQuest in Game.Player.QuestLog.ActiveQuests)

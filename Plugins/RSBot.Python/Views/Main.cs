@@ -80,7 +80,11 @@ public partial class Main : DoubleBufferedControl
     {
         if (InvokeRequired)
         {
-            Invoke(new System.Action(() => AppendLog(text)));
+            // BeginInvoke, not blocking Invoke - see RSBot.Skills' OnAddBuff for why: nothing
+            // here needs the synchronous completion Invoke() provides, and this can be
+            // called at a high rate by an active Python plugin's own logging.
+            if (IsHandleCreated)
+                BeginInvoke(new System.Action(() => AppendLog(text)));
             return;
         }
 

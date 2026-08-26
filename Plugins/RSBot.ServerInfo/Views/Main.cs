@@ -25,7 +25,11 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action(UpdateServerInfo));
+            // BeginInvoke, not blocking Invoke - see RSBot.Chat's AppendMessage/RSBot.Skills'
+            // OnAddBuff for why: nothing here needs the synchronous completion Invoke()
+            // provides, and blocking ties up a ThreadPool worker for no benefit.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action(UpdateServerInfo));
             return;
         }
         lvServerInfo.Items.Clear();

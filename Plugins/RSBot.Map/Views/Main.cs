@@ -154,7 +154,13 @@ public partial class Main : DoubleBufferedControl
     {
         if (lvMonster.InvokeRequired)
         {
-            lvMonster.Invoke(() => AddGridItem(name, type, level, position));
+            // BeginInvoke, not blocking Invoke - see RSBot.Skills' OnAddBuff for why: nothing
+            // here needs the synchronous completion Invoke() provides, and this fires per
+            // monster spawn detected on the map - a burst of spawns (entering a populated
+            // area) could otherwise pile up one permanently-blocked thread per monster with
+            // no bound, the same confirmed-live failure mode fixed the same way elsewhere.
+            if (lvMonster.IsHandleCreated)
+                lvMonster.BeginInvoke(() => AddGridItem(name, type, level, position));
             return;
         }
 

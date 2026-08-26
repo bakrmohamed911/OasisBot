@@ -45,6 +45,23 @@ public partial class CosController : DoubleBufferedControl
     {
         panel.Controls.Clear();
         panelTopCenter.Controls.Clear();
+
+        // Controls.Clear() above only detaches these from their parent panels - it does
+        // NOT release their native window handles. _cachedControls.Clear() then drops the
+        // last managed reference, so without disposing first, every cached CosControlBase
+        // (plus its sibling MiniCosControl, which isn't a child control and so wouldn't be
+        // disposed recursively anyway) leaks its ~10-12 HWNDs until GC finalizes it - and
+        // the next relogin immediately reconstructs a fresh set on top, since the cache is
+        // now empty. Same handle-leak class already fixed elsewhere (see AttributesSettingsView,
+        // QuestSidebarElement, CommandCenter Main) - this one fires once per disconnect, not
+        // once per repaint, so with a COS kept summoned across reconnects it drains the
+        // window-handle quota fast on frequent relogin cycles.
+        foreach (var control in _cachedControls.Values)
+        {
+            control.MiniCosControl?.Dispose();
+            control.Dispose();
+        }
+
         _cachedControls.Clear();
         _selectedIndex = 0;
         Visible = false;
@@ -139,8 +156,15 @@ public partial class CosController : DoubleBufferedControl
             ReOrder();
         });
 
+        // BeginInvoke, not blocking Invoke - see RSBot.Skills' OnAddBuff for why: nothing
+        // downstream waits on this completing (OnSummonCos is just another EventManager
+        // subscriber), so blocking only cost a ThreadPool worker for no benefit - the same
+        // confirmed-live failure mode fixed the same way elsewhere.
         if (panel.InvokeRequired)
-            panel.Invoke(action);
+        {
+            if (panel.IsHandleCreated)
+                panel.BeginInvoke(action);
+        }
         else
             action();
     }
@@ -165,8 +189,12 @@ public partial class CosController : DoubleBufferedControl
             ReOrder();
         });
 
+        // BeginInvoke, not blocking Invoke - see TryAddControlToPanel above.
         if (InvokeRequired)
-            panel.Invoke(action);
+        {
+            if (panel.IsHandleCreated)
+                panel.BeginInvoke(action);
+        }
         else
             action();
     }

@@ -61,7 +61,18 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<uint, ItemPerk>(OnRemoveItemPerk), targetId, removedPerk);
+            // BeginInvoke, not the blocking Invoke this used to call: every one of this
+            // file's event handlers is dispatched off a fire-and-forget Task.Run by
+            // EventManager.FireEvent (see its own comment), so nothing here waits on the
+            // synchronous completion Invoke() provides - blocking bought nothing but tied
+            // up a fresh ThreadPool worker per call until the UI thread got around to it.
+            // Under a burst of same-named events (e.g. a self-buff refreshing every few
+            // seconds firing OnAddBuff/OnRemoveBuff repeatedly), that pattern created one
+            // permanently-blocked worker thread per event with no bound on how many could
+            // pile up - confirmed live via a frozen-process dump showing 350+ threads stuck
+            // exactly here waiting on Control.Invoke, not on any single deadlock.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<uint, ItemPerk>(OnRemoveItemPerk), targetId, removedPerk);
             return;
         }
         if (targetId != Game.Player.UniqueId || removedPerk == null)
@@ -88,7 +99,9 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<uint, uint>(OnAddItemPerk), targetId, token);
+            // See the comment in OnRemoveItemPerk just above - same fix, same reason.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<uint, uint>(OnAddItemPerk), targetId, token);
             return;
         }
         if (targetId != Game.Player.UniqueId)
@@ -402,7 +415,12 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<SkillInfo>(OnAddBuff), buffInfo);
+            // See the comment in OnRemoveItemPerk above - same fix, same reason. This
+            // handler specifically is the one a live frozen-process dump caught with 177
+            // threads stuck here at once (paired with an equal pile in OnRemoveBuff below)
+            // during a fast-refreshing self-buff.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<SkillInfo>(OnAddBuff), buffInfo);
             return;
         }
         try
@@ -425,7 +443,9 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<SkillInfo>(OnRemoveBuff), removingBuff);
+            // See the comment in OnAddBuff above - same fix, same reason, same live repro.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<SkillInfo>(OnRemoveBuff), removingBuff);
             return;
         }
         try
@@ -459,7 +479,9 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<SkillInfo>(OnSkillLearned), learnedSkill);
+            // See the comment in OnRemoveItemPerk above - same fix, same reason.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<SkillInfo>(OnSkillLearned), learnedSkill);
             return;
         }
         Log.NotifyLang("SkillLearned", learnedSkill.Record.GetRealName());
@@ -475,7 +497,9 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<SkillInfo, SkillInfo>(OnSkillUpgraded), oldSkill, newSkill);
+            // See the comment in OnRemoveItemPerk above - same fix, same reason.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<SkillInfo, SkillInfo>(OnSkillUpgraded), oldSkill, newSkill);
             return;
         }
         LoadSkills();
@@ -490,7 +514,9 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<SkillInfo, SkillInfo>(OnWithdrawSkill), oldSkill, newSkill);
+            // See the comment in OnRemoveItemPerk above - same fix, same reason.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<SkillInfo, SkillInfo>(OnWithdrawSkill), oldSkill, newSkill);
             return;
         }
         LoadSkills();
@@ -504,7 +530,9 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(new Action<MasteryInfo>(OnLearnSkillMastery), info);
+            // See the comment in OnRemoveItemPerk above - same fix, same reason.
+            if (IsHandleCreated)
+                this.BeginInvoke(new Action<MasteryInfo>(OnLearnSkillMastery), info);
             return;
         }
         Log.NotifyLang("MasteryUpgraded", info.Record.Name);
@@ -519,7 +547,11 @@ public partial class Main : DoubleBufferedControl
     {
         if (this.InvokeRequired)
         {
-            this.Invoke(OnLoadCharacter);
+            // See the comment in OnRemoveItemPerk above - same fix, same reason (this one
+            // fires only once per login, not in a hot loop, but there's no reason for it to
+            // keep the caller's thread blocked either).
+            if (IsHandleCreated)
+                this.BeginInvoke(OnLoadCharacter);
             return;
         }
         comboMonsterType.SelectedIndex = 0;

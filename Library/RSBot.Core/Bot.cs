@@ -66,7 +66,22 @@ public class Bot
             tokenSource = new CancellationTokenSource();
             TokenSource = tokenSource;
             Running = true;
-            _workerTask = Task.Run(() => RunAsync(tokenSource), tokenSource.Token);
+
+            // LongRunning, like Kernel.ComponentUpdaterAsync's own tick loop - this task
+            // lives for the entire bot session (every Botbase.Tick() call: target/attack/
+            // movement/loot/buff/berzerk/protection, each of which can synchronously block
+            // on AwaitCallback.AwaitResponse() waiting on the server) rather than for a
+            // single short unit of work, so it shouldn't be a plain Task.Run competing with
+            // the general ThreadPool for a worker on every one of those blocking waits -
+            // that competition, under sustained combat load, was part of what could push
+            // the pool into starvation long enough for the whole app to go silent (see the
+            // comment in AwaitCallback.AwaitResponse for the other half of this).
+            _workerTask = Task.Factory.StartNew(
+                () => RunAsync(tokenSource),
+                tokenSource.Token,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default
+            ).Unwrap();
         }
     }
 
