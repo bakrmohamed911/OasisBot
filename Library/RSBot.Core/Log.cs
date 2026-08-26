@@ -161,6 +161,11 @@ public class Log
 
         using (var stream = File.AppendText(filePath))
         {
+            // Every entry in this file used to be timestamp-less, making it impossible to tell
+            // whether a given crash trace happened just now or hours/builds ago - directly cost
+            // real diagnostic time more than once (had to fall back on file mtime, which only
+            // reflects the *last* write to the whole day's file, not any individual entry).
+            stream.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]");
             stream.WriteLine(obj.ToString());
         }
     }

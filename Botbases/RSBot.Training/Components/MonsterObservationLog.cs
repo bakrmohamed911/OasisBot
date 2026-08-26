@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using RSBot.Core;
 using RSBot.Core.Event;
+using RSBot.Core.Objects;
 using RSBot.Core.Objects.Spawn;
 
 namespace RSBot.Training.Components;
@@ -109,20 +110,52 @@ public static class MonsterObservationLog
     }
 
     /// <summary>
-    ///     Every monster observed so far in the given region, or empty if none have been seen
-    ///     there yet (a region this character has never actually visited/trained in).
+    ///     Every monster observed so far "in" the given region - not an exact-region-only match,
+    ///     since a single named zone (what a Training Area's teleport-gate entry actually points
+    ///     at) almost never corresponds to just one region tile. Confirmed live: a dungeon's
+    ///     observed monsters landed across two different, numerically adjacent region IDs (two
+    ///     floors of the same instance), while its teleport gate's own region had zero exact
+    ///     matches - an exact match here would have looked "not fetched at all" despite the
+    ///     underlying data genuinely being there. Overworld regions are geographic (region ID
+    ///     encodes an X/Y map tile - see <see cref="Region" />'s own layout), so nearby tiles are
+    ///     included by real distance; dungeon regions aren't laid out geographically at all (IDs
+    ///     are closer to arbitrary/sequential per floor), so nearby *numeric* IDs are used there
+    ///     instead as the closest available signal - weaker, but the only one there is.
     /// </summary>
-    public static IReadOnlyList<ObservedMonster> GetMonstersInRegion(ushort region)
+    public static IReadOnlyList<ObservedMonster> GetMonstersInRegion(Region region, int tileRadius = 3)
     {
         lock (_lock)
         {
             if (_byRegion == null)
                 return Array.Empty<ObservedMonster>();
 
-            return _byRegion.TryGetValue(region, out var monsters)
-                ? monsters.Values.OrderBy(m => m.Level).ToList()
-                : Array.Empty<ObservedMonster>();
+            var result = new Dictionary<string, ObservedMonster>();
+
+            foreach (var kvp in _byRegion)
+            {
+                if (!IsNearby(region, new Region(kvp.Key), tileRadius))
+                    continue;
+
+                foreach (var monster in kvp.Value.Values)
+                    result.TryAdd(monster.CodeName, monster);
+            }
+
+            return result.Values.OrderBy(m => m.Level).ToList();
         }
+    }
+
+    private static bool IsNearby(Region a, Region b, int tileRadius)
+    {
+        if (a.Id == b.Id)
+            return true;
+
+        if (a.IsDungeon != b.IsDungeon)
+            return false;
+
+        if (a.IsDungeon)
+            return Math.Abs(a.Id - b.Id) <= tileRadius;
+
+        return Math.Abs(a.X - b.X) <= tileRadius && Math.Abs(a.Y - b.Y) <= tileRadius;
     }
 
     private static void Load()
