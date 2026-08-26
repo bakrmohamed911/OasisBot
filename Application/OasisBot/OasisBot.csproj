@@ -46,6 +46,19 @@
     </ItemGroup>
     <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="..\..\Build\Data\%(RecursiveDir)" />
   </Target>
+  <Target Name="EnsureLogDirectories" AfterTargets="Build">
+    <!-- User/Logs/... is only ever created on demand at runtime (RSBot.Log.Views.Main.AppendLog,
+         RSBot.Core.Log.FatalFileOnly) - so a fresh checkout/CI build has no Logs folder at all
+         until the app has actually logged something. Create the well-known subfolders up front
+         so the file logs this app writes are always at a predictable, already-existing path
+         instead of only appearing after the fact. scripts/build.ps1 -Clean already preserves an
+         existing Build/User across a clean build (moves it out, then back), so this is purely
+         additive - it never overwrites real log data, only fills in directories that don't exist. -->
+    <ItemGroup>
+      <LogDirectories Include="..\..\Build\User\Logs;..\..\Build\User\Logs\Environment;..\..\Build\User\Logs\Exceptions" />
+    </ItemGroup>
+    <MakeDir Directories="@(LogDirectories)" Condition="!Exists('%(LogDirectories.Identity)')" />
+  </Target>
   <Target Name="RemoveUnusedRuntimeAssets" AfterTargets="Build">
     <!-- PlatformTarget above already hard-pins this whole app to x86, so only the win-x86
          SkiaSharp native asset is ever actually used - the other 3 RID variants (win-x64,
