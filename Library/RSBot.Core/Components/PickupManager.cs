@@ -358,6 +358,11 @@ public class PickupManager
 
     public static void LoadFilter()
     {
+        // Same "OnEnterGame" fires-once-per-login (not once-per-process) situation as
+        // ShoppingManager.LoadFilters() - clear first or a relogin mid-session duplicates
+        // every entry already in this static list.
+        PickupFilter.Clear();
+
         var config = PlayerConfig.GetArray<string>("RSBot.Shopping.Pickup");
 
         foreach (var item in config)

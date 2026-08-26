@@ -751,6 +751,14 @@ public static class ShoppingManager
 
     public static void LoadFilters()
     {
+        // Called from RSBot.Items' LoadSettings(), itself subscribed to "OnEnterGame" - i.e.
+        // once per login, not just once per process. Without clearing first, every relogin
+        // during a session (auto-relogin after a disconnect, switching characters, etc.)
+        // appended the same saved entries onto whatever was already in these static lists,
+        // silently piling up duplicates.
+        SellFilter.Clear();
+        StoreFilter.Clear();
+
         var configSell = PlayerConfig.GetArray<string>("RSBot.Shopping.Sell");
         var configStore = PlayerConfig.GetArray<string>("RSBot.Shopping.Store");
 

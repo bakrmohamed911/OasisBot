@@ -20,12 +20,23 @@ public static class PlayerConfig
     private static readonly string[] PerCharacterPrefixes = { "RSBot.Skills.", "RSBot.Party.Buffing", "RSBot.Shopping." };
 
     /// <summary>
-    ///     Carve-outs from <see cref="PerCharacterPrefixes" /> - "what to sell/store" (and the
-    ///     matching "also sell/store pet items" toggles) is a filter list like every other shared
-    ///     item filter, not part of "what to buy"/"what to cast", so it's shared too even though
-    ///     it lives under the same "RSBot.Shopping." prefix as the (still per-character) buy list.
+    ///     Carve-outs from <see cref="PerCharacterPrefixes" /> - "what to pickup/sell/store" (and
+    ///     the matching "also sell/store pet items" toggles) is a filter list like every other
+    ///     shared item filter, not part of "what to buy"/"what to cast", so it's shared too even
+    ///     though it lives under the same "RSBot.Shopping." prefix as the (still per-character) buy
+    ///     list. "RSBot.Shopping.Pickup" was missed here originally - Sell/Store were carved out but
+    ///     Pickup (the third column of the same "Item filter" tab, saved by
+    ///     <see cref="Components.PickupManager.SaveFilter" />) stayed accidentally per-character,
+    ///     so it silently didn't follow a character between accounts/profiles the way Sell/Store did.
     /// </summary>
-    private static readonly string[] SharedExceptions = { "RSBot.Shopping.Sell", "RSBot.Shopping.Store" };
+    private static readonly string[] SharedExceptions =
+    {
+        "RSBot.Shopping.Sell",
+        "RSBot.Shopping.Store",
+        "RSBot.Shopping.Pickup",
+        "RSBot.Shopping.SellPetItems",
+        "RSBot.Shopping.StorePetItems",
+    };
 
     /// <summary>
     ///     The per-character config - only ever holds keys matching <see cref="PerCharacterPrefixes" />.
