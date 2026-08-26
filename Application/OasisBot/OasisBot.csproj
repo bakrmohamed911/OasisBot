@@ -46,6 +46,22 @@
     </ItemGroup>
     <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="..\..\Build\Data\%(RecursiveDir)" />
   </Target>
+  <Target Name="BuildPluginsAndBots" AfterTargets="Build">
+    <!-- Plugins/Botbases are loaded dynamically at runtime (Data/Plugins, Data/Bots) rather than
+         referenced by this project at compile time, so MSBuild's normal dependency graph never
+         rebuilds them when only this project builds - `dotnet build
+         Application\OasisBot\OasisBot.csproj` reports "Build succeeded" while every plugin DLL
+         silently stays exactly as stale as it was before. Confirmed the hard way in a debugging
+         session: several plugin fixes sat uncompiled for hours despite repeated successful builds
+         of this project alone, only surfacing once DLL timestamps were compared directly.
+         scripts\build.ps1 and a plain `dotnet build OasisBot.sln`/solution build in an IDE don't
+         have this gap (the solution's own project list already covers everything) - this target
+         exists so building *just this project*, by any tool, closes it too. -->
+    <ItemGroup>
+      <PluginAndBotProjects Include="..\..\Plugins\**\*.csproj;..\..\Botbases\**\*.csproj" />
+    </ItemGroup>
+    <MSBuild Projects="@(PluginAndBotProjects)" Properties="Configuration=$(Configuration)" BuildInParallel="true" />
+  </Target>
   <Target Name="EnsureLogDirectories" AfterTargets="Build">
     <!-- User/Logs/... is only ever created on demand at runtime (RSBot.Log.Views.Main.AppendLog,
          RSBot.Core.Log.FatalFileOnly) - so a fresh checkout/CI build has no Logs folder at all
