@@ -8,6 +8,7 @@ using RSBot.Core;
 using RSBot.Core.Event;
 using RSBot.Core.Objects;
 using RSBot.Training;
+using RSBot.Training.Bundle;
 using RSBot.Training.Components;
 using RSBot.Training.Views.Dialogs;
 using SDUI.Controls;
@@ -79,10 +80,8 @@ public partial class Main : DoubleBufferedControl
         txtSearchPlace.Enter += txtSearchPlace_Enter;
         SubscribeEvents();
 
-        comboRecommendedZone.Items.Add("(Select a level range...)");
-        foreach (var zone in RecommendedTrainingZones.All)
-            comboRecommendedZone.Items.Add(zone);
-        comboRecommendedZone.SelectedIndex = 0;
+        MonsterObservationLog.Initialize();
+        LoadAreaCatalog();
     }
 
     /// <summary>
@@ -814,22 +813,91 @@ public partial class Main : DoubleBufferedControl
     #endregion Create a walk script
 
     /// <summary>
-    ///     Handles the SelectedIndexChanged event of the comboRecommendedZone control - purely
-    ///     informational (see <see cref="RecommendedTrainingZones" />'s own remarks for why this
-    ///     doesn't set the Area's coordinates directly): shows where to travel and a reminder to
-    ///     use the existing "Current" button once actually standing there.
+    ///     Populates comboTrainingAreaZone from live reference data (see
+    ///     <see cref="TrainingAreaCatalog" /> - real coordinates parsed from this server's own
+    ///     client files, not researched/guessed). Called from the constructor, and again from
+    ///     <see cref="OnLoadCharacter" /> in case reference data wasn't ready yet at construction
+    ///     time (this control can exist before a character has ever logged in).
+    /// </summary>
+    private void LoadAreaCatalog()
+    {
+        var zones = TrainingAreaCatalog.GetZones();
+        if (zones.Count == 0)
+            return;
+
+        comboTrainingAreaZone.Items.Clear();
+        comboMonsterInZone.Items.Clear();
+
+        foreach (var zone in zones)
+            comboTrainingAreaZone.Items.Add(zone);
+    }
+
+    /// <summary>
+    ///     Handles the SelectedIndexChanged event of the comboTrainingAreaZone control -
+    ///     re-populates comboMonsterInZone with whatever <see cref="MonsterObservationLog" /> has
+    ///     actually observed spawning in this zone's region so far (empty if this character has
+    ///     never trained there yet - there's no way to know what spawns somewhere without having
+    ///     actually seen it).
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-    private void comboRecommendedZone_SelectedIndexChanged(object sender, EventArgs e)
+    private void comboTrainingAreaZone_SelectedIndexChanged(object sender, EventArgs e)
     {
-        if (comboRecommendedZone.SelectedItem is not RecommendedTrainingZones.RecommendedZone zone)
+        comboMonsterInZone.Items.Clear();
+
+        if (comboTrainingAreaZone.SelectedItem is not TrainingAreaCatalog.NamedZone zone)
         {
-            labelRecommendedZoneHint.Text = "";
+            btnStartAreaMonsterTraining.Enabled = false;
             return;
         }
 
-        labelRecommendedZoneHint.Text = $"{zone.Hint} Travel there, then click \"Current\" above to set it.";
+        var monsters = MonsterObservationLog.GetMonstersInRegion(zone.Position.Region);
+        if (monsters.Count == 0)
+        {
+            comboMonsterInZone.Items.Add("(none observed here yet - train here once to discover them)");
+            comboMonsterInZone.SelectedIndex = 0;
+            comboMonsterInZone.Enabled = false;
+        }
+        else
+        {
+            comboMonsterInZone.Enabled = true;
+            foreach (var monster in monsters)
+                comboMonsterInZone.Items.Add(monster);
+        }
+
+        btnStartAreaMonsterTraining.Enabled = true;
+    }
+
+    /// <summary>
+    ///     Handles the Click event of the btnStartAreaMonsterTraining control - sets the Area to
+    ///     the selected zone's real coordinates (from TrainingAreaCatalog, so this is always a
+    ///     genuine, server-accurate position) and, if a specific observed monster was also picked,
+    ///     restricts targeting to it via <see cref="Bundle.Target.TargetBundle.SetMonsterFilter" />.
+    ///     Does not start the bot itself - same as every other Area-setting control here, this
+    ///     only stages the configuration; the existing Start button still runs it.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+    private void btnStartAreaMonsterTraining_Click(object sender, EventArgs e)
+    {
+        if (comboTrainingAreaZone.SelectedItem is not TrainingAreaCatalog.NamedZone zone)
+            return;
+
+        PlayerConfig.Set("RSBot.Area.Region", zone.Position.Region.Id);
+        PlayerConfig.Set("RSBot.Area.X", zone.Position.XOffset);
+        PlayerConfig.Set("RSBot.Area.Y", zone.Position.YOffset);
+        PlayerConfig.Set("RSBot.Area.Z", zone.Position.ZOffset);
+
+        if (zone.Radius > 0)
+            PlayerConfig.Set("RSBot.Area.Radius", (int)zone.Radius);
+
+        EventManager.FireEvent("OnSetTrainingArea");
+
+        Bundles.Target.SetMonsterFilter(
+            comboMonsterInZone.SelectedItem is MonsterObservationLog.ObservedMonster monster
+                ? monster.CodeName
+                : null
+        );
     }
 
     /// <summary>
@@ -931,6 +999,11 @@ public partial class Main : DoubleBufferedControl
 
         RefreshTrainingPlaceList();
         SelectSavedTrainingPlace();
+
+        // Reference data (TeleportData) is guaranteed loaded by now, unlike at construction
+        // time - refresh in case the constructor's own attempt found it empty.
+        if (comboTrainingAreaZone.Items.Count == 0)
+            LoadAreaCatalog();
     }
 
     private void buttonSelectTrainingArea_Click(object sender, EventArgs e)

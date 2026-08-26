@@ -17,8 +17,20 @@ internal class TargetBundle : IBundle
 
     private Dictionary<uint, int> _blacklist;
     private int _lastDiagnosticTick;
+    private string _monsterFilterCodeName;
 
     #endregion Fields
+
+    /// <summary>
+    ///     Restricts GetNearestEnemy() to only the given monster CodeName (set from the Training
+    ///     tab's Area+Monster selection - see Views.Main.btnStartAreaMonsterTraining_Click), or
+    ///     removes any restriction when passed null/empty. Purely additive to the existing
+    ///     candidate filter below - doesn't touch the rarity-preference/distance ordering at all,
+    ///     since that logic is already delicately tuned (see the comments on the OrderBy chain in
+    ///     GetNearestEnemy()) and this only needs to narrow *which* monsters are candidates in the
+    ///     first place, not how they're ranked against each other.
+    /// </summary>
+    public void SetMonsterFilter(string codeName) => _monsterFilterCodeName = codeName;
 
     #region Constructor
 
@@ -275,7 +287,13 @@ internal class TargetBundle : IBundle
                     && //Isn't pandora box
                     !(m.Record.IsDimensionPillar && ignorePillar)
                     && //Isn't dimension pillar
-                    !m.Record.IsSummonFlower,
+                    !m.Record.IsSummonFlower
+                    && //Isn't summon flower
+                    (
+                        string.IsNullOrEmpty(_monsterFilterCodeName)
+                        || m.AttackingPlayer
+                        || m.Record.CodeName == _monsterFilterCodeName
+                    ), //Matches the Area+Monster selection's specific target, if one is set (still lets anything already attacking us through, same as the area-bounds bypass above)
                 out var entities
             )
         )
