@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RSBot.Core;
@@ -575,6 +576,111 @@ public partial class Main : DoubleBufferedControl
     }
 
     /// <summary>
+    ///     One-time (per shared config, not per-character - see the "RSBot.Items." key prefix,
+    ///     which PlayerConfig routes to the shared store) seeding of sensible default pickup/store
+    ///     filters, requested by the user rather than shipped as hardcoded item lists (the item
+    ///     reference data - and therefore item names/existence - depends on the private server,
+    ///     so this queries the live-loaded reference data the same way the manual search box
+    ///     does, instead of a static list that could be wrong or incomplete for a given server).
+    ///     Only ever runs once (guarded by <c>appliedKey</c>) so it never fights a user's own
+    ///     later changes to these same items.
+    /// </summary>
+    private void ApplyDefaultItemFiltersIfNeeded()
+    {
+        const string appliedKey = "RSBot.Items.DefaultFiltersApplied";
+        if (PlayerConfig.Get(appliedKey, false))
+            return;
+
+        try
+        {
+            var everything = new List<TypeIdFilter> { new TypeIdFilter { CompareByTypeID1 = true, TypeID1 = 3 } };
+            var alchemy = GetAlchemyFilters();
+
+            // SOX: ObjectRarity.ClassC and above - "SOX" is the game's own name for this rarity
+            // tier (see the comment on ObjectRarity.ClassC itself), which is also the tier that
+            // gets the "(Seal of Star/Moon/Sun/Nova)" name suffix (RefObjItem.GetRarityName()).
+            ApplyDefaultFilter(
+                Game.ReferenceManager.GetFilteredItems(
+                    new List<TypeIdFilter> { new TypeIdFilter(p => (p as RefObjItem)?.Rarity >= ObjectRarity.ClassC) }
+                ),
+                pickup: true,
+                store: true
+            );
+
+            // Elixirs and Attribute/Magic stones share the same TypeID category (the "Alchemy"
+            // checkbox's filters - TypeID3 10 and 11) - narrow by name to split them apart.
+            ApplyDefaultFilter(
+                Game.ReferenceManager.GetFilteredItems(alchemy, searchPattern: "Elixir"),
+                pickup: true,
+                store: true
+            );
+            ApplyDefaultFilter(
+                Game.ReferenceManager.GetFilteredItems(alchemy, searchPattern: "Stone"),
+                pickup: true,
+                store: true
+            );
+
+            // Scrolls - pickup and store, no category restriction beyond the name.
+            ApplyDefaultFilter(
+                Game.ReferenceManager.GetFilteredItems(everything, searchPattern: "Scroll"),
+                pickup: true,
+                store: true
+            );
+
+            // Event "-Latter" letters (collect-the-letters event, e.g. spelling "HAPPY") -
+            // pickup only, no store.
+            ApplyDefaultFilter(
+                Game.ReferenceManager.GetFilteredItems(everything, searchPattern: "-Latter"),
+                pickup: true,
+                store: false
+            );
+
+            // Keys - pickup only. A plain substring search for "key" also matches "Monkey"/
+            // "Turkey"-named items (confirmed live - the in-app search box's own "Key" result
+            // list includes "Turkey Stone"/"Monkey trinket"/etc.), so require a whole-word match
+            // instead of taking the raw search results.
+            var keyItems = Game
+                .ReferenceManager.GetFilteredItems(everything, searchPattern: "Key")
+                .Where(i => Regex.IsMatch(i.GetRealName(), @"\bKey\b", RegexOptions.IgnoreCase));
+            ApplyDefaultFilter(keyItems, pickup: true, store: false);
+
+            ShoppingManager.SaveFilters();
+            PickupManager.SaveFilter();
+
+            Log.Notify(
+                "[Items] Applied default pickup/store filters (SOX, Elixirs, Attribute/Magic stones, Scrolls, event letters, keys)."
+            );
+        }
+        catch (Exception e)
+        {
+            // Best-effort - a reference-data hiccup here shouldn't block normal login/settings
+            // load, and leaving appliedKey unset means it'll just retry on the next login.
+            Log.Warn($"[Items] Failed to apply default item filters: {e.Message}");
+            return;
+        }
+
+        PlayerConfig.Set(appliedKey, true);
+        PlayerConfig.Save();
+    }
+
+    /// <summary>
+    ///     Adds every item in <paramref name="items" /> to the pickup and/or store filter lists
+    ///     (in-memory only - callers save once after all categories are applied), skipping any
+    ///     already present so this is safe to call repeatedly across overlapping categories.
+    /// </summary>
+    private static void ApplyDefaultFilter(IEnumerable<RefObjItem> items, bool pickup, bool store)
+    {
+        foreach (var item in items)
+        {
+            if (pickup && !PickupManager.PickupFilter.Any(p => p.CodeName == item.CodeName))
+                PickupManager.PickupFilter.Add((item.CodeName, false));
+
+            if (store && !ShoppingManager.StoreFilter.Contains(item.CodeName))
+                ShoppingManager.StoreFilter.Add(item.CodeName);
+        }
+    }
+
+    /// <summary>
     ///     Fired when the core finished to load the game data
     /// </summary>
     private void OnLoadGameData()
@@ -623,6 +729,8 @@ public partial class Main : DoubleBufferedControl
 
             ShoppingManager.LoadFilters();
             PickupManager.LoadFilter();
+
+            ApplyDefaultItemFiltersIfNeeded();
         });
 
         _loadingSettings = false;
